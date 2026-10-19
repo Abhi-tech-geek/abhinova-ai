@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300,0,0&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+  *{scroll-behavior:smooth}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:rgba(140,140,170,.28);border-radius:20px}
+  ::-webkit-scrollbar-track{background:transparent}
+  textarea,input,button{font-family:'Space Grotesk',sans-serif}
+  textarea::placeholder,input::placeholder{color:currentColor;opacity:.42}
+  textarea:focus,input:focus{outline:none}
+  .ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;white-space:nowrap;direction:ltr;-webkit-font-smoothing:antialiased}
+  @keyframes anv-spin{to{transform:rotate(360deg)}}
+  @keyframes anv-ripple{0%{transform:scale(.55);opacity:.55}70%{opacity:0}100%{transform:scale(2.1);opacity:0}}
+  @keyframes anv-mic{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.2);opacity:0}}
+  @keyframes anv-floatA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-30px) scale(1.08)}}
+  @keyframes anv-floatB{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-50px,30px) scale(1.12)}}
+  @keyframes anv-rise{from{transform:translateY(8px)}to{transform:translateY(0)}}
+  @keyframes anv-blink{0%,100%{opacity:1}50%{opacity:0}}
+  @keyframes anv-shimmer{0%{background-position:-280px 0}100%{background-position:280px 0}}
+  @keyframes anv-glow{0%,100%{opacity:.6}50%{opacity:1}}
+  @keyframes anv-orbit{to{transform:rotate(360deg)}}
+  @keyframes anv-orbitFlat{from{transform:scaleY(.36) rotate(0deg)}to{transform:scaleY(.36) rotate(360deg)}}
+  @keyframes anv-dotFront{
+    0%{transform:translate(22px,0px) scale(1);opacity:1}
+    12.5%{transform:translate(15.6px,4.95px) scale(1.15);opacity:1}
+    25%{transform:translate(0px,7px) scale(1.3);opacity:1}
+    37.5%{transform:translate(-15.6px,4.95px) scale(1.15);opacity:1}
+    50%{transform:translate(-22px,0px) scale(1);opacity:1}
+    50.01%{opacity:0}
+    99.99%{transform:translate(22px,0px) scale(1);opacity:0}
+    100%{transform:translate(22px,0px) scale(1);opacity:1}
+  }
+  @keyframes anv-dotBack{
+    0%{transform:translate(-22px,0px) scale(1);opacity:0}
+    49.99%{opacity:0}
+    50%{transform:translate(-22px,0px) scale(1);opacity:1}
+    62.5%{transform:translate(-15.6px,-4.95px) scale(.72);opacity:1}
+    75%{transform:translate(0px,-7px) scale(.6);opacity:1}
+    87.5%{transform:translate(15.6px,-4.95px) scale(.72);opacity:1}
+    100%{transform:translate(22px,0px) scale(1);opacity:1}
+  }
+  @keyframes anv-orbitR{to{transform:rotate(-360deg)}}
+  @keyframes anv-breathe{0%,100%{transform:scale(1);box-shadow:0 0 40px 4px rgba(110,120,255,.5)}50%{transform:scale(1.07);box-shadow:0 0 70px 10px rgba(150,107,255,.65)}}
+  @keyframes anv-gridpan{from{background-position:0 0}to{background-position:46px 46px}}
+  @keyframes anv-twinkle{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:.9;transform:scale(1)}}
+  @keyframes anv-corewave{0%{transform:scale(.6);opacity:.5}100%{transform:scale(1.9);opacity:0}}
+  @keyframes anv-scan{0%{transform:translateY(-100%)}100%{transform:translateY(2000%)}}
+  @keyframes anv-breath{0%,100%{transform:scale(.5);opacity:.4}25%{transform:scale(1);opacity:.95}50%{transform:scale(1);opacity:.95}75%{transform:scale(.5);opacity:.4}}
+  @keyframes anv-breathSlow{0%,100%{transform:scale(.62)}25%,50%{transform:scale(1.05)}}
+  @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}}
+</style>
+</helmet>
+
+<div style="position:fixed;inset:0;overflow:hidden;background:{{ t.appBg }};color:{{ t.text }};font-family:'Space Grotesk',sans-serif;font-size:15px;transition:background .4s ease,color .3s ease">
+
+  <!-- ambient background blobs -->
+  <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">
+    <div style="position:absolute;inset:0;opacity:{{ t.gridOpacity }};background-image:linear-gradient({{ t.gridLine }} 1px,transparent 1px),linear-gradient(90deg,{{ t.gridLine }} 1px,transparent 1px);background-size:46px 46px;mask-image:radial-gradient(circle at 50% 42%,#000 0%,transparent 78%);-webkit-mask-image:radial-gradient(circle at 50% 42%,#000 0%,transparent 78%);animation:anv-gridpan 14s linear infinite"></div>
+    <div style="position:absolute;width:520px;height:520px;left:60%;top:-160px;border-radius:50%;background:{{ t.blobA }};filter:blur(80px);animation:anv-floatA 18s ease-in-out infinite"></div>
+    <div style="position:absolute;width:460px;height:460px;left:-120px;top:55%;border-radius:50%;background:{{ t.blobB }};filter:blur(80px);animation:anv-floatB 22s ease-in-out infinite"></div>
+  </div>
+
+  <!-- floating prototype control: theme + viewport -->
+  <div style="position:absolute;bottom:14px;right:14px;z-index:90;display:flex;gap:6px;align-items:center;padding:5px;border-radius:34px;background:{{ t.panel2 }};backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);border:1px solid {{ t.border }};box-shadow:0 6px 18px rgba(0,0,0,.18);transform:scale(.86);transform-origin:bottom right">
+    <div style="display:flex;gap:2px;padding:3px;border-radius:30px;background:{{ t.inset }}">
+      <button onClick="{{ themeDark }}" title="Dark" style="display:grid;place-items:center;width:30px;height:26px;border:none;border-radius:24px;cursor:pointer;color:{{ t.text }};background:{{ dDark }}"><span class="ms" style="font-size:16px">dark_mode</span></button>
+      <button onClick="{{ themeLight }}" title="Light" style="display:grid;place-items:center;width:30px;height:26px;border:none;border-radius:24px;cursor:pointer;color:{{ t.text }};background:{{ dLight }}"><span class="ms" style="font-size:16px">light_mode</span></button>
+      <button onClick="{{ themeWell }}" title="Wellness" style="display:grid;place-items:center;width:30px;height:26px;border:none;border-radius:24px;cursor:pointer;color:{{ t.text }};background:{{ dWell }}"><span class="ms" style="font-size:16px">spa</span></button>
+    </div>
+    <div style="width:1px;height:18px;background:{{ t.border }}"></div>
+    <div style="display:flex;gap:2px;padding:3px;border-radius:30px;background:{{ t.inset }}">
+      <button onClick="{{ vDesktop }}" title="Desktop" style="display:grid;place-items:center;width:30px;height:26px;border:none;border-radius:24px;cursor:pointer;color:{{ t.text }};background:{{ dDesk }}"><span class="ms" style="font-size:16px">desktop_windows</span></button>
+      <button onClick="{{ vMobile }}" title="Mobile" style="display:grid;place-items:center;width:30px;height:26px;border:none;border-radius:24px;cursor:pointer;color:{{ t.text }};background:{{ dMob }}"><span class="ms" style="font-size:16px">smartphone</span></button>
+    </div>
+  </div>
+
+  <!-- stage -->
+  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding-top:30px">
+    <div style="{{ frameStyle }}">
+
+      <!-- ===================== AUTH ===================== -->
+      <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ true }}">
+      <div style="position:relative;width:100%;height:100%;display:flex;flex-direction:{{ authDir }};overflow-y:auto;animation:anv-rise .5s ease both">
+        <!-- brand side -->
+        <div style="flex:1;min-height:{{ authBrandMin }};position:relative;display:flex;flex-direction:column;justify-content:center;padding:{{ authPad }};overflow-y:auto;overflow-x:hidden">
+          <div style="position:relative;width:88px;height:88px;margin-bottom:30px">
+            <div style="position:absolute;inset:-24px;border-radius:50%;background:{{ t.grad }};filter:blur(34px);opacity:.55;animation:anv-glow 4s ease-in-out infinite"></div>
+            <div style="position:absolute;inset:-11px;border-radius:50%;background:conic-gradient(from 0deg,transparent,{{ t.accentSolid }},transparent 62%);animation:anv-orbit 7s linear infinite;mask:radial-gradient(closest-side,transparent 72%,#000 74%);-webkit-mask:radial-gradient(closest-side,transparent 72%,#000 74%)"></div>
+            <div style="position:absolute;inset:-11px;animation:anv-orbit 7s linear infinite"><span style="position:absolute;top:-3px;left:50%;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 12px {{ t.accentSolid }};transform:translateX(-50%)"></span></div>
+            <div style="position:absolute;inset:0;display:grid;place-items:center"><svg viewBox="0 0 24 24" style="width:42px;height:42px;filter:drop-shadow(0 3px 10px {{ t.accentSolid }})"><path d="M12 1l2.2 8.0L22 12l-7.8 2.9L12 23l-2.2-8.1L2 12l7.8-2.9z" fill="{{ t.accentSolid }}"/></svg></div>
+          </div>
+          <div style="font-size:{{ wordSize }};font-weight:700;letter-spacing:-1.4px;line-height:1">Abhi<span style="color:{{ t.accentSolid }}">Nova</span></div>
+          <div style="margin-top:14px;font-size:17px;color:{{ t.muted }};max-width:360px;line-height:1.5">One calm, fast workspace where your ideas, code and answers finally live together — and it actually understands you.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-top:12px;max-width:380px">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0"><div style="width:30px;height:30px;flex:none;border-radius:9px;background:{{ t.gradSoft }};border:1px solid {{ t.border }};display:grid;place-items:center;color:{{ t.accentSolid }}"><span class="ms" style="font-size:17px">bolt</span></div><span style="font-size:13px;line-height:1.35;color:{{ t.text }}">Reasoning that thinks first</span></div>
+            <div style="display:flex;align-items:center;gap:10px;min-width:0"><div style="width:30px;height:30px;flex:none;border-radius:9px;background:{{ t.gradSoft }};border:1px solid {{ t.border }};display:grid;place-items:center;color:{{ t.accentSolid }}"><span class="ms" style="font-size:17px">science</span></div><span style="font-size:13px;line-height:1.35;color:{{ t.text }}">A full QA studio</span></div>
+            <div style="display:flex;align-items:center;gap:10px;min-width:0"><div style="width:30px;height:30px;flex:none;border-radius:9px;background:{{ t.gradSoft }};border:1px solid {{ t.border }};display:grid;place-items:center;color:{{ t.accentSolid }}"><span class="ms" style="font-size:17px">terminal</span></div><span style="font-size:13px;line-height:1.35;color:{{ t.text }}">Code Studio built in</span></div>
+            <div style="display:flex;align-items:center;gap:10px;min-width:0"><div style="width:30px;height:30px;flex:none;border-radius:9px;background:{{ t.gradSoft }};border:1px solid {{ t.border }};display:grid;place-items:center;color:{{ t.accentSolid }}"><span class="ms" style="font-size:17px">shield</span></div><span style="font-size:13px;line-height:1.35;color:{{ t.text }}">Private by design</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;flex:none;border-radius:9px;background:{{ t.gradSoft }};border:1px solid {{ t.border }};display:grid;place-items:center;color:{{ t.accentSolid }}"><span class="ms" style="font-size:17px">spa</span></div><span style="font-size:13px;line-height:1.35;color:{{ t.text }}">Wellness Mode</span></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:28px">
+            <div style="display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:30px;background:{{ t.panel }};border:1px solid {{ t.border }};font-size:13px;color:{{ t.muted }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ t.accentSolid }};box-shadow:0 0 8px {{ t.accentSolid }}"></span>Online</div>
+            <div style="padding:7px 13px;border-radius:30px;background:{{ t.panel }};border:1px solid {{ t.border }};font-size:13px;color:{{ t.muted }}">Private &amp; secure</div>
+          </div>
+        </div>
+        <!-- form side -->
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:{{ authPad }}">
+          <div style="width:100%;max-width:392px;padding:28px;border-radius:24px;background:{{ t.glass }};backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border:1px solid {{ t.borderStrong }};box-shadow:{{ t.shadow }}">
+            <div style="display:flex;gap:3px;padding:4px;border-radius:13px;background:{{ t.inset }};margin-bottom:22px">
+              <div onClick="{{ tabSignIn }}" style="flex:1;text-align:center;padding:9px 0;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:600;color:{{ siColor }};background:{{ siBg }};box-shadow:{{ siShadow }};transition:all .2s">Sign in</div>
+              <div onClick="{{ tabSignUp }}" style="flex:1;text-align:center;padding:9px 0;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:600;color:{{ suColor }};background:{{ suBg }};box-shadow:{{ suShadow }};transition:all .2s">Create account</div>
+            </div>
+            <div style="font-size:22px;font-weight:600;letter-spacing:-.4px">{{ authHeading }}</div>
+            <div style="font-size:14px;color:{{ t.muted }};margin-top:5px;margin-bottom:20px">{{ authSub }}</div>
+            <div style="font-size:12px;font-weight:500;color:{{ t.muted }};margin-bottom:7px">Email</div>
+            <div style="display:flex;align-items:center;gap:9px;padding:0 13px;height:46px;border-radius:13px;background:{{ t.inputBg }};border:1px solid {{ t.border }};margin-bottom:15px;transition:box-shadow .18s,border-color .18s" style-focus="border-color:{{ t.accentSolid }};box-shadow:0 0 0 3px {{ t.gradSoft }}"><span class="ms" style="font-size:18px;color:{{ t.faint }}">mail</span><input placeholder="you@example.com" style="flex:1;border:none;background:transparent;color:{{ t.text }};font-size:14.5px"></div>
+            <div style="font-size:12px;font-weight:500;color:{{ t.muted }};margin-bottom:7px">Password</div>
+            <div style="display:flex;align-items:center;gap:9px;padding:0 13px;height:46px;border-radius:13px;background:{{ t.inputBg }};border:1px solid {{ t.border }};margin-bottom:14px;transition:box-shadow .18s,border-color .18s" style-focus="border-color:{{ t.accentSolid }};box-shadow:0 0 0 3px {{ t.gradSoft }}"><span class="ms" style="font-size:18px;color:{{ t.faint }}">lock</span><input type="password" placeholder="••••••••••" style="flex:1;border:none;background:transparent;color:{{ t.text }};font-size:14.5px"><span class="ms" style="font-size:18px;color:{{ t.faint }};cursor:pointer">visibility</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:{{ t.muted }}"><span style="width:18px;height:18px;border-radius:6px;background:{{ t.grad }};display:grid;place-items:center"><span class="ms" style="font-size:14px;color:#fff">check</span></span>Remember me</label><span style="font-size:13px;font-weight:500;color:{{ t.accentSolid }};cursor:pointer">Forgot password?</span></div>
+            <button onClick="{{ login }}" style="width:100%;height:48px;border:none;border-radius:13px;cursor:pointer;color:#fff;font-size:15px;font-weight:600;background:{{ t.grad }};box-shadow:{{ t.btnGlow }};display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s ease,filter .15s ease" style-hover="filter:brightness(1.08);transform:translateY(-1px)" style-active="transform:translateY(0) scale(.98);filter:brightness(.96)">{{ authCta }}<span class="ms" style="font-size:19px">arrow_forward</span></button>
+            <button onClick="{{ login }}" style="width:100%;height:46px;margin-top:11px;border:1px solid {{ t.borderStrong }};border-radius:13px;cursor:pointer;color:{{ t.text }};font-size:14.5px;font-weight:500;background:{{ t.panel }};display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s" style-hover="background:{{ t.panel2 }}"><span class="ms" style="font-size:18px">public</span>Continue with Google</button>
+            <div style="display:flex;align-items:center;gap:12px;margin:18px 0"><div style="flex:1;height:1px;background:{{ t.border }}"></div><div style="font-size:12px;color:{{ t.faint }}">or</div><div style="flex:1;height:1px;background:{{ t.border }}"></div></div>
+            <div style="text-align:center"><span onClick="{{ guest }}" style="cursor:pointer;font-size:14.5px;font-weight:600;color:{{ t.accentSolid }}">Continue as Guest →</span><div style="font-size:12px;color:{{ t.faint }};margin-top:5px">No account needed. Your session stays on this device.</div></div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== WORKSPACE ===================== -->
+      <sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+      <div style="position:relative;width:100%;height:100%;display:flex">
+
+        <!-- sidebar / drawer backdrop -->
+        <sc-if value="{{ showBackdrop }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ closeDrawer }}" style="position:absolute;inset:0;z-index:40;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)"></div>
+        </sc-if>
+
+        <!-- SIDEBAR -->
+        <sc-if value="{{ sidebarVisible }}" hint-placeholder-val="{{ true }}">
+        <div style="{{ sidebarStyle }}">
+          <div style="display:flex;align-items:center;gap:11px;padding:4px 6px 16px;cursor:pointer" onClick="{{ goChat }}">
+            <div style="position:relative;width:34px;height:34px;flex:none">
+              <div style="position:absolute;inset:-7px;border-radius:50%;background:{{ t.grad }};filter:blur(12px);opacity:.55"></div>
+              <div style="position:absolute;inset:0;border-radius:11px;background:{{ t.grad }};display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="#fff" style="width:19px;height:19px"><path d="M12 1l2.2 8.0L22 12l-7.8 2.9L12 23l-2.2-8.1L2 12l7.8-2.9z"/></svg></div>
+            </div>
+            <sc-if value="{{ sidebarOpen }}" hint-placeholder-val="{{ true }}"><div style="font-size:18px;font-weight:700;letter-spacing:-.6px">Abhi<span style="color:{{ t.accentSolid }}">Nova</span></div></sc-if>
+          </div>
+
+          <button onClick="{{ newChat }}" style="display:flex;align-items:center;gap:10px;justify-content:{{ navJustify }};width:100%;height:44px;padding:0 13px;margin-bottom:16px;border:none;border-radius:13px;cursor:pointer;color:#fff;font-size:14.5px;font-weight:600;background:{{ t.grad }};box-shadow:{{ t.btnGlow }}"><span class="ms" style="font-size:20px">{{ newBtnIcon }}</span><sc-if value="{{ sidebarOpen }}" hint-placeholder-val="{{ true }}">{{ newBtnLabel }}</sc-if></button>
+
+          <div style="flex:none">
+            <sc-for list="{{ navItems }}" as="nav" hint-placeholder-count="4">
+              <div onClick="{{ nav.go }}" style="position:relative;display:flex;align-items:center;gap:12px;justify-content:{{ navJustify }};height:42px;padding:0 13px;margin-bottom:4px;border-radius:12px;cursor:pointer;font-size:14.5px;font-weight:{{ nav.weight }};color:{{ nav.color }};background:{{ nav.bg }};border:1px solid {{ nav.bd }};transition:background .22s cubic-bezier(.4,0,.2,1),color .22s,border-color .22s" style-hover="background:{{ nav.hoverBg }};color:{{ nav.text }}">
+                <span style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:{{ nav.barH }};border-radius:0 3px 3px 0;background:{{ nav.bar }};transition:height .22s cubic-bezier(.4,0,.2,1)"></span>
+                <span class="ms" style="font-size:21px;color:{{ nav.iconColor }}">{{ nav.icon }}</span>
+                <sc-if value="{{ sidebarOpen }}" hint-placeholder-val="{{ true }}"><span style="flex:1">{{ nav.label }}</span></sc-if>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ sidebarOpen }}" hint-placeholder-val="{{ true }}">
+          <div style="margin-top:18px;flex:none;display:flex;flex-direction:column">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:{{ t.faint }};padding:0 13px;margin-bottom:8px">{{ recentLabel }}</div>
+            <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 11px;margin:0 4px 10px;border-radius:10px;background:{{ t.inset }};border:1px solid {{ t.border }}">
+              <span class="ms" style="font-size:16px;color:{{ t.faint }}">search</span>
+              <input value="{{ sessionSearch }}" onChange="{{ onSessionSearch }}" placeholder="Search {{ recentLabel }}…" style="flex:1;border:none;background:transparent;color:{{ t.text }};font-size:12.5px;min-width:0">
+              <sc-if value="{{ hasSearchQuery }}" hint-placeholder-val="{{ false }}"><span onClick="{{ clearSearch }}" class="ms" style="font-size:15px;color:{{ t.faint }};cursor:pointer">close</span></sc-if>
+            </div>
+            <div style="max-height:250px;overflow-y:auto;overflow-x:hidden;margin:0 -4px;padding:0 4px">
+              <sc-for list="{{ filteredConversations }}" as="c" hint-placeholder-count="5">
+                <sc-if value="{{ c.isRenaming }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:center;gap:7px;height:44px;padding:0 6px 0 11px;border-radius:10px;background:{{ c.panel }};border:1px solid {{ c.borderStrong }}">
+                    <span class="ms" style="font-size:16px;color:{{ c.faint }};flex:none">{{ c.ricon }}</span>
+                    <input value="{{ c.renameVal }}" onChange="{{ c.onRenameInput }}" onKeyDown="{{ c.onRenameKey }}" onBlur="{{ c.commitRename }}" autofocus style="flex:1;min-width:0;border:none;background:transparent;color:{{ c.text }};font-size:13.5px">
+                  </div>
+                </sc-if>
+                <sc-if value="{{ c.notRenaming }}" hint-placeholder-val="{{ true }}">
+                <div onClick="{{ c.open }}" style="display:flex;align-items:center;gap:7px;height:44px;padding:0 6px 0 11px;border-radius:10px;cursor:pointer;font-size:13.5px;color:{{ c.muted }};transition:background .18s,color .18s" style-hover="background:{{ c.panel }};color:{{ c.text }}">
+                  <span class="ms" style="font-size:16px;color:{{ c.faint }};flex:none">{{ c.ricon }}</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.title }}</div>
+                    <div style="font-size:10.5px;color:{{ c.faint }};margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.dateLabel }}</div>
+                  </div>
+                  <span onClick="{{ c.edit }}" class="ms" style="font-size:15px;color:{{ c.faint }};opacity:.4;width:20px;height:20px;flex:none;display:grid;place-items:center;border-radius:6px;transition:opacity .15s,background .15s,color .15s" style-hover="opacity:1;background:{{ c.inset }};color:{{ c.text }}">edit</span>
+                  <span onClick="{{ c.remove }}" class="ms" style="font-size:15px;color:{{ c.faint }};opacity:.4;width:20px;height:20px;flex:none;display:grid;place-items:center;border-radius:6px;transition:opacity .15s,background .15s,color .15s" style-hover="opacity:1;background:{{ c.inset }};color:{{ c.text }}">close</span>
+                </div>
+                </sc-if>
+              </sc-for>
+              <sc-if value="{{ noRecents }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:14px 13px;font-size:12.5px;color:{{ t.faint }};line-height:1.5">{{ noRecentsMsg }}</div>
+              </sc-if>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- bottom controls -->
+          <div style="margin-top:18px;padding-top:14px;border-top:1px solid {{ t.border }}">
+            <div onClick="{{ goSettings }}" style="position:relative;display:flex;align-items:center;gap:12px;justify-content:{{ navJustify }};height:42px;padding:0 13px;margin-bottom:8px;border-radius:12px;cursor:pointer;font-size:14.5px;font-weight:{{ settingsWeight }};color:{{ settingsColor }};background:{{ settingsBg }};transition:background .18s,color .18s" style-hover="background:{{ t.panel }}">
+              <span class="ms" style="font-size:21px;color:{{ settingsIconColor }}">settings</span>
+              <sc-if value="{{ sidebarOpen }}" hint-placeholder-val="{{ true }}"><span style="flex:1">Settings</span></sc-if>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;height:48px;padding:0 8px;border-radius:12px;cursor:pointer;transition:background .15s" style-hover="background:{{ t.panel }}">
+              <div style="width:32px;height:32px;border-radius:50%;flex:none;background:{{ t.grad }};display:grid;place-items:center;color:#fff;font-weight:600;font-size:13px;box-shadow:0 0 0 2px {{ t.panel }}, 0 0 0 3px {{ t.borderStrong }}">AS</div>
+              <sc-if value="{{ sidebarOpen }}" hint-placeholder-val="{{ true }}"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Abhinav Sharma</div><div style="font-size:11.5px;color:{{ t.faint }}">Pro workspace</div></div><span onClick="{{ signOut }}" class="ms" style="font-size:18px;color:{{ t.faint }};flex:none;width:26px;height:26px;display:grid;place-items:center;border-radius:8px" style-hover="color:{{ t.text }};background:{{ t.inset }}">logout</span></sc-if>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- MAIN -->
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;position:relative">
+
+          <!-- topbar -->
+          <div style="height:56px;flex:none;display:flex;align-items:center;gap:8px;padding:0 16px;border-bottom:1px solid {{ t.border }};background:{{ t.topbar }};backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 1px 0 rgba(0,0,0,.02),0 8px 24px -18px rgba(0,0,0,.35);position:relative;z-index:5">
+            <sc-if value="{{ showMenuBtn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ openDrawer }}" style="display:grid;place-items:center;width:36px;height:36px;border:none;border-radius:10px;cursor:pointer;background:{{ t.panel }};color:{{ t.text }}"><span class="ms" style="font-size:21px">menu</span></button></sc-if>
+            <sc-if value="{{ showCollapseBtn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toggleSidebar }}" style="display:grid;place-items:center;width:34px;height:34px;border:none;border-radius:9px;cursor:pointer;background:transparent;color:{{ t.faint }}" style-hover="background:{{ t.panel }};color:{{ t.text }}"><span class="ms" style="font-size:20px">dock_to_right</span></button></sc-if>
+            <sc-if value="{{ showTopTabs }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:3px;padding:3px;border-radius:12px;background:{{ t.inset }};flex:0 1 auto;min-width:0;overflow-x:auto">
+                <sc-for list="{{ topTabs }}" as="tab" hint-placeholder-count="4">
+                  <div onClick="{{ tab.go }}" style="display:flex;align-items:center;gap:6px;flex:none;height:32px;padding:0 11px;border-radius:9px;cursor:pointer;font-size:12.5px;font-weight:600;color:{{ tab.color }};background:{{ tab.bg }};border:1px solid {{ tab.border }};transition:all .18s;white-space:nowrap">
+                    <span class="ms" style="font-size:17px;color:{{ tab.iconColor }}">{{ tab.icon }}</span>{{ tab.label }}
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ hideTopTabs }}" hint-placeholder-val="{{ false }}"><div style="font-size:15.5px;font-weight:600;letter-spacing:-.2px">{{ screenTitle }}</div>
+            <div style="font-size:12.5px;color:{{ t.faint }};padding:3px 9px;border-radius:20px;border:1px solid {{ t.border }};background:{{ t.panel }}">{{ screenTag }}</div></sc-if>
+            <div style="flex:1;min-width:8px"></div>
+            <div onClick="{{ toggleWellness }}" title="Toggle Wellness Mode" style="display:flex;align-items:center;gap:7px;flex:none;height:32px;padding:0 5px 0 11px;border-radius:20px;cursor:pointer;background:{{ wellBtnBg }};border:1px solid {{ wellBtnBorder }};transition:all .2s">
+              <span class="ms" style="font-size:17px;color:{{ wellIconColor }}">spa</span>
+              <span style="width:30px;height:17px;border-radius:20px;background:{{ wellTrack }};position:relative;flex:none;transition:background .2s"><span style="position:absolute;top:2px;left:{{ wellKnob }};width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s"></span></span>
+            </div>
+          </div>
+
+          <!-- screen body -->
+          <div style="flex:1;min-height:0;overflow-y:auto;position:relative">
+
+            <!-- ---------- CHAT ---------- -->
+            <sc-if value="{{ isChat }}" hint-placeholder-val="{{ true }}">
+              <sc-if value="{{ showEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 22px;animation:anv-rise .5s ease both">
+                <!-- living AI core -->
+                <div style="position:relative;width:{{ coreSize }};height:{{ coreSize }};margin-bottom:26px">
+                  <div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent,{{ t.accentSolid }},transparent 55%);opacity:.5;animation:anv-orbit 6s linear infinite;mask:radial-gradient(closest-side,transparent 70%,#000 72%);-webkit-mask:radial-gradient(closest-side,transparent 70%,#000 72%)"></div>
+                  <div style="position:absolute;inset:11%;border-radius:50%;background:conic-gradient(from 180deg,transparent,#9a6bff,transparent 50%);opacity:.55;animation:anv-orbitR 4.5s linear infinite;mask:radial-gradient(closest-side,transparent 66%,#000 68%);-webkit-mask:radial-gradient(closest-side,transparent 66%,#000 68%)"></div>
+                  <div style="position:absolute;inset:22%;border-radius:50%;border:1px solid {{ t.borderStrong }};animation:anv-orbit 9s linear infinite"></div>
+                  <div style="position:absolute;inset:-8%;border-radius:50%;background:{{ t.grad }};filter:blur(38px);opacity:.4;animation:anv-glow 4s ease-in-out infinite"></div>
+                  <div style="position:absolute;inset:0;animation:anv-orbit 7s linear infinite"><span style="position:absolute;top:-3px;left:50%;width:7px;height:7px;border-radius:50%;background:{{ t.accentSolid }};box-shadow:0 0 12px {{ t.accentSolid }};transform:translateX(-50%)"></span></div>
+                  <div style="position:absolute;inset:11%;animation:anv-orbitR 5.5s linear infinite"><span style="position:absolute;bottom:-2px;left:50%;width:5px;height:5px;border-radius:50%;background:#9a6bff;box-shadow:0 0 10px #9a6bff;transform:translateX(-50%)"></span></div>
+                  <div style="position:absolute;inset:33%;border-radius:50%;background:{{ t.grad }};animation:anv-breathe 4s ease-in-out infinite;display:grid;place-items:center;box-shadow:inset 0 0 22px rgba(255,255,255,.45)"><svg viewBox="0 0 24 24" fill="#fff" style="width:54%;height:54%"><path d="M12 1l2.2 8.0L22 12l-7.8 2.9L12 23l-2.2-8.1L2 12l7.8-2.9z"/></svg></div>
+                </div>
+                <div style="position:relative;font-size:{{ heroSize }};font-weight:700;letter-spacing:-2px;line-height:1">Abhi<span style="color:{{ t.accentSolid }}">Nova</span> AI</div>
+                <div style="color:{{ t.muted }};font-size:16px;margin:12px 0 30px;text-align:center">How can I accelerate your work today?</div>
+                <div style="display:grid;grid-template-columns:{{ chipCols }};gap:12px;width:100%;max-width:640px">
+                  <sc-for list="{{ suggested }}" as="s" hint-placeholder-count="4">
+                    <div onClick="{{ s.go }}" style="display:flex;align-items:center;gap:12px;padding:15px 16px;border-radius:15px;cursor:pointer;background:{{ s.panel }};border:1px solid {{ s.border }};transition:transform .15s,border-color .15s" style-hover="transform:translateY(-2px);border-color:{{ s.borderStrong }}"><span class="ms" style="font-size:21px;color:{{ s.accent }}">{{ s.icon }}</span><span style="font-size:13.5px;font-weight:500;line-height:1.35">{{ s.text }}</span></div>
+                  </sc-for>
+                </div>
+              </div>
+              </sc-if>
+
+              <sc-if value="{{ showThread }}" hint-placeholder-val="{{ true }}">
+              <div style="max-width:{{ threadW }};margin:0 auto;padding:28px 22px 30px">
+                <sc-if value="{{ convoLoaded }}" hint-placeholder-val="{{ true }}">
+                <!-- user -->
+                <div style="display:flex;justify-content:flex-end;margin-bottom:22px;animation:anv-rise .4s ease both">
+                  <div style="max-width:78%;padding:13px 16px;border-radius:18px 18px 5px 18px;color:{{ t.userText }};background:{{ t.userBubble }};font-size:14.5px;line-height:1.5;box-shadow:{{ t.btnGlow }}">Draft a launch announcement for AbhiNova — warm, confident, a couple of lines.</div>
+                </div>
+                <!-- ai rich -->
+                <div style="display:flex;gap:13px;margin-bottom:22px;animation:anv-rise .5s ease both">
+                  <div style="width:32px;height:32px;flex:none;border-radius:10px;background:{{ t.grad }};display:grid;place-items:center;box-shadow:{{ t.btnGlow }}"><svg viewBox="0 0 24 24" fill="#fff" style="width:17px;height:17px"><path d="M12 1l2.2 8.0L22 12l-7.8 2.9L12 23l-2.2-8.1L2 12l7.8-2.9z"/></svg></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:600;color:{{ t.muted }};margin-bottom:7px">AbhiNova</div>
+                    <div style="font-size:14.5px;line-height:1.65;color:{{ t.text }}">Here's a launch announcement you can drop into a blog or email — warm, confident, and short:</div>
+                    <div style="margin-top:12px;border-radius:15px;overflow:hidden;border:1px solid {{ t.border }};background:{{ t.gradSoft }}">
+                      <div style="padding:18px 18px 16px">
+                        <div style="font-size:17px;font-weight:700;letter-spacing:-.3px;margin-bottom:8px">Meet AbhiNova — your AI, finally in one place ✨</div>
+                        <div style="font-size:14px;line-height:1.65;color:{{ t.text }}">Today we're opening AbhiNova to everyone. It's the calm, fast workspace where thinking, building, and shipping live side by side — with reasoning that actually thinks before it answers. No more juggling ten tabs. Just ask, and move.</div>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:8px;padding:11px 18px;border-top:1px solid {{ t.border }};background:{{ t.panel }}">
+                        <button onClick="{{ copyCode }}" style="display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:1px solid {{ t.border }};border-radius:9px;cursor:pointer;background:transparent;color:{{ t.text }};font-size:12.5px;font-weight:500"><span class="ms" style="font-size:15px">content_copy</span>Copy</button>
+                        <button style="display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:none;border-radius:9px;cursor:pointer;background:{{ t.gradSoft }};color:{{ t.accentSolid }};font-size:12.5px;font-weight:600"><span class="ms" style="font-size:15px">tune</span>Make it punchier</button>
+                      </div>
+                    </div>
+                    <div style="font-size:14px;line-height:1.65;color:{{ t.muted }};margin-top:12px">Want a shorter tweet version, or a more playful tone? Just say the word.</div>
+                  </div>
+                </div>
+                </sc-if>
+                <!-- dynamic -->
+                <sc-for list="{{ messages }}" as="m" hint-placeholder-count="0">
+                  <sc-if value="{{ m.isUser }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;justify-content:flex-end;margin-bottom:22px;animation:anv-rise .35s ease both"><div style="max-width:78%;padding:13px 16px;border-radius:18px 18px 5px 18px;color:{{ m.userText }};background:{{ m.userBubble }};font-size:14.5px;line-height:1.5">{{ m.text }}</div></div>
+                  </sc-if>
+                  <sc-if value="{{ m.isAi }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;gap:13px;margin-bottom:22px;animation:anv-rise .4s ease both"><div style="width:32px;height:32px;flex:none;border-radius:10px;background:{{ m.grad }};display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="#fff" style="width:17px;height:17px"><path d="M12 1l2.2 8.0L22 12l-7.8 2.9L12 23l-2.2-8.1L2 12l7.8-2.9z"/></svg></div><div style="flex:1;padding-top:5px;font-size:14.5px;line-height:1.65">{{ m.text }}</div></div>
+                  </sc-if>
+                </sc-for>
+                <!-- thinking orb -->
+                <sc-if value="{{ thinking }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:13px;align-items:center;margin-bottom:22px">
+                    <div style="position:relative;width:32px;height:32px;flex:none">
+                      <div style="position:absolute;inset:-3px;border-radius:50%;background:conic-gradient(from 0deg,transparent,{{ t.accentSolid }},transparent 60%);animation:anv-orbit 1.4s linear infinite;mask:radial-gradient(closest-side,transparent 64%,#000 66%);-webkit-mask:radial-gradient(closest-side,transparent 64%,#000 66%)"></div>
+                      <div style="position:absolute;inset:7px;border-radius:50%;background:{{ t.grad }};animation:anv-breathe 1.6s ease-in-out infinite;box-shadow:{{ t.btnGlow }}"></div>
+                    </div>
+                    <div style="font-size:13.5px;color:{{ t.muted }}">Reasoning<span style="animation:anv-blink 1.2s infinite">…</span></div>
+                  </div>
+                </sc-if>
+              </div>
+              </sc-if>
+
+              <!-- input bar -->
+              <div style="position:sticky;bottom:0;padding:14px 22px 18px;background:{{ t.fade }}">
+                <div style="max-width:{{ threadW }};margin:0 auto;border-radius:22px;background:{{ t.glass }};backdrop-filter:blur(24px) saturate(1.3);-webkit-backdrop-filter:blur(24px) saturate(1.3);border:1px solid {{ t.borderStrong }};box-shadow:{{ t.shadow }},inset 0 1px 0 rgba(255,255,255,.05);overflow:hidden;transition:box-shadow .2s">
+                  <div style="display:flex;align-items:flex-end;gap:10px;padding:9px 9px 9px 16px">
+                    <textarea value="{{ input }}" onChange="{{ onInput }}" placeholder="Message AbhiNova…" rows="1" style="flex:1;border:none;background:transparent;color:{{ t.text }};font-size:15px;line-height:1.5;resize:none;max-height:120px;padding:9px 0"></textarea>
+                    <button onClick="{{ toggleMic }}" style="position:relative;display:grid;place-items:center;width:42px;height:42px;flex:none;border:none;border-radius:13px;cursor:pointer;background:{{ micBg }};color:{{ micColor }}">
+                      <sc-if value="{{ listening }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;border-radius:13px;background:{{ t.grad }};opacity:.6;animation:anv-mic 1.4s ease-out infinite"></span></sc-if>
+                      <span class="ms" style="font-size:21px;position:relative">mic</span>
+                    </button>
+                    <button onClick="{{ send }}" style="display:grid;place-items:center;width:42px;height:42px;flex:none;border:none;border-radius:13px;cursor:pointer;color:#fff;background:{{ t.grad }};box-shadow:{{ t.btnGlow }};transition:transform .15s ease,filter .15s ease" style-hover="filter:brightness(1.08);transform:translateY(-1px)" style-active="transform:scale(.92)"><span class="ms" style="font-size:21px">arrow_upward</span></button>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;padding:2px 12px 11px">
+                    <div onClick="{{ cycleModel }}" style="display:flex;align-items:center;gap:7px;height:30px;padding:0 11px;border-radius:9px;cursor:pointer;background:{{ t.inset }};border:1px solid {{ t.border }};font-size:12.5px;font-weight:500;color:{{ t.text }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ t.accentSolid }};box-shadow:0 0 8px {{ t.accentSolid }}"></span>{{ model }}<span class="ms" style="font-size:15px;color:{{ t.faint }}">unfold_more</span></div>
+                    <div style="display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:9px;cursor:pointer;color:{{ t.muted }};font-size:12.5px" style-hover="background:{{ t.inset }}"><span class="ms" style="font-size:16px">attach_file</span>Attach</div>
+                    <div style="display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:9px;cursor:pointer;color:{{ t.muted }};font-size:12.5px" style-hover="background:{{ t.inset }}"><span class="ms" style="font-size:16px">bolt</span>Agents</div>
+                    <div style="flex:1"></div>
+                    <div style="font-size:11.5px;color:{{ t.faint }}">{{ model }} · reasoning on</div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- ---------- QA STUDIO ---------- -->
+            <sc-if value="{{ isQAGrid }}" hint-placeholder-val="{{ false }}">
+            <div style="max-width:980px;margin:0 auto;padding:30px 22px 40px;animation:anv-rise .45s ease both">
+              <div style="position:relative;overflow:hidden;border-radius:22px;padding:26px 26px 24px;background:{{ t.grad }};box-shadow:{{ t.btnGlow }}">
+                <div style="position:absolute;right:-30px;top:-30px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.16);filter:blur(6px)"></div>
+                <div style="position:absolute;right:40px;bottom:-50px;width:120px;height:120px;border-radius:50%;border:1px solid rgba(255,255,255,.3)"></div>
+                <div style="position:relative;display:flex;align-items:center;gap:13px">
+                  <div style="width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.18);backdrop-filter:blur(6px);display:grid;place-items:center;color:#fff"><span class="ms" style="font-size:25px">science</span></div>
+                  <div><div style="font-size:24px;font-weight:700;letter-spacing:-.6px;color:#fff">QA Studio</div><div style="font-size:13.5px;color:rgba(255,255,255,.82)">Eight AI-native tools to test faster and ship with confidence.</div></div>
+                </div>
+                <div style="position:relative;display:flex;gap:26px;margin-top:20px">
+                  <div><div style="font-size:21px;font-weight:700;color:#fff">8</div><div style="font-size:12px;color:rgba(255,255,255,.78)">Tools</div></div>
+                  <div><div style="font-size:21px;font-weight:700;color:#fff">2.4k</div><div style="font-size:12px;color:rgba(255,255,255,.78)">Cases generated</div></div>
+                  <div><div style="font-size:21px;font-weight:700;color:#fff">12m</div><div style="font-size:12px;color:rgba(255,255,255,.78)">Saved this week</div></div>
+                </div>
+              </div>
+              <div style="font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:{{ t.faint }};margin:26px 0 12px">All tools</div>
+              <div style="display:grid;grid-template-columns:{{ qaCols }};gap:14px">
+                <sc-for list="{{ qaTools }}" as="tool" hint-placeholder-count="8">
+                  <div onClick="{{ tool.open }}" style="position:relative;padding:18px;border-radius:17px;cursor:pointer;background:{{ tool.panel }};border:1px solid {{ tool.border }};transition:transform .18s ease,border-color .18s,box-shadow .18s;overflow:hidden" style-hover="transform:translateY(-3px);border-color:{{ tool.borderStrong }};box-shadow:{{ tool.hoverGlow }}">
+                    <div style="width:40px;height:40px;border-radius:11px;background:{{ tool.gradSoft }};border:1px solid {{ tool.border }};display:grid;place-items:center;color:{{ tool.accent }};margin-bottom:13px"><span class="ms" style="font-size:21px">{{ tool.icon }}</span></div>
+                    <div style="font-size:15px;font-weight:600;letter-spacing:-.2px;margin-bottom:5px">{{ tool.name }}</div>
+                    <div style="font-size:12.5px;color:{{ tool.muted }};line-height:1.45">{{ tool.desc }}</div>
+                    <span class="ms" style="position:absolute;top:18px;right:16px;font-size:18px;color:{{ tool.faint }}">north_east</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            </sc-if>
+
+            <!-- ---------- QA DETAIL ---------- -->
+            <sc-if value="{{ isQADetail }}" hint-placeholder-val="{{ false }}">
+            <div style="max-width:1040px;margin:0 auto;padding:24px 22px 40px;animation:anv-rise .4s ease both">
+              <div onClick="{{ backTools }}" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:{{ t.muted }};font-size:13.5px;margin-bottom:16px"><span class="ms" style="font-size:18px">arrow_back</span>QA Studio</div>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px"><div style="width:40px;height:40px;border-radius:11px;background:{{ t.gradSoft }};border:1px solid {{ t.border }};display:grid;place-items:center;color:{{ t.accentSolid }}"><span class="ms" style="font-size:21px">fact_check</span></div><div><div style="font-size:19px;font-weight:700;letter-spacing:-.3px">Test Case Generator</div><div style="font-size:13px;color:{{ t.muted }}">Turn a feature description into structured test cases.</div></div></div>
+              <div style="display:grid;grid-template-columns:{{ detailCols }};gap:18px;align-items:start">
+                <!-- form -->
+                <div style="padding:20px;border-radius:17px;background:{{ t.panel }};border:1px solid {{ t.border }}">
+                  <div style="font-size:12px;font-weight:600;color:{{ t.muted }};margin-bottom:7px">Feature / Module</div>
+                  <input value="Checkout — apply discount code" style="width:100%;height:44px;padding:0 13px;border-radius:11px;background:{{ t.inputBg }};border:1px solid {{ t.border }};color:{{ t.text }};font-size:14px;margin-bottom:16px">
+                  <div style="font-size:12px;font-weight:600;color:{{ t.muted }};margin-bottom:7px">Requirements</div>
+                  <textarea rows="5" style="width:100%;padding:12px 13px;border-radius:11px;background:{{ t.inputBg }};border:1px solid {{ t.border }};color:{{ t.text }};font-size:14px;line-height:1.55;resize:none;margin-bottom:16px">Valid codes apply % or flat discount. Expired or invalid codes show an error. Only one code per order. Stacking with sale items is blocked.</textarea>
+                  <div style="font-size:12px;font-weight:600;color:{{ t.muted }};margin-bottom:8px">Coverage</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+                    <sc-for list="{{ coverChips }}" as="cc" hint-placeholder-count="4"><div style="padding:6px 12px;border-radius:20px;font-size:12.5px;cursor:pointer;background:{{ cc.bg }};border:1px solid {{ cc.border }};color:{{ cc.color }}">{{ cc.label }}</div></sc-for>
+                  </div>
+                  <button onClick="{{ runTool }}" style="width:100%;height:46px;border:none;border-radius:12px;cursor:pointer;color:#fff;font-size:14.5px;font-weight:600;background:{{ t.grad }};box-shadow:{{ t.btnGlow }};display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s ease,filter .15s ease" style-hover="filter:brightness(1.06);transform:translateY(-1px)" style-active="transform:scale(.98)"><span class="ms" style="font-size:20px">auto_awesome</span>Generate test cases</button>
+                </div>
+                <!-- output -->
+                <div style="border-radius:17px;background:{{ t.panel }};border:1px solid {{ t.border }};overflow:hidden">
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid {{ t.border }}"><div style="font-size:14px;font-weight:600">Generated · {{ resultCount }}</div><div style="display:flex;gap:8px"><button onClick="{{ copyTable }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 11px;border:1px solid {{ t.border }};border-radius:9px;cursor:pointer;background:transparent;color:{{ t.muted }};font-size:12.5px"><span class="ms" style="font-size:15px">content_copy</span>Copy</button><button onClick="{{ exportTable }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 11px;border:none;border-radius:9px;cursor:pointer;background:{{ t.gradSoft }};color:{{ t.accentSolid }};font-size:12.5px;font-weight:600"><span class="ms" style="font-size:15px">download</span>Export</button></div></div>
+                  <sc-if value="{{ ranTool }}" hint-placeholder-val="{{ false }}">
+                  <div style="overflow-x:auto">
+                    <div style="display:grid;grid-template-columns:64px 1.4fr 2fr 90px;font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:{{ t.faint }};padding:11px 18px;background:{{ t.inset }}"><div>ID</div><div>Title</div><div>Expected result</div><div>Priority</div></div>
+                    <sc-for list="{{ testRows }}" as="r" hint-placeholder-count="5">
+                      <div style="display:grid;grid-template-columns:64px 1.4fr 2fr 90px;font-size:13px;padding:13px 18px;border-top:1px solid {{ r.border }};align-items:center"><div style="font-family:'JetBrains Mono',monospace;color:{{ r.accent }};font-size:12px">{{ r.id }}</div><div style="font-weight:500">{{ r.title }}</div><div style="color:{{ r.muted }};line-height:1.4">{{ r.expected }}</div><div><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:{{ r.pbg }};color:{{ r.pcolor }}">{{ r.priority }}</span></div></div>
+                    </sc-for>
+                  </div>
+                  </sc-if>
+                  <sc-if value="{{ notRun }}" hint-placeholder-val="{{ true }}">
+                  <div style="padding:60px 22px;text-align:center;color:{{ t.faint }}"><span class="ms" style="font-size:38px;opacity:.5">table_view</span><div style="font-size:13.5px;margin-top:10px">Run the generator to see structured test cases here.</div></div>
+                  </sc-if>
+                </div>
+              </div>
+            </div>
+            </sc-if>
+
+            <!-- ---------- DOCUMENTS ---------- -->
+            <sc-if value="{{ isDocs }}" hint-placeholder-val="{{ false }}">
+            <div style="max-width:1040px;margin:0 auto;padding:28px 22px 40px;animation:anv-rise .45s ease both">
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:22px">
+                <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:200px">
+                  <div style="width:44px;height:44px;border-radius:13px;background:{{ t.gradSoft }};border:1px solid {{ t.border }};display:grid;place-items:center;color:{{ t.accentSolid }}"><span class="ms" style="font-size:23px">auto_stories</span></div>
+                  <div><div style="font-size:21px;font-weight:700;letter-spacing:-.4px">Knowledge base</div><div style="font-size:13px;color:{{ t.muted }}">Ask anything across your documents — answers come with citations.</div></div>
+                </div>
+                <div style="display:flex;gap:10px">
+                  <div style="padding:11px 16px;border-radius:13px;background:{{ t.panel }};border:1px solid {{ t.border }};text-align:center"><div style="font-size:18px;font-weight:700;color:{{ t.accentSolid }}">4</div><div style="font-size:11px;color:{{ t.faint }}">Documents</div></div>
+                  <div style="padding:11px 16px;border-radius:13px;background:{{ t.panel }};border:1px solid {{ t.border }};text-align:center"><div style="font-size:18px;font-weight:700;color:{{ t.accentSolid }}">1,240</div><div style="font-size:11px;color:{{ t.faint }}">Chunks indexed</div></div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:{{ detailCols }};gap:18px;align-items:start">
+                <div>
+                  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:34px 20px;border-radius:17px;border:1.6px dashed {{ t.borderStrong }};background:{{ t.panel }};text-align:center;cursor:pointer;transition:border-color .2s,background .2s" style-hover="border-color:{{ t.accentSolid }};background:{{ t.gradSoft }}">
+                    <div style="width:50px;height:50px;border-radius:14px;background:{{ t.gradSoft }};display:grid;place-items:center;color:{{ t.accentSolid }};margin-bottom:13px"><span class="ms" style="font-size:26px">cloud_upload</span></div>
+                    <div style="font-size:14.5px;font-weight:600">Drop files to add knowledge</div>
+                    <div style="font-size:12.5px;color:{{ t.muted }};margin-top:5px">PDF, DOCX, MD, CSV · up to 50MB</div>
+                    <button style="margin-top:14px;height:38px;padding:0 16px;border:1px solid {{ t.borderStrong }};border-radius:10px;cursor:pointer;background:{{ t.panel2 }};color:{{ t.text }};font-size:13px;font-weight:600;transition:transform .15s" style-active="transform:scale(.96)">Browse files</button>
+                  </div>
+                  <div style="font-size:12px;font-weight:600;color:{{ t.faint }};letter-spacing:.5px;text-transform:uppercase;margin:22px 0 10px">Knowledge base</div>
+                  <sc-for list="{{ documents }}" as="d" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:12px;padding:13px;border-radius:13px;background:{{ d.panel }};border:1px solid {{ d.border }};margin-bottom:9px"><div style="width:36px;height:36px;border-radius:10px;background:{{ d.inset }};display:grid;place-items:center;color:{{ d.muted }}"><span class="ms" style="font-size:19px">{{ d.icon }}</span></div><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.name }}</div><div style="font-size:11.5px;color:{{ d.faint }}">{{ d.meta }}</div></div><span style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:{{ d.badgeBg }};color:{{ d.badgeColor }}"><span class="ms" style="font-size:13px;{{ d.spin }}">{{ d.badgeIcon }}</span>{{ d.status }}</span></div>
+                  </sc-for>
+                </div>
+                <!-- chat with docs -->
+                <div style="border-radius:17px;background:{{ t.panel }};border:1px solid {{ t.border }};display:flex;flex-direction:column;min-height:420px">
+                  <div style="padding:14px 18px;border-bottom:1px solid {{ t.border }};font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px"><span class="ms" style="font-size:18px;color:{{ t.accentSolid }}">forum</span>Chat with documents</div>
+                  <div style="flex:1;padding:18px;overflow-y:auto">
+                    <div style="display:flex;justify-content:flex-end;margin-bottom:18px"><div style="max-width:80%;padding:11px 14px;border-radius:16px 16px 4px 16px;color:{{ t.userText }};background:{{ t.userBubble }};font-size:13.5px;line-height:1.5">What's our refund window for enterprise plans?</div></div>
+                    <div style="display:flex;gap:11px"><div style="width:28px;height:28px;flex:none;border-radius:9px;background:{{ t.grad }};display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px">A</div><div style="flex:1"><div style="font-size:13.5px;line-height:1.6">Enterprise plans have a <b>30-day refund window</b> from the invoice date, prorated for annual contracts. Approvals route through Finance.</div><div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px"><div onClick="{{ openSource }}" style="display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:8px;cursor:pointer;background:{{ t.gradSoft }};border:1px solid {{ t.border }};color:{{ t.accentSolid }};font-size:11.5px;font-weight:600"><span class="ms" style="font-size:13px">format_quote</span>Billing-Policy.pdf · p.4</div><div onClick="{{ openSource }}" style="display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:8px;cursor:pointer;background:{{ t.gradSoft }};border:1px solid {{ t.border }};color:{{ t.accentSolid }};font-size:11.5px;font-weight:600"><span class="ms" style="font-size:13px">format_quote</span>MSA-2025.docx · §7.2</div></div></div></div>
+                  </div>
+                  <div style="padding:13px 16px;border-top:1px solid {{ t.border }};display:flex;align-items:center;gap:9px"><input placeholder="Ask across 4 documents…" style="flex:1;height:40px;padding:0 13px;border-radius:11px;background:{{ t.inputBg }};border:1px solid {{ t.border }};color:{{ t.text }};font-size:13.5px"><button style="display:grid;place-items:center;width:40px;height:40px;border:none;border-radius:11px;cursor:pointer;color:#fff;background:{{ t.grad }}"><span class="ms" style="font-size:19px">arrow_upward</span></button></div>
+                </div>
+              </div>
+            </div>
+            <!-- source side panel -->
+            <sc-if value="{{ docPanel }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ closeSource }}" style="position:absolute;inset:0;z-index:55;background:rgba(0,0,0,.4)"></div>
+              <div style="position:absolute;top:0;right:0;bottom:0;z-index:56;width:{{ sourceW }};background:{{ t.glassSolid }};backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-left:1px solid {{ t.borderStrong }};box-shadow:{{ t.shadow }};display:flex;flex-direction:column;animation:anv-rise .3s ease both">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid {{ t.border }}"><div style="font-size:14px;font-weight:600">Source · Billing-Policy.pdf</div><span onClick="{{ closeSource }}" class="ms" style="font-size:20px;cursor:pointer;color:{{ t.faint }}">close</span></div>
+                <div style="flex:1;overflow-y:auto;padding:18px">
+                  <div style="font-size:12px;color:{{ t.faint }};margin-bottom:10px">Page 4 · Refunds & cancellations</div>
+                  <div style="padding:14px;border-radius:12px;background:{{ t.gradSoft }};border:1px solid {{ t.border }};font-size:13.5px;line-height:1.65">"Enterprise subscriptions may be cancelled within <b>thirty (30) days</b> of the invoice date for a prorated refund. Refund requests are reviewed by the Finance team and processed within 10 business days."</div>
+                  <div style="font-size:13px;line-height:1.7;color:{{ t.muted }};margin-top:16px">Standard and Pro plans follow a 14-day window. Usage-based add-ons are non-refundable once consumed. For annual contracts, the prorated amount excludes any applied promotional credits.</div>
+                </div>
+              </div>
+            </sc-if>
+            </sc-if>
+
+            <!-- ---------- WELLNESS ---------- -->
+            <sc-if value="{{ isWellness }}" hint-placeholder-val="{{ false }}">
+            <div style="max-width:1000px;margin:0 auto;padding:28px 22px 40px;animation:anv-rise .5s ease both">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><div style="width:42px;height:42px;border-radius:14px;background:{{ t.grad }};display:grid;place-items:center;color:#fff"><span class="ms" style="font-size:23px">self_improvement</span></div><div><div style="font-size:21px;font-weight:700;letter-spacing:-.4px">A calmer space</div><div style="font-size:13.5px;color:{{ t.muted }}">Take a breath. I'm here whenever you're ready.</div></div></div>
+
+              <div style="display:flex;flex-wrap:wrap;gap:9px;margin:20px 0 22px">
+                <sc-for list="{{ personas }}" as="p" hint-placeholder-count="4"><div onClick="{{ p.pick }}" style="display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:30px;cursor:pointer;background:{{ p.bg }};border:1px solid {{ p.border }};color:{{ p.color }};font-size:13.5px;font-weight:500;transition:all .2s"><span class="ms" style="font-size:17px">{{ p.icon }}</span>{{ p.name }}</div></sc-for>
+              </div>
+
+              <!-- TODAY overview -->
+              <sc-if value="{{ isWellToday }}" hint-placeholder-val="{{ true }}">
+              <div style="max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+                <div style="padding:18px;border-radius:20px;background:{{ t.panel }};border:1px solid {{ t.border }}">
+                  <div style="font-size:14px;font-weight:600;margin-bottom:3px">How are you feeling today?</div>
+                  <div style="font-size:12px;color:{{ t.muted }};margin-bottom:14px">A quick daily check-in.</div>
+                  <div style="display:flex;justify-content:space-between;gap:6px">
+                    <sc-for list="{{ moods }}" as="md" hint-placeholder-count="5"><div onClick="{{ md.pick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 0;border-radius:14px;cursor:pointer;background:{{ md.bg }};border:1px solid {{ md.border }};transition:all .18s"><div style="font-size:24px;filter:{{ md.filter }}">{{ md.emoji }}</div><div style="font-size:10.5px;color:{{ md.muted }}">{{ md.label }}</div></div></sc-for>
+                  </div>
+                </div>
+                <div style="padding:18px;border-radius:20px;background:{{ t.panel }};border:1px solid {{ t.border }}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div style="font-size:14px;font-weight:600">Mood this week</div><div style="font-size:11.5px;color:{{ t.faint }}">7 days</div></div>
+                  <svg viewBox="0 0 300 110" style="width:100%;height:96px;overflow:visible">
+                    <defs><linearGradient id="anvMoodFillT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{{ t.accentSolid }}" stop-opacity="0.32"></stop><stop offset="1" stop-color="{{ t.accentSolid }}" stop-opacity="0"></stop></linearGradient></defs>
+                    <path d="{{ moodArea }}" fill="url(#anvMoodFillT)"></path>
+                    <path d="{{ moodPath }}" fill="none" stroke="{{ t.accentSolid }}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <circle cx="250" cy="25" r="4.5" fill="{{ t.accentSolid }}"></circle>
+                    <circle cx="250" cy="25" r="9" fill="{{ t.accentSolid }}" opacity="0.22"></circle>
+                  </svg>
+                  <div style="display:flex;justify-content:space-between;font-size:10px;color:{{ t.faint }};margin-top:4px"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+                </div>
+                <div onClick="{{ goTalk }}" style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:18px;cursor:pointer;background:{{ t.grad }};box-shadow:{{ t.btnGlow }}"><span class="ms" style="font-size:22px;color:#fff">forum</span><div style="flex:1"><div style="font-size:14px;font-weight:600;color:#fff">Want to talk it out?</div><div style="font-size:12px;color:rgba(255,255,255,.85)">Open a conversation with AbhiNova</div></div><span class="ms" style="font-size:20px;color:#fff">arrow_forward</span></div>
+              </div>
+              </sc-if>
+
+              <!-- TALK -->
+              <sc-if value="{{ isWellTalk }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;grid-template-columns:{{ wellCols }};gap:16px;align-items:start">
+                <!-- chat -->
+                <div style="padding:20px;border-radius:20px;background:{{ t.panel }};border:1px solid {{ t.border }}">
+                  <div style="display:flex;gap:11px;margin-bottom:16px"><div style="width:30px;height:30px;flex:none;border-radius:50%;background:{{ t.grad }};display:grid;place-items:center;color:#fff"><span class="ms" style="font-size:17px">favorite</span></div><div style="flex:1;padding:12px 15px;border-radius:6px 16px 16px 16px;background:{{ t.aiBubble }};font-size:14px;line-height:1.6">Hi Abhinav. It sounds like today carried a lot. We can sit with it together — no fixing needed. What's the loudest thought right now?</div></div>
+                  <div style="display:flex;justify-content:flex-end"><div style="max-width:80%;padding:11px 15px;border-radius:16px 6px 16px 16px;color:{{ t.userText }};background:{{ t.userBubble }};font-size:14px;line-height:1.55">Just feeling stretched thin before the release.</div></div>
+                  <div style="margin-top:18px;display:flex;align-items:center;gap:9px;padding:7px 7px 7px 15px;border-radius:18px;background:{{ t.inputBg }};border:1px solid {{ t.border }}"><input placeholder="Share what's on your mind…" style="flex:1;border:none;background:transparent;color:{{ t.text }};font-size:14px"><button style="display:grid;place-items:center;width:38px;height:38px;border:none;border-radius:13px;cursor:pointer;color:#fff;background:{{ t.grad }}"><span class="ms" style="font-size:19px">arrow_upward</span></button></div>
+                </div>
+                <!-- right rail -->
+                <div style="display:flex;flex-direction:column;gap:16px">
+                  <!-- mood check-in -->
+                  <div style="padding:18px;border-radius:20px;background:{{ t.panel }};border:1px solid {{ t.border }}">
+                    <div style="font-size:14px;font-weight:600;margin-bottom:3px">How are you feeling?</div>
+                    <div style="font-size:12px;color:{{ t.muted }};margin-bottom:14px">A quick daily check-in.</div>
+                    <div style="display:flex;justify-content:space-between;gap:6px">
+                      <sc-for list="{{ moods }}" as="md" hint-placeholder-count="5"><div onClick="{{ md.pick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 0;border-radius:14px;cursor:pointer;background:{{ md.bg }};border:1px solid {{ md.border }};transition:all .18s"><div style="font-size:24px;filter:{{ md.filter }}">{{ md.emoji }}</div><div style="font-size:10.5px;color:{{ md.muted }}">{{ md.label }}</div></div></sc-for>
+                    </div>
+                  </div>
+                  <!-- trend chart -->
+                  <div style="padding:18px;border-radius:20px;background:{{ t.panel }};border:1px solid {{ t.border }}">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div style="font-size:14px;font-weight:600">Mood this week</div><div style="font-size:11.5px;color:{{ t.faint }}">7 days</div></div>
+                    <svg viewBox="0 0 300 110" style="width:100%;height:96px;overflow:visible">
+                      <defs><linearGradient id="anvMoodFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{{ t.accentSolid }}" stop-opacity="0.32"></stop><stop offset="1" stop-color="{{ t.accentSolid }}" stop-opacity="0"></stop></linearGradient></defs>
+                      <path d="{{ moodArea }}" fill="url(#anvMoodFill)"></path>
+                      <path d="{{ moodPath }}" fill="none" stroke="{{ t.accentSolid }}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                      <circle cx="250" cy="25" r="4.5" fill="{{ t.accentSolid }}"></circle>
+                      <circle cx="250" cy="25" r="9" fill="{{ t.accentSolid }}" opacity="0.22"></circle>
+                    </svg>
+                    <div style="display:flex;justify-content:space-between;font-size:10px;color:{{ t.faint }};margin-top:4px"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+                  </div>
+                  <!-- journal -->
+                  <div style="padding:18px;border-radius:20px;background:{{ t.panel }};border:1px solid {{ t.border }}">
+                    <div style="font-size:14px;font-weight:600;margin-bottom:11px;display:flex;align-items:center;gap:7px"><span class="ms" style="font-size:17px;color:{{ t.accentSolid }}">edit_note</span>Thought journal</div>
+                    <textarea rows="3" placeholder="Write freely. Nothing here is judged…" style="width:100%;padding:12px 13px;border-radius:13px;background:{{ t.inputBg }};border:1px solid {{ t.border }};color:{{ t.text }};font-size:13.5px;line-height:1.6;resize:none"></textarea>
+                    <button style="margin-top:10px;width:100%;height:40px;border:none;border-radius:11px;cursor:pointer;color:#fff;font-size:13.5px;font-weight:600;background:{{ t.grad }};transition:transform .15s,filter .15s" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Save entry</button>
+                  </div>
+                </div>
+              </div>
+              </sc-if>
+
+              <!-- JOURNAL -->
+              <sc-if value="{{ isWellJournal }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+                <div style="padding:20px;border-radius:20px;background:{{ t.panel }};border:1px solid {{ t.border }}">
+                  <div style="font-size:15px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px"><span class="ms" style="font-size:19px;color:{{ t.accentSolid }}">edit_note</span>New entry</div>
+                  <textarea rows="4" placeholder="Write freely. Nothing here is judged…" style="width:100%;padding:13px 14px;border-radius:13px;background:{{ t.inputBg }};border:1px solid {{ t.border }};color:{{ t.text }};font-size:14px;line-height:1.6;resize:none"></textarea>
+                  <button onClick="{{ saveJournal }}" style="margin-top:11px;width:100%;height:42px;border:none;border-radius:11px;cursor:pointer;color:#fff;font-size:14px;font-weight:600;background:{{ t.grad }};box-shadow:{{ t.btnGlow }};transition:transform .15s,filter .15s" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Save entry</button>
+                </div>
+                <div style="font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:{{ t.faint }};margin-top:6px">Past entries</div>
+                <sc-for list="{{ journalEntries }}" as="j" hint-placeholder-count="3">
+                  <div style="padding:15px 17px;border-radius:15px;background:{{ j.panel }};border:1px solid {{ j.border }}">
+                    <div style="font-size:11.5px;color:{{ j.faint }};margin-bottom:6px">{{ j.dateLabel }}</div>
+                    <div style="font-size:13.5px;line-height:1.6;color:{{ j.text }}">{{ j.text }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              </sc-if>
+
+              <!-- INSIGHTS -->
+              <sc-if value="{{ isWellInsights }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+                <div style="padding:20px;border-radius:20px;background:{{ t.panel }};border:1px solid {{ t.border }}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:15px;font-weight:600">Mood trend</div><div style="font-size:11.5px;color:{{ t.faint }}">Last 7 days</div></div>
+                  <svg viewBox="0 0 300 130" style="width:100%;height:150px;overflow:visible">
+                    <defs><linearGradient id="anvMoodFillI" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{{ t.accentSolid }}" stop-opacity="0.32"></stop><stop offset="1" stop-color="{{ t.accentSolid }}" stop-opacity="0"></stop></linearGradient></defs>
+                    <path d="{{ moodArea }}" fill="url(#anvMoodFillI)"></path>
+                    <path d="{{ moodPath }}" fill="none" stroke="{{ t.accentSolid }}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <circle cx="250" cy="25" r="5" fill="{{ t.accentSolid }}"></circle>
+                    <circle cx="250" cy="25" r="10" fill="{{ t.accentSolid }}" opacity="0.22"></circle>
+                  </svg>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:{{ t.faint }};margin-top:6px"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div style="padding:16px;border-radius:15px;background:{{ t.panel }};border:1px solid {{ t.border }};text-align:center"><div style="font-size:22px;font-weight:700;color:{{ t.accentSolid }}">4.1</div><div style="font-size:12px;color:{{ t.muted }};margin-top:3px">Avg mood this week</div></div>
+                  <div style="padding:16px;border-radius:15px;background:{{ t.panel }};border:1px solid {{ t.border }};text-align:center"><div style="font-size:22px;font-weight:700;color:{{ t.accentSolid }}">5</div><div style="font-size:12px;color:{{ t.muted }};margin-top:3px">Check-ins logged</div></div>
+                </div>
+              </div>
+              </sc-if>
+            </div>
+            </sc-if>
+
+            <!-- ---------- CODE STUDIO ---------- -->
+            <sc-if value="{{ isCode }}" hint-placeholder-val="{{ false }}">
+
+            <!-- code home -->
+            <sc-if value="{{ isCodeHome }}" hint-placeholder-val="{{ true }}">
+            <div style="height:100%;overflow-y:auto">
+              <div style="max-width:880px;margin:0 auto;padding:36px 26px 44px;animation:anv-rise .45s ease both">
+                <!-- hero -->
+                <div style="position:relative;overflow:hidden;border-radius:24px;padding:30px 30px 28px;background:{{ t.grad }};box-shadow:{{ t.btnGlow }};margin-bottom:28px">
+                  <div style="position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.16);filter:blur(8px)"></div>
+                  <div style="position:absolute;right:90px;bottom:-60px;width:140px;height:140px;border-radius:50%;border:1px solid rgba(255,255,255,.3)"></div>
+                  <div style="position:absolute;right:30px;top:30px;font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.55);line-height:1.7;text-align:right">&lt;/&gt; build<br>⌥ fix<br>↻ refactor</div>
+                  <div style="position:relative;display:flex;align-items:center;gap:14px;margin-bottom:16px">
+                    <div style="width:52px;height:52px;border-radius:15px;background:rgba(255,255,255,.18);backdrop-filter:blur(6px);display:grid;place-items:center;color:#fff"><span class="ms" style="font-size:28px">terminal</span></div>
+                    <div><div style="font-size:26px;font-weight:700;letter-spacing:-.6px;color:#fff">Code Studio</div><div style="font-size:14px;color:rgba(255,255,255,.85)">Open a folder and let AbhiNova build, edit and fix with you.</div></div>
+                  </div>
+                  <div style="position:relative;display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
+                    <button onClick="{{ pickFolder }}" style="display:flex;align-items:center;gap:8px;height:42px;padding:0 18px;border:none;border-radius:12px;cursor:pointer;background:#fff;color:#1b1d28;font-size:14px;font-weight:600"><span class="ms" style="font-size:19px">folder_open</span>Open a folder</button>
+                    <button onClick="{{ startTemplate }}" style="display:flex;align-items:center;gap:8px;height:42px;padding:0 18px;border:1px solid rgba(255,255,255,.4);border-radius:12px;cursor:pointer;background:rgba(255,255,255,.12);color:#fff;font-size:14px;font-weight:600"><span class="ms" style="font-size:19px">add</span>New project</button>
+                    <button onClick="{{ openProject }}" style="display:flex;align-items:center;gap:8px;height:42px;padding:0 18px;border:1px solid rgba(255,255,255,.4);border-radius:12px;cursor:pointer;background:transparent;color:#fff;font-size:14px;font-weight:600"><span class="ms" style="font-size:19px">cloud</span>Clone from Git</button>
+                  </div>
+                </div>
+                <!-- recent projects -->
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px">
+                  <div style="font-size:15px;font-weight:600;letter-spacing:-.2px">Recent projects</div>
+                  <span style="font-size:12.5px;color:{{ t.faint }};cursor:pointer">View all</span>
+                </div>
+                <div style="display:grid;grid-template-columns:{{ codeHomeCols }};gap:13px;margin-bottom:30px">
+                  <sc-for list="{{ codeProjects }}" as="p" hint-placeholder-count="3">
+                    <div onClick="{{ p.open }}" style="position:relative;padding:17px;border-radius:16px;cursor:pointer;background:{{ p.panel }};border:1px solid {{ p.border }};transition:transform .18s ease,border-color .18s,box-shadow .18s" style-hover="transform:translateY(-3px);border-color:{{ p.borderStrong }};box-shadow:{{ p.hoverGlow }}">
+                      <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px">
+                        <div style="width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:{{ p.tint }}22;color:{{ p.tint }}"><span class="ms" style="font-size:20px">{{ p.icon }}</span></div>
+                        <span style="width:8px;height:8px;border-radius:50%;background:{{ p.dot }};box-shadow:0 0 8px {{ p.dot }}"></span>
+                      </div>
+                      <div style="font-size:14.5px;font-weight:600;margin-bottom:4px">{{ p.name }}</div>
+                      <div style="font-size:12px;color:{{ p.faint }}">{{ p.meta }}</div>
+                      <div style="font-size:11.5px;color:{{ p.muted }};margin-top:9px;padding-top:9px;border-top:1px solid {{ p.border }}">{{ p.files }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <!-- templates -->
+                <div style="font-size:15px;font-weight:600;letter-spacing:-.2px;margin-bottom:13px">Start from a template</div>
+                <div style="display:grid;grid-template-columns:{{ codeHomeCols }};gap:13px">
+                  <sc-for list="{{ codeTemplates }}" as="tpl" hint-placeholder-count="4">
+                    <div onClick="{{ tpl.start }}" style="display:flex;align-items:center;gap:13px;padding:15px 16px;border-radius:15px;cursor:pointer;background:{{ tpl.panel }};border:1px solid {{ tpl.border }};transition:border-color .18s,transform .18s" style-hover="border-color:{{ tpl.borderStrong }};transform:translateY(-2px)">
+                      <div style="width:40px;height:40px;flex:none;border-radius:11px;display:grid;place-items:center;background:{{ tpl.tint }}22;color:{{ tpl.tint }}"><span class="ms" style="font-size:21px">{{ tpl.icon }}</span></div>
+                      <div style="min-width:0"><div style="font-size:13.5px;font-weight:600">{{ tpl.name }}</div><div style="font-size:12px;color:{{ tpl.muted }};margin-top:2px">{{ tpl.desc }}</div></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+            </sc-if>
+
+            <!-- code editor -->
+            <sc-if value="{{ isCodeEditor }}" hint-placeholder-val="{{ false }}">
+            <div style="height:100%;display:flex;flex-direction:column;animation:anv-rise .4s ease both">
+              <!-- editor toolbar -->
+              <div style="flex:none;display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid {{ t.border }}">
+                <div onClick="{{ backCodeHome }}" style="display:grid;place-items:center;width:32px;height:32px;border-radius:9px;cursor:pointer;color:{{ t.muted }}" style-hover="background:{{ t.panel }};color:{{ t.text }}"><span class="ms" style="font-size:19px">arrow_back</span></div>
+                <div style="display:flex;align-items:center;gap:9px;flex:1;min-width:0">
+                  <span class="ms" style="font-size:18px;color:{{ t.accentSolid }}">folder_open</span>
+                  <span style="font-size:14px;font-weight:600">abhinova-api</span>
+                  <span style="font-size:12px;color:{{ t.faint }};padding:2px 8px;border-radius:20px;border:1px solid {{ t.border }}">main</span>
+                </div>
+                <button onClick="{{ saveCode }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid {{ t.border }};border-radius:10px;cursor:pointer;background:transparent;color:{{ t.text }};font-size:13px;font-weight:500" style-hover="background:{{ t.panel }}"><span class="ms" style="font-size:17px">save</span>Save</button>
+                <button onClick="{{ runCode }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:none;border-radius:10px;cursor:pointer;color:#fff;font-size:13px;font-weight:600;background:{{ t.grad }};box-shadow:{{ t.btnGlow }};transition:transform .15s" style-active="transform:scale(.96)"><span class="ms" style="font-size:17px">play_arrow</span>Run</button>
+              </div>
+              <!-- 3-pane body -->
+              <div style="flex:1;min-height:0;display:grid;grid-template-columns:{{ codeCols }}">
+                <!-- explorer -->
+                <div style="border-right:1px solid {{ t.border }};display:flex;flex-direction:column;min-height:0;background:{{ t.topbar }}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px 9px">
+                    <span style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:{{ t.faint }}">Explorer</span>
+                    <span onClick="{{ newCodeFile }}" class="ms" style="font-size:17px;color:{{ t.faint }};cursor:pointer" style-hover="color:{{ t.text }}">note_add</span>
+                  </div>
+                  <div style="flex:1;overflow-y:auto;padding:0 6px 10px">
+                    <sc-for list="{{ codeTree }}" as="f" hint-placeholder-count="7">
+                      <div onClick="{{ f.open }}" style="position:relative;display:flex;align-items:center;gap:8px;height:32px;padding-left:{{ f.pad }};padding-right:8px;border-radius:8px;cursor:pointer;font-size:13px;color:{{ f.fg }};background:{{ f.bg }};transition:background .15s" style-hover="background:{{ f.panel }}">
+                        <span style="position:absolute;left:0;top:6px;bottom:6px;width:2.5px;border-radius:3px;background:{{ f.bar }}"></span>
+                        <span class="ms" style="font-size:17px;color:{{ f.ficonColor }}">{{ f.ficon }}</span>
+                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.name }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+                <!-- editor -->
+                <div style="display:flex;flex-direction:column;min-height:0;min-width:0">
+                  <div style="flex:none;display:flex;align-items:center;gap:1px;padding:0 10px;border-bottom:1px solid {{ t.border }};background:{{ t.topbar }}">
+                    <div style="display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-bottom:2px solid {{ t.accentSolid }};font-size:13px;font-weight:500"><span class="ms" style="font-size:16px;color:{{ t.accentSolid }}">javascript</span>{{ codeActiveFile }}<span class="ms" style="font-size:15px;color:{{ t.faint }};margin-left:4px">close</span></div>
+                  </div>
+                  <div style="flex:1;overflow:auto;background:{{ t.codeBg }};font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.7;padding:12px 0">
+                    <sc-for list="{{ codeLines }}" as="ln" hint-placeholder-count="14">
+                      <div style="display:flex">
+                        <span style="flex:none;width:46px;text-align:right;padding-right:14px;color:{{ ln.faint }};user-select:none">{{ ln.num }}</span>
+                        <span style="flex:1;white-space:pre;color:{{ ln.code }};padding-right:18px">{{ ln.text }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="flex:none;display:flex;align-items:center;gap:14px;padding:7px 16px;border-top:1px solid {{ t.border }};background:{{ t.topbar }};font-size:11.5px;color:{{ t.faint }}">
+                    <span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:#3fb950"></span>{{ codeLang }}</span>
+                    <span>UTF-8</span><span>LF</span><span style="flex:1"></span><span>Ln 1, Col 1</span>
+                  </div>
+                </div>
+                <!-- AI assistant -->
+                <sc-if value="{{ showCodeAssistant }}" hint-placeholder-val="{{ true }}">
+                <div style="border-left:1px solid {{ t.border }};display:flex;flex-direction:column;min-height:0;min-width:0;background:{{ t.topbar }}">
+                  <div style="flex:none;display:flex;align-items:center;gap:9px;padding:13px 16px;border-bottom:1px solid {{ t.border }}">
+                    <div style="width:26px;height:26px;border-radius:8px;background:{{ t.grad }};display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="#fff" style="width:14px;height:14px"><path d="M12 1l2.2 8.0L22 12l-7.8 2.9L12 23l-2.2-8.1L2 12l7.8-2.9z"/></svg></div>
+                    <span style="font-size:13.5px;font-weight:600">Code assistant</span>
+                  </div>
+                  <div style="flex:1;overflow-y:auto;padding:16px">
+                    <sc-if value="{{ codeChatEmpty }}" hint-placeholder-val="{{ true }}">
+                    <div style="font-size:13px;color:{{ t.muted }};line-height:1.6;margin-bottom:12px">Ask me to explain, fix, refactor, add features, write tests — or scaffold a whole app or website.</div>
+                    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:9px 11px;border-radius:11px;background:{{ t.inset }};border:1px solid {{ t.border }};margin-bottom:16px">
+                      <span class="ms" style="font-size:15px;color:{{ t.accentSolid }}">layers</span>
+                      <span style="font-size:11.5px;color:{{ t.muted }}">4 files in context</span>
+                      <span style="font-size:10.5px;font-family:'JetBrains Mono',monospace;color:{{ t.faint }}">app.js · auth.js · utils.js · README.md</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                      <sc-for list="{{ codeCaps }}" as="cap" hint-placeholder-count="6">
+                        <div onClick="{{ cap.go }}" style="display:flex;align-items:center;gap:8px;padding:11px 12px;border-radius:11px;cursor:pointer;background:{{ cap.panel }};border:1px solid {{ cap.border }};font-size:12.5px;font-weight:500;transition:border-color .15s,transform .15s" style-hover="border-color:{{ cap.borderStrong }};transform:translateY(-1px)"><span class="ms" style="font-size:18px;color:{{ cap.accent }}">{{ cap.icon }}</span>{{ cap.label }}</div>
+                      </sc-for>
+                    </div>
+                    <div style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:{{ t.faint }};margin:20px 0 9px">Try asking</div>
+                    <div style="display:flex;flex-direction:column;gap:7px">
+                      <sc-for list="{{ codeExamples }}" as="ex" hint-placeholder-count="4">
+                        <div onClick="{{ ex.go }}" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:10px;cursor:pointer;background:transparent;border:1px solid {{ ex.border }};font-size:12.5px;color:{{ ex.muted }};line-height:1.4;transition:background .15s,color .15s" style-hover="background:{{ ex.panel }};color:{{ ex.text }}"><span class="ms" style="font-size:15px;color:{{ ex.accent }};flex:none">{{ ex.icon }}</span><span style="flex:1">{{ ex.text }}</span><span class="ms" style="font-size:15px;color:{{ ex.faint }}">north_east</span></div>
+                      </sc-for>
+                    </div>
+                    </sc-if>
+                    <sc-for list="{{ codeChat }}" as="m" hint-placeholder-count="0">
+                      <sc-if value="{{ m.isUser }}" hint-placeholder-val="{{ true }}">
+                        <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><div style="max-width:88%;padding:10px 13px;border-radius:14px 14px 4px 14px;color:{{ m.userText }};background:{{ m.userBubble }};font-size:13px;line-height:1.5">{{ m.text }}</div></div>
+                      </sc-if>
+                      <sc-if value="{{ m.isAi }}" hint-placeholder-val="{{ false }}">
+                        <div style="display:flex;gap:9px;margin-bottom:16px">
+                          <div style="width:24px;height:24px;flex:none;border-radius:7px;background:{{ m.grad }};display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="#fff" style="width:12px;height:12px"><path d="M12 1l2.2 8.0L22 12l-7.8 2.9L12 23l-2.2-8.1L2 12l7.8-2.9z"/></svg></div>
+                          <div style="flex:1;min-width:0">
+                            <div style="font-size:13px;line-height:1.6">{{ m.text }}</div>
+                            <sc-if value="{{ m.hasBullets }}" hint-placeholder-val="{{ false }}">
+                              <div style="margin-top:9px;display:flex;flex-direction:column;gap:7px">
+                                <sc-for list="{{ m.bulletsArr }}" as="b" hint-placeholder-count="3">
+                                  <div style="display:flex;gap:8px;font-size:12.5px;line-height:1.5;color:{{ b.muted }}"><span class="ms" style="font-size:15px;color:{{ b.accent }};flex:none">chevron_right</span><span>{{ b.text }}</span></div>
+                                </sc-for>
+                              </div>
+                            </sc-if>
+                            <sc-if value="{{ m.hasCode }}" hint-placeholder-val="{{ false }}">
+                              <div style="margin-top:10px;border-radius:10px;overflow:hidden;border:1px solid {{ m.border }}">
+                                <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:{{ m.inset }};border-bottom:1px solid {{ m.border }}"><span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:{{ m.muted }}">{{ m.codeFile }}</span><span onClick="{{ m.applyCode }}" style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:{{ m.accent }};cursor:pointer"><span class="ms" style="font-size:14px">check</span>Apply</span></div>
+                                <pre style="margin:0;padding:11px;background:{{ m.codeBg }};overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.7;color:{{ m.code }};white-space:pre">{{ m.code }}</pre>
+                              </div>
+                            </sc-if>
+                            <sc-if value="{{ m.hasDiff }}" hint-placeholder-val="{{ false }}">
+                              <div style="margin-top:10px;border-radius:10px;overflow:hidden;border:1px solid {{ m.border }};font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.65"><div style="padding:7px 11px;background:rgba(248,81,73,.12);color:#f85149">- res.redirect('/home');</div><div style="padding:7px 11px;background:rgba(63,185,80,.12);color:#3fb950">+ onSuccess(() =&gt; res.redirect('/home'));</div></div>
+                              <div style="display:flex;gap:7px;margin-top:9px"><button onClick="{{ m.applyCode }}" style="height:30px;padding:0 13px;border:none;border-radius:8px;cursor:pointer;color:#fff;font-size:12px;font-weight:600;background:{{ m.grad }}">Apply patch</button><button style="height:30px;padding:0 12px;border:1px solid {{ m.border }};border-radius:8px;cursor:pointer;background:transparent;color:{{ m.muted }};font-size:12px">Dismiss</button></div>
+                            </sc-if>
+                            <sc-if value="{{ m.hasFiles }}" hint-placeholder-val="{{ false }}">
+                              <div style="margin-top:10px;border-radius:11px;overflow:hidden;border:1px solid {{ m.border }}">
+                                <sc-for list="{{ m.filesArr }}" as="f" hint-placeholder-count="4">
+                                  <div style="display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid {{ f.border }};background:{{ f.panel }}"><span class="ms" style="font-size:16px;color:{{ f.accent }}">note_add</span><span style="font-size:12px;font-family:'JetBrains Mono',monospace;font-weight:600">{{ f.file }}</span><span style="font-size:11.5px;color:{{ f.faint }};margin-left:auto">{{ f.desc }}</span></div>
+                                </sc-for>
+                              </div>
+                              <button onClick="{{ m.createAll }}" style="display:flex;align-items:center;gap:7px;margin-top:10px;height:34px;padding:0 15px;border:none;border-radius:9px;cursor:pointer;color:#fff;font-size:12.5px;font-weight:600;background:{{ m.grad }};box-shadow:{{ m.btnGlow }}"><span class="ms" style="font-size:16px">bolt</span>{{ m.cta }}</button>
+                            </sc-if>
+                            <sc-if value="{{ m.hasNote }}" hint-placeholder-val="{{ false }}">
+                              <div style="font-size:12.5px;line-height:1.55;color:{{ m.muted }};margin-top:10px">{{ m.note }}</div>
+                            </sc-if>
+                          </div>
+                        </div>
+                      </sc-if>
+                    </sc-for>
+                    <sc-if value="{{ codeThinking }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;gap:9px;align-items:center"><div style="position:relative;width:24px;height:24px;flex:none"><div style="position:absolute;inset:-2px;border-radius:50%;background:conic-gradient(from 0deg,transparent,{{ t.accentSolid }},transparent 60%);animation:anv-orbit 1.3s linear infinite;mask:radial-gradient(closest-side,transparent 62%,#000 64%);-webkit-mask:radial-gradient(closest-side,transparent 62%,#000 64%)"></div></div><span style="font-size:12.5px;color:{{ t.muted }}">Working across your files<span style="animation:anv-blink 1.2s infinite">…</span></span></div>
+                    </sc-if>
+                  </div>
+                  <div style="flex:none;padding:12px 14px;border-top:1px solid {{ t.border }}">
+                    <div style="display:flex;align-items:flex-end;gap:8px;padding:7px 7px 7px 13px;border-radius:14px;background:{{ t.inputBg }};border:1px solid {{ t.border }}">
+                      <textarea value="{{ codeInput }}" onChange="{{ onCodeInput }}" placeholder="Ask to build or fix…" rows="1" style="flex:1;border:none;background:transparent;color:{{ t.text }};font-size:13px;line-height:1.5;resize:none;max-height:90px;padding:6px 0"></textarea>
+                      <button onClick="{{ sendCode }}" style="display:grid;place-items:center;width:34px;height:34px;flex:none;border:none;border-radius:10px;cursor:pointer;color:#fff;background:{{ t.grad }}"><span class="ms" style="font-size:18px">arrow_upward</span></button>
+                    </div>
+                  </div>
+                </div>
+                </sc-if>
+              </div>
+            </div>
+            </sc-if>
+            </sc-if>
+
+            <!-- ---------- SETTINGS ---------- -->
+            <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+            <div style="max-width:680px;margin:0 auto;padding:30px 22px;animation:anv-rise .4s ease both">
+              <div style="font-size:21px;font-weight:700;letter-spacing:-.4px;margin-bottom:20px">Settings</div>
+              <div style="padding:20px;border-radius:17px;background:{{ t.panel }};border:1px solid {{ t.border }};margin-bottom:14px">
+                <div style="font-size:13px;font-weight:600;color:{{ t.muted }};margin-bottom:14px">Appearance</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+                  <div onClick="{{ themeDark }}" style="padding:14px;border-radius:13px;cursor:pointer;background:#0a0b12;border:2px solid {{ selDark }};text-align:center"><div style="height:34px;border-radius:8px;background:linear-gradient(120deg,#4f8cff,#9a6bff);margin-bottom:9px"></div><div style="font-size:12.5px;font-weight:600;color:#e9ebf5">Dark</div></div>
+                  <div onClick="{{ themeLight }}" style="padding:14px;border-radius:13px;cursor:pointer;background:#f4f2ee;border:2px solid {{ selLight }};text-align:center"><div style="height:34px;border-radius:8px;background:linear-gradient(120deg,#3b6fe0,#8b5cf6);margin-bottom:9px"></div><div style="font-size:12.5px;font-weight:600;color:#1b1d28">Light</div></div>
+                  <div onClick="{{ themeWell }}" style="padding:14px;border-radius:13px;cursor:pointer;background:#f4ede4;border:2px solid {{ selWell }};text-align:center"><div style="height:34px;border-radius:8px;background:linear-gradient(120deg,#f0a868,#e58aa0);margin-bottom:9px"></div><div style="font-size:12.5px;font-weight:600;color:#3c342e">Wellness</div></div>
+                </div>
+              </div>
+              <div style="padding:6px 20px;border-radius:17px;background:{{ t.panel }};border:1px solid {{ t.border }}">
+                <sc-for list="{{ settingRows }}" as="sr" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:13px;padding:15px 12px;margin:0 -12px;border-radius:12px;border-bottom:1px solid {{ sr.border }};cursor:pointer;transition:background .15s" style-hover="background:{{ sr.panel }}" onClick="{{ sr.toggle }}"><span class="ms" style="font-size:21px;color:{{ sr.muted }}">{{ sr.icon }}</span><div style="flex:1"><div style="font-size:14px;font-weight:500">{{ sr.label }}</div><div style="font-size:12px;color:{{ sr.faint }}">{{ sr.desc }}</div></div><span style="width:38px;height:22px;border-radius:20px;background:{{ sr.track }};position:relative;transition:background .2s"><span style="position:absolute;top:2px;left:{{ sr.knob }};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s"></span></span></div></sc-for>
+              </div>
+            </div>
+            </sc-if>
+
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== CMD+K ===================== -->
+      <sc-if value="{{ cmdk }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeCmd }}" style="position:absolute;inset:0;z-index:120;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;justify-content:center;padding-top:14vh">
+        <div onClick="{{ stop }}" style="width:90%;max-width:560px;height:max-content;max-height:60vh;border-radius:20px;overflow:hidden;background:{{ t.glassSolid }};backdrop-filter:blur(30px) saturate(1.4);-webkit-backdrop-filter:blur(30px) saturate(1.4);border:1px solid {{ t.borderStrong }};box-shadow:{{ t.shadow }};animation:anv-rise .25s ease both;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid {{ t.border }}"><span class="ms" style="font-size:21px;color:{{ t.muted }}">search</span><input autofocus placeholder="Search actions, tools, docs…" style="flex:1;border:none;background:transparent;color:{{ t.text }};font-size:16px"><span style="font-size:11px;padding:2px 7px;border-radius:6px;background:{{ t.inset }};border:1px solid {{ t.border }};color:{{ t.faint }}">esc</span></div>
+          <div style="overflow-y:auto;padding:8px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:{{ t.faint }};padding:8px 12px 4px">Quick actions</div>
+            <sc-for list="{{ cmdItems }}" as="ci" hint-placeholder-count="5"><div onClick="{{ ci.go }}" style="display:flex;align-items:center;gap:13px;padding:11px 12px;border-radius:11px;cursor:pointer" style-hover="background:{{ ci.panel }}"><div style="width:30px;height:30px;border-radius:9px;background:{{ ci.gradSoft }};display:grid;place-items:center;color:{{ ci.accent }}"><span class="ms" style="font-size:17px">{{ ci.icon }}</span></div><span style="flex:1;font-size:14px;font-weight:500">{{ ci.label }}</span><span style="font-size:12px;color:{{ ci.faint }}">{{ ci.hint }}</span></div></sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== BREATHE ===================== -->
+      <sc-if value="{{ breathe }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;z-index:130;display:flex;flex-direction:column;align-items:center;justify-content:center;background:{{ t.glassSolid }};backdrop-filter:blur(30px) saturate(1.3);-webkit-backdrop-filter:blur(30px) saturate(1.3)">
+        <div onClick="{{ closeBreathe }}" style="position:absolute;top:20px;right:20px;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;cursor:pointer;background:{{ t.panel }};border:1px solid {{ t.border }};color:{{ t.muted }}"><span class="ms" style="font-size:20px">close</span></div>
+        <div style="position:relative;width:260px;height:260px;display:grid;place-items:center;margin-bottom:34px">
+          <div style="position:absolute;inset:0;border-radius:50%;background:{{ t.grad }};filter:blur(36px);opacity:.5;animation:anv-breath 14s ease-in-out infinite"></div>
+          <div style="position:absolute;inset:30px;border-radius:50%;border:1px solid {{ t.borderStrong }};animation:anv-breathSlow 14s ease-in-out infinite"></div>
+          <div style="position:absolute;inset:60px;border-radius:50%;border:1px solid {{ t.border }};animation:anv-breathSlow 14s ease-in-out infinite"></div>
+          <div style="width:130px;height:130px;border-radius:50%;background:{{ t.grad }};box-shadow:inset 0 0 30px rgba(255,255,255,.4);animation:anv-breathSlow 14s ease-in-out infinite;display:grid;place-items:center"><span class="ms" style="font-size:38px;color:#fff">air</span></div>
+        </div>
+        <div style="font-size:30px;font-weight:600;letter-spacing:-.5px;min-height:38px;transition:opacity .4s">{{ breathePhase }}</div>
+        <div style="font-size:14.5px;color:{{ t.muted }};margin-top:8px">Follow the circle · 4 rounds will reset your nervous system</div>
+        <div onClick="{{ closeBreathe }}" style="margin-top:30px;padding:11px 24px;border-radius:30px;cursor:pointer;background:{{ t.panel }};border:1px solid {{ t.borderStrong }};font-size:14px;font-weight:500">I feel calmer</div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== TOAST ===================== -->
+      <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:140;display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:13px;background:{{ t.glassSolid }};backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid {{ t.borderStrong }};box-shadow:{{ t.shadow }};animation:anv-rise .3s ease both"><span class="ms" style="font-size:19px;color:{{ t.accentSolid }}">check_circle</span><span style="font-size:13.5px;font-weight:500">{{ toast }}</span></div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1240,&quot;height&quot;:760}}">
+class Component extends DCLogic {
+  state = {
+    screen:'auth', theme:'dark', viewport:'desktop',
+    sidebarOpen:true, drawer:false, cmdk:false,
+    listening:false, thinking:false, input:'', showEmpty:true, convoLoaded:false,
+    messages:[], toast:null, ranTool:false, docPanel:false,
+    persona:'Dost', mood:null, model:'AbhiNova 2.0',
+    wellSection:'today', breathe:false, breathePhase:'Breathe in…', authTab:'in',
+    codeActive:'app.js', codeChat:[], codeThinking:false, codeInput:'', folderPicked:true, codeView:'home',
+    renameCtx:null, renameId:null, renameText:'', sessionSearch:'',
+    settings:{notifications:true,voice:true,motion:false},
+    recents:{
+      chat:[
+        {id:'c1',title:'Launch announcement draft',mins:35},
+        {id:'c2',title:'Names for a productivity app',mins:180},
+        {id:'c3',title:'Summarize the Q2 report',mins:1500},
+        {id:'c4',title:'Explain async/await simply',mins:4200},
+        {id:'c5',title:'Email to reschedule a call',mins:10200}
+      ],
+      qa:[
+        {id:'q1',title:'Checkout — discount codes',mins:90},
+        {id:'q2',title:'Login form edge cases',mins:2600},
+        {id:'q3',title:'Cart total bug report',mins:5900},
+        {id:'q4',title:'Regression plan — v4.2',mins:14000}
+      ],
+      docs:[
+        {id:'d1',title:'Refund window question',mins:60},
+        {id:'d2',title:'MSA renewal terms',mins:3000},
+        {id:'d3',title:'Onboarding checklist',mins:9000}
+      ],
+      code:[
+        {id:'k1',title:'Fix auth redirect bug',mins:20},
+        {id:'k2',title:'Build a REST API in Express',mins:1440},
+        {id:'k3',title:'Refactor cart reducer',mins:4000},
+        {id:'k4',title:'Add dark mode toggle',mins:8600}
+      ],
+      wellness:[
+        {id:'w1',title:'Pre-release stress',mins:50},
+        {id:'w2',title:'Wind-down before sleep',mins:900},
+        {id:'w3',title:'Gratitude — three things',mins:1600},
+        {id:'w4',title:'Morning intention',mins:2700}
+      ]
+    },
+    journalEntries:[
+      {id:'j1',mins:70,text:'Feeling stretched before the release, but proud of how the team pulled together today.'},
+      {id:'j2',mins:1500,text:'Slept badly. Going to try winding down without the phone tonight.'},
+      {id:'j3',mins:8800,text:'Grateful for a calm morning with coffee before the day got busy.'}
+    ],
+  };
+  componentDidMount(){
+    this._key=(e)=>{
+      if((e.metaKey||e.ctrlKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();this.setState(s=>({cmdk:!s.cmdk}));}
+      if(e.key==='Escape'){this.setState({cmdk:false,docPanel:false,drawer:false});}
+    };
+    window.addEventListener('keydown',this._key);
+  }
+  componentWillUnmount(){window.removeEventListener('keydown',this._key);clearInterval(this._breathe);}
+  startBreathe(){
+    this.setState({breathe:true,breathePhase:'Breathe in…',drawer:false,cmdk:false});
+    const phases=['Breathe in…','Hold','Breathe out…','Hold'];
+    let i=0;
+    clearInterval(this._breathe);
+    this._breathe=setInterval(()=>{i=(i+1)%phases.length;this.setState({breathePhase:phases[i]});},3500);
+  }
+  stopBreathe(){clearInterval(this._breathe);this.setState({breathe:false});}
+  removeRecent(ctx,id){
+    this.setState(s=>({recents:{...s.recents,[ctx]:s.recents[ctx].filter(x=>x.id!==id)}}));
+    this.toastMsg('Removed from history');
+  }
+  startRename(ctx,id,text){ this.setState({renameCtx:ctx,renameId:id,renameText:text}); }
+  commitRename(){
+    const {renameCtx,renameId,renameText}=this.state;
+    if(!renameCtx||!renameId) return;
+    const v=(renameText||'').trim();
+    if(v){
+      this.setState(s=>({recents:{...s.recents,[renameCtx]:s.recents[renameCtx].map(x=>x.id===renameId?{...x,title:v}:x)}}));
+    }
+    this.setState({renameCtx:null,renameId:null,renameText:''});
+  }
+  cancelRename(){ this.setState({renameCtx:null,renameId:null,renameText:''}); }
+  relTime(mins){
+    if(mins==null) return '';
+    if(mins<60) return mins+'m ago';
+    const hrs=Math.round(mins/60);
+    if(hrs<24) return hrs+'h ago';
+    const days=Math.round(hrs/24);
+    if(days<7) return days===1?'Yesterday':days+'d ago';
+    const weeks=Math.round(days/7);
+    if(weeks<5) return weeks+'w ago';
+    return Math.round(days/30)+'mo ago';
+  }
+  addSession(ctx){
+    const labels={chat:'New chat',qa:'New QA session',code:'New code session',docs:'New doc chat',wellness:'New session'};
+    const id=ctx+'-'+Date.now();
+    this.setState(s=>({recents:{...s.recents,[ctx]:[{id,title:labels[ctx]||'Untitled'},...s.recents[ctx]]}}));
+  }
+  newInContext(ctx){
+    if(ctx==='wellness'){ this.setState({screen:'wellness',wellSection:'talk',drawer:false,cmdk:false}); return; }
+    if(ctx==='qa'){ this.addSession('qa'); this.setState({screen:'qadetail',ranTool:false,drawer:false,cmdk:false}); return; }
+    if(ctx==='code'){ this.addSession('code'); this.setState({screen:'code',codeView:'editor',codeChat:[],drawer:false,cmdk:false}); return; }
+    if(ctx==='docs'){ this.addSession('docs'); this.setState({screen:'docs',docPanel:false,drawer:false,cmdk:false}); return; }
+    this.addSession('chat');
+    this.setState({screen:'chat',showEmpty:true,convoLoaded:false,messages:[],drawer:false,cmdk:false});
+  }
+  sendCode(text){
+    const v=((text!=null?text:this.state.codeInput)||'').trim();
+    if(!v) return;
+    this.setState(s=>({codeChat:[...s.codeChat,{isUser:true,text:v}],codeInput:'',codeThinking:true}));
+    const reply=this.codeReply(v);
+    clearTimeout(this._cr);
+    this._cr=setTimeout(()=>{
+      this.setState(s=>({codeThinking:false,codeChat:[...s.codeChat,{isAi:true,...reply}]}));
+    },1500);
+  }
+  codeReply(v){
+    const q=v.toLowerCase();
+    const file=this.state.codeActive;
+    if(/test|spec|unit/.test(q)) return {text:`Here are unit tests for ${file} using Vitest:`, codeFile:'auth.test.js', code:`import { describe, it, expect } from 'vitest';\nimport { login } from './auth.js';\n\ndescribe('auth', () => {\n  it('rejects an invalid password', async () => {\n    const res = await login({ email: 'a@b.com', password: 'x' });\n    expect(res.status).toBe(401);\n  });\n\n  it('issues a token on success', async () => {\n    const res = await login(validUser);\n    expect(res.body.token).toBeDefined();\n  });\n});`, note:'Covers the happy path and the 401 branch. Want edge cases (lockout, expired token) too?'};
+    if(/explain|understand|walk me|what does|how does|step/.test(q)) return {text:`Here's what ${file} does, step by step:`, bullets:['Creates an Express app and enables JSON body parsing.','Mounts the auth router at /api/auth for login & refresh.','Exposes GET /health returning a status + timestamp.','Listens on :3000 and logs once the server is ready.'], note:"It's the entry point — everything wires together here. Want a request-flow diagram?"};
+    if(/refactor|clean|rewrite|better|optimi|tidy|simplif/.test(q)) return {text:'Cleaned it up — extracted validation, consistent async/await, and a single error path:', codeFile:file, code:`authRouter.post('/login', async (req, res, next) => {\n  try {\n    const { email, password } = req.body;\n    const user = await findUser(email);\n    if (!user || !verify(password, user.hash))\n      throw new HttpError(401, 'Invalid credentials');\n\n    res.json({ token: signToken({ id: user.id }) });\n  } catch (err) {\n    next(err);\n  }\n});`, note:'Same behaviour, fewer branches, and errors now flow to your handler.'};
+    if(/bug|wrong|crash|broken|fix|fail|debug|\berror\b|\bissue\b/.test(q)) return {text:'I found the issue — the redirect fires before the token is stored, so the user lands logged-out. Patch:', diff:true, note:"Review the diff and hit Apply when you're happy."};
+    if(/website|landing|web ?site|web ?page|home ?page/.test(q)) return {text:"Love it — here's my plan for a landing page. I'll scaffold these files:", files:[{file:'index.html',desc:'Hero, features, pricing, footer'},{file:'styles.css',desc:'Design tokens + responsive layout'},{file:'main.js',desc:'Nav toggle + scroll reveal'},{file:'assets/',desc:'Logo & image folder'}], cta:'Create all files', note:"Approve and I'll generate each file, then we refine section by section."};
+    if(/application|build an|build a|make an|make a|create an|create a|dashboard|saas|new project|scaffold/.test(q)) return {text:"Here's how I'd structure that app. Proposed files:", files:[{file:'src/App.jsx',desc:'Root layout + routes'},{file:'src/api.js',desc:'Fetch wrapper for the backend'},{file:'src/components/',desc:'Reusable UI components'},{file:'server/index.js',desc:'Express API + endpoints'}], cta:'Scaffold project', note:"I'll wire the frontend to the API once you approve the structure."};
+    if(/add|feature|implement|endpoint|route|logout/.test(q)) return {text:'Added a logout route with token revocation. New file created:', codeFile:'src/routes/logout.js', code:`import { Router } from 'express';\nimport { revoke } from '../lib/jwt.js';\n\nexport const logoutRouter = Router();\n\nlogoutRouter.post('/logout', async (req, res) => {\n  await revoke(req.token);\n  res.json({ ok: true });\n});`, note:"Wire it in app.js with app.use('/api/auth', logoutRouter). Want me to do that?"};
+    return {text:"On it. I can explain code, find & fix bugs, refactor, add features, write tests, or scaffold a whole app or website — just tell me which file or what to build.", note:"I have all 4 files in context, so I'll keep any change consistent across them."};
+  }
+  toastMsg(m){this.setState({toast:m});clearTimeout(this._t);this._t=setTimeout(()=>this.setState({toast:null}),1900);}
+  go(s){this.setState({screen:s,drawer:false,cmdk:false,...(s==='code'?{codeView:'home'}:{})});}
+  themes(){
+    return {
+      dark:{
+        appBg:'radial-gradient(1100px 760px at 72% -12%, rgba(99,110,255,.16), transparent 58%), radial-gradient(900px 700px at 8% 112%, rgba(150,92,246,.14), transparent 55%), #06070d',
+        blobA:'radial-gradient(circle, rgba(79,140,255,.5), transparent 70%)',
+        blobB:'radial-gradient(circle, rgba(150,92,246,.42), transparent 70%)',
+        panel:'rgba(255,255,255,.045)', panel2:'rgba(255,255,255,.07)', inset:'rgba(255,255,255,.05)',
+        glass:'rgba(20,22,34,.55)', glassSolid:'rgba(16,18,28,.85)', topbar:'rgba(10,11,18,.55)', fade:'linear-gradient(180deg, transparent, rgba(6,7,13,.85) 40%)',
+        border:'rgba(255,255,255,.09)', borderStrong:'rgba(255,255,255,.16)',
+        text:'#eef0fa', muted:'#9096ad', faint:'#5d melt'.replace(' melt',''), 
+        grad:'linear-gradient(120deg,#4f8cff,#9a6bff)', gradSoft:'linear-gradient(120deg,rgba(79,140,255,.16),rgba(154,107,255,.16))',
+        accentSolid:'#7c8cff', inputBg:'rgba(255,255,255,.05)',
+        userBubble:'linear-gradient(120deg,#4f8cff,#9a6bff)', userText:'#fff', aiBubble:'rgba(255,255,255,.05)',
+        codeBg:'rgba(0,0,0,.4)', code:'#c8d2ff',
+        glow:'0 0 50px rgba(110,120,255,.4)', btnGlow:'0 8px 26px rgba(99,110,255,.4)', hoverGlow:'0 14px 40px rgba(99,110,255,.28)',
+        shadow:'0 24px 70px rgba(0,0,0,.55)', radius:'18px', gridLine:'rgba(255,255,255,.05)', gridOpacity:'1'
+      },
+      light:{
+        appBg:'radial-gradient(1100px 800px at 76% -12%, rgba(99,110,255,.12), transparent 58%), radial-gradient(900px 760px at 4% 112%, rgba(168,85,247,.09), transparent 55%), #f3f1ec',
+        blobA:'radial-gradient(circle, rgba(99,140,255,.28), transparent 70%)',
+        blobB:'radial-gradient(circle, rgba(168,85,247,.22), transparent 70%)',
+        panel:'rgba(255,255,255,.72)', panel2:'rgba(255,255,255,.92)', inset:'rgba(20,22,40,.05)',
+        glass:'rgba(255,255,255,.74)', glassSolid:'rgba(252,251,250,.92)', topbar:'rgba(248,247,244,.7)', fade:'linear-gradient(180deg, transparent, rgba(243,241,236,.92) 40%)',
+        border:'rgba(20,22,50,.09)', borderStrong:'rgba(20,22,50,.16)',
+        text:'#1b1d28', muted:'#5b6072', faint:'#9094a4',
+        grad:'linear-gradient(120deg,#3b6fe0,#8b5cf6)', gradSoft:'linear-gradient(120deg,rgba(59,111,224,.1),rgba(139,92,246,.1))',
+        accentSolid:'#5566e0', inputBg:'rgba(255,255,255,.85)',
+        userBubble:'linear-gradient(120deg,#3b6fe0,#8b5cf6)', userText:'#fff', aiBubble:'rgba(255,255,255,.85)',
+        codeBg:'rgba(20,22,45,.045)', code:'#3a3f70',
+        glow:'0 18px 50px rgba(80,90,180,.16)', btnGlow:'0 10px 26px rgba(80,100,220,.28)', hoverGlow:'0 16px 40px rgba(80,90,180,.16)',
+        shadow:'0 24px 60px rgba(60,64,110,.18)', radius:'18px', gridLine:'rgba(40,44,90,.06)', gridOpacity:'1'
+      },
+      wellness:{
+        appBg:'radial-gradient(1000px 820px at 80% -12%, rgba(240,168,104,.24), transparent 60%), radial-gradient(900px 800px at 4% 112%, rgba(229,138,160,.22), transparent 56%), #f4ede4',
+        blobA:'radial-gradient(circle, rgba(240,168,104,.4), transparent 70%)',
+        blobB:'radial-gradient(circle, rgba(229,138,160,.36), transparent 70%)',
+        panel:'rgba(255,251,246,.66)', panel2:'rgba(255,251,246,.92)', inset:'rgba(120,90,70,.06)',
+        glass:'rgba(255,251,246,.7)', glassSolid:'rgba(252,246,238,.94)', topbar:'rgba(250,243,235,.7)', fade:'linear-gradient(180deg, transparent, rgba(244,237,228,.92) 40%)',
+        border:'rgba(120,90,70,.12)', borderStrong:'rgba(120,90,70,.2)',
+        text:'#3c342e', muted:'#7a6f64', faint:'#a89a8c',
+        grad:'linear-gradient(120deg,#f0a868,#e58aa0)', gradSoft:'linear-gradient(120deg,rgba(240,168,104,.16),rgba(229,138,160,.16))',
+        accentSolid:'#dd9070', inputBg:'rgba(255,251,246,.85)',
+        userBubble:'linear-gradient(120deg,#f0a868,#e58aa0)', userText:'#fff', aiBubble:'rgba(255,247,239,.92)',
+        codeBg:'rgba(120,90,70,.06)', code:'#7a5a44',
+        glow:'0 16px 46px rgba(200,150,120,.22)', btnGlow:'0 8px 24px rgba(225,150,130,.34)', hoverGlow:'0 14px 38px rgba(225,150,130,.24)',
+        shadow:'0 24px 60px rgba(150,110,90,.2)', radius:'24px', gridLine:'rgba(150,110,80,.05)', gridOpacity:'1'
+      }
+    };
+  }
+  send(text){
+    const v=((text!=null?text:this.state.input)||'').trim();
+    if(!v) return;
+    this.setState(s=>({messages:[...s.messages,{text:v,isUser:true,isAi:false}],input:'',showEmpty:false,thinking:true}));
+    clearTimeout(this._r);
+    this._r=setTimeout(()=>{
+      this.setState(s=>({thinking:false,messages:[...s.messages,{text:"Done — here's a clear first draft you can run with. I kept it tight and on-brand; tell me the tone you want (punchier, warmer, more formal) and I'll reshape it, or I can expand any part into a full version.",isUser:false,isAi:true}]}));
+    },1500);
+  }
+  renderVals(){
+    const S=this.state, t=this.themes()[S.theme];
+    t.faint = S.theme==='dark'?'#5d6480':(S.theme==='light'?'#9094a4':'#a89a8c');
+    const L={panel:t.panel,panel2:t.panel2,border:t.border,borderStrong:t.borderStrong,inset:t.inset,muted:t.muted,faint:t.faint,text:t.text,accent:t.accentSolid,gradSoft:t.gradSoft,hoverGlow:t.hoverGlow,grad:t.grad,userBubble:t.userBubble,userText:t.userText,code:t.code,codeBg:t.codeBg,btnGlow:t.btnGlow};
+    const isMobile=S.viewport==='mobile';
+    const sel=(c)=>`inset 0 0 0 1px transparent`;
+    const wellnessActive = S.theme==='wellness';
+    let navItems;
+    if(wellnessActive){
+      navItems=[
+        {key:'today',icon:'wb_twilight',label:'Today',go:()=>this.setState({screen:'wellness',wellSection:'today',drawer:false,cmdk:false})},
+        {key:'talk',icon:'forum',label:'Talk it out',go:()=>this.setState({screen:'wellness',wellSection:'talk',drawer:false,cmdk:false})},
+        {key:'breathe',icon:'air',label:'Breathe',go:()=>this.startBreathe()},
+        {key:'journal',icon:'menu_book',label:'Journal',go:()=>this.setState({screen:'wellness',wellSection:'journal',drawer:false,cmdk:false})},
+        {key:'insights',icon:'monitoring',label:'Mood insights',go:()=>this.setState({screen:'wellness',wellSection:'insights',drawer:false,cmdk:false})}
+      ].map(n=>{
+        const active = n.key==='breathe' ? false : (S.screen==='wellness'&&S.wellSection===n.key);
+        return {...n, color:active?t.text:t.muted, bg:active?t.panel2:'transparent', text:t.text, weight:active?'600':'500', bd:active?t.border:'transparent', bar:active?t.accentSolid:'transparent', barH:active?'18px':'0px', hoverBg:active?t.panel2:t.panel, iconColor:active?t.accentSolid:t.muted};
+      });
+    } else {
+      navItems=[
+      ].map(n=>{
+        const active=(S.screen===n.id)||(n.id==='qa'&&S.screen==='qadetail');
+        return {...n, color: active?t.text:t.muted, bg: active?t.panel2:'transparent', text:t.text, weight:active?'600':'500', bd:active?t.border:'transparent', bar:active?t.accentSolid:'transparent', barH:active?'18px':'0px', hoverBg:active?t.panel2:t.panel, iconColor:active?t.accentSolid:t.muted, go:()=>this.go(n.id)};
+      });
+    }
+    const recentCtx = wellnessActive ? 'wellness'
+      : (S.screen==='qa'||S.screen==='qadetail') ? 'qa'
+      : (S.screen==='code') ? 'code'
+      : (S.screen==='docs') ? 'docs'
+      : 'chat';
+    const ctxMeta = {
+      chat:{label:'Recent chats', icon:'chat_bubble_outline'},
+      qa:{label:'QA sessions', icon:'science'},
+      code:{label:'Code sessions', icon:'terminal'},
+      docs:{label:'Document Q&A', icon:'description'},
+      wellness:{label:'Sessions', icon:'favorite'}
+    }[recentCtx];
+    const openCtx = (ctx)=>{
+      if(ctx==='wellness'){this.setState({screen:'wellness',wellSection:'talk',drawer:false});}
+      else if(ctx==='qa'){this.setState({screen:'qadetail',drawer:false});}
+      else if(ctx==='code'){this.setState({screen:'code',codeView:'editor',drawer:false});}
+      else if(ctx==='docs'){this.setState({screen:'docs',drawer:false});}
+      else {this.setState({screen:'chat',showEmpty:false,convoLoaded:true,messages:[],drawer:false});}
+    };
+    const buildSessions = (ctx)=>{
+      const meta=({chat:{label:'Recent chats',icon:'chat_bubble_outline'},qa:{label:'QA sessions',icon:'science'},code:{label:'Code sessions',icon:'terminal'},docs:{label:'Document Q&A',icon:'description'},wellness:{label:'Sessions',icon:'favorite'}})[ctx];
+      return (S.recents[ctx]||[]).map(c=>{
+        const isRenaming = S.renameCtx===ctx && S.renameId===c.id;
+        return {
+          ...c,...L, ricon:meta.icon, isRenaming, notRenaming:!isRenaming, renameVal:S.renameText,
+          dateLabel:this.relTime(c.mins),
+          open:()=>openCtx(ctx),
+          onRenameInput:(e)=>this.setState({renameText:e.target.value}),
+          onRenameKey:(e)=>{ if(e.key==='Enter') this.commitRename(); if(e.key==='Escape') this.cancelRename(); },
+          commitRename:()=>this.commitRename(),
+          edit:(e)=>{ e&&e.stopPropagation&&e.stopPropagation(); this.startRename(ctx,c.id,c.title); },
+          remove:(e)=>{ e&&e.stopPropagation&&e.stopPropagation(); this.removeRecent(ctx,c.id); }
+        };
+      });
+    };
+    const openRecent = ()=>openCtx(recentCtx);
+    const conversations=buildSessions(recentCtx);
+    const sidebarChats=buildSessions(wellnessActive?'wellness':'chat');
+    const searchQ=(S.sessionSearch||'').trim().toLowerCase();
+    const filteredConversations = searchQ ? conversations.filter(c=>c.title.toLowerCase().includes(searchQ)) : conversations;
+    const __conversations_old=[].map(c=>({...c,...L}));
+    const suggested=[
+      {icon:'auto_awesome',text:'Draft a launch announcement for our new app'},
+      {icon:'lightbulb',text:'Brainstorm 10 names for a productivity tool'},
+      {icon:'summarize',text:'Summarize a long report into 5 key points'},
+      {icon:'code',text:'Explain this code and suggest improvements'}
+    ].map(s=>({...L,...s,go:()=>this.send(s.text)}));
+    const qaTools=[
+      {name:'Test Case Generator',desc:'Spec → structured, prioritized test cases.',icon:'fact_check'},
+      {name:'Bug Report Formatter',desc:'Messy notes → clean, reproducible report.',icon:'bug_report'},
+      {name:'Edge Case Generator',desc:'Surface the inputs that break things.',icon:'alt_route'},
+      {name:'API Testing Helper',desc:'Build & assert requests from a contract.',icon:'api'},
+      {name:'Regression Checklist',desc:'Auto-build a release regression plan.',icon:'checklist'},
+      {name:'SQL Helper',desc:'Plain English → optimized SQL.',icon:'database'},
+      {name:'Test Data Generator',desc:'Realistic seed data on demand.',icon:'dataset'},
+      {name:'Automation Snippets',desc:'Playwright / Cypress code in a click.',icon:'code'}
+    ].map(x=>({...x,...L,open:()=>this.go('qadetail')}));
+    const coverChips=[
+      {label:'Happy path',on:true},{label:'Negative',on:true},{label:'Boundary',on:true},{label:'Security',on:false}
+    ].map(c=>({label:c.label, bg:c.on?t.gradSoft:'transparent', border:c.on?'transparent':t.border, color:c.on?t.accentSolid:t.muted}));
+    const testRows=[
+      {id:'TC-01',title:'Valid percentage code applies',expected:'Order total reduced by code %',priority:'High'},
+      {id:'TC-02',title:'Expired code rejected',expected:'Inline error, total unchanged',priority:'High'},
+      {id:'TC-03',title:'Stacking blocked on sale item',expected:'Second code refused with reason',priority:'Med'},
+      {id:'TC-04',title:'Whitespace / case-insensitive code',expected:'Trimmed & matched correctly',priority:'Low'},
+      {id:'TC-05',title:'Code at exact expiry minute',expected:'Boundary handled as expired',priority:'Med'}
+    ].map(r=>{
+      const p=r.priority;
+      const map={High:[t.gradSoft,t.accentSolid],Med:[t.inset,t.muted],Low:[t.inset,t.faint]};
+      return {...r,...L, pbg:map[p][0], pcolor:map[p][1]};
+    });
+    const documents=[
+      {name:'Billing-Policy.pdf',meta:'2.1 MB · 12 pages',status:'Ready',state:'ready',icon:'picture_as_pdf'},
+      {name:'MSA-2025.docx',meta:'880 KB · 7.2k words',status:'Ready',state:'ready',icon:'description'},
+      {name:'Onboarding-Guide.md',meta:'42 KB',status:'Ready',state:'ready',icon:'article'},
+      {name:'Q2-Metrics.csv',meta:'1.4 MB · 9.8k rows',status:'Processing',state:'proc',icon:'table_chart'}
+    ].map(d=>{
+      const ready=d.state==='ready';
+      return {...d,...L,
+        badgeBg: ready?t.gradSoft:t.inset,
+        badgeColor: ready?t.accentSolid:t.muted,
+        badgeIcon: ready?'check_circle':'progress_activity',
+        spin: ready?'':'animation:anv-spin 1.1s linear infinite'
+      };
+    });
+    const personas=[
+      {name:'Dost',icon:'volunteer_activism',sub:'warm friend'},
+      {name:'Sage',icon:'auto_stories',sub:'calm wisdom'},
+      {name:'Coach',icon:'sports',sub:'gentle push'},
+      {name:'Socrates',icon:'psychology',sub:'asks questions'}
+    ].map(p=>{
+      const on=S.persona===p.name;
+      return {...p, bg:on?t.gradSoft:t.panel, border:on?'transparent':t.border, color:on?t.accentSolid:t.muted, pick:()=>this.setState({persona:p.name})};
+    });
+    const moods=[
+      {emoji:'😞',label:'Low',v:1},{emoji:'😕',label:'Meh',v:2},{emoji:'😐',label:'Okay',v:3},{emoji:'🙂',label:'Good',v:4},{emoji:'😄',label:'Great',v:5}
+    ].map(m=>{
+      const on=S.mood===m.v;
+      return {...m,...L, bg:on?t.gradSoft:'transparent', border:on?t.accentSolid:t.border, filter:on?'none':'grayscale(.5) opacity(.75)', pick:()=>{this.setState({mood:m.v});this.toastMsg('Mood logged — thanks for checking in 💛');}};
+    });
+    const cmdItems=[
+      {icon:'add',label:'New chat',hint:'⌘N',to:'chat'},
+      {icon:'science',label:'Open QA Studio',hint:'',to:'qa'},
+      {icon:'description',label:'Search documents',hint:'',to:'docs'},
+      {icon:'spa',label:'Enter Wellness Mode',hint:'',to:'wellness'},
+      {icon:'settings',label:'Open settings',hint:'',to:'settings'}
+    ].map(c=>({...c,...L, go:()=>{ if(c.label==='New chat'){this.newChat();} else this.go(c.to); }}));
+    const settingRows=[
+      {key:'notifications',icon:'notifications',label:'Notifications',desc:'Mentions, results & digests'},
+      {key:'voice',icon:'mic',label:'Voice input',desc:'Enable the listening mic'},
+      {key:'motion',icon:'animation',label:'Reduced motion',desc:'Calm, static interface'}
+    ].map(r=>{
+      const on=!!S.settings[r.key];
+      return {...r,...L, on, track:on?t.accentSolid:t.inset, knob:on?'18px':'2px', border:t.border, toggle:()=>this.setState(s=>({settings:{...s.settings,[r.key]:!s.settings[r.key]}}))};
+    });
+
+    // ---- Code Studio ----
+    const codeFileData={
+      'app.js':{lang:'JavaScript',body:`import express from 'express';\nimport { authRouter } from './routes/auth.js';\n\nconst app = express();\napp.use(express.json());\n\napp.use('/api/auth', authRouter);\n\napp.get('/health', (req, res) => {\n  res.json({ ok: true, ts: Date.now() });\n});\n\napp.listen(3000, () => {\n  console.log('AbhiNova API on :3000');\n});`},
+      'auth.js':{lang:'JavaScript',body:`import { Router } from 'express';\nimport { signToken } from '../lib/jwt.js';\n\nexport const authRouter = Router();\n\nauthRouter.post('/login', async (req, res) => {\n  const { email, password } = req.body;\n  const user = await findUser(email);\n  if (!user || !verify(password, user.hash)) {\n    return res.status(401).json({ error: 'Invalid' });\n  }\n  const token = signToken({ id: user.id });\n  res.json({ token });\n});`},
+      'utils.js':{lang:'JavaScript',body:`export const clamp = (n, lo, hi) =>\n  Math.max(lo, Math.min(hi, n));\n\nexport const debounce = (fn, ms = 250) => {\n  let t;\n  return (...args) => {\n    clearTimeout(t);\n    t = setTimeout(() => fn(...args), ms);\n  };\n};`},
+      'README.md':{lang:'Markdown',body:`# AbhiNova API\n\nA small Express service powering the workspace.\n\n## Run\n\n    npm install\n    npm run dev\n\n## Routes\n\n- POST /api/auth/login\n- GET  /health`}
+    };
+    const codeTree=[
+      {type:'folder',name:'src',depth:0,open:true},
+      {type:'file',name:'app.js',key:'app.js',depth:1,icon:'javascript'},
+      {type:'folder',name:'routes',depth:1,open:true},
+      {type:'file',name:'auth.js',key:'auth.js',depth:2,icon:'javascript'},
+      {type:'folder',name:'lib',depth:1,open:true},
+      {type:'file',name:'utils.js',key:'utils.js',depth:2,icon:'javascript'},
+      {type:'file',name:'README.md',key:'README.md',depth:0,icon:'description'}
+    ].map(f=>{
+      const active=f.type==='file'&&f.key===S.codeActive;
+      return {...f,...L,
+        isFile:f.type==='file', isFolder:f.type==='folder',
+        pad:(10+f.depth*16)+'px',
+        bg:active?t.gradSoft:'transparent',
+        fg:active?t.text:(f.type==='folder'?t.text:t.muted),
+        bar:active?t.accentSolid:'transparent',
+        ficon:f.type==='folder'?'folder':(f.icon||'insert_drive_file'),
+        ficonColor:f.type==='folder'?t.accentSolid:t.faint,
+        open:f.type==='file'?(()=>this.setState({codeActive:f.key})):(()=>{})
+      };
+    });
+    const active=codeFileData[S.codeActive]||codeFileData['app.js'];
+    const codeLines=active.body.split('\n').map((ln,i)=>({...L,num:i+1,text:ln||' '}));
+    const codeChat=(S.codeChat||[]).map(m=>({
+      ...L,...m,
+      bulletsArr:(m.bullets||[]).map(b=>({...L,text:b})),
+      filesArr:(m.files||[]).map(f=>({...L,...f})),
+      hasBullets:!!(m.bullets&&m.bullets.length),
+      hasCode:!!m.code,
+      hasFiles:!!(m.files&&m.files.length),
+      hasDiff:!!m.diff,
+      hasNote:!!m.note,
+      cta:m.cta||'Create all files',
+      applyCode:()=>this.toastMsg('Applied to '+(m.codeFile||'file')),
+      createAll:()=>{this.setState({codeView:'editor'});this.toastMsg('Files created — opening editor');}
+    }));
+    const codeTemplates=[
+      {name:'Node + Express API',desc:'REST server with auth & routes',icon:'dns',tint:'#6e9bff'},
+      {name:'React + Vite app',desc:'Component starter with router',icon:'web',tint:'#61dafb'},
+      {name:'Python script',desc:'CLI tool with argparse',icon:'terminal',tint:'#ffd24a'},
+      {name:'Blank workspace',desc:'Start from an empty folder',icon:'folder_open',tint:'#b48cff'}
+    ].map(x=>({...L,...x,start:()=>{this.setState({codeView:'editor',codeActive:'app.js'});this.toastMsg('Scaffolding '+x.name+'…');}}));
+    const codeProjects=[
+      {name:'abhinova-api',meta:'Node · edited 2h ago',files:'4 files',icon:'dns',tint:'#6e9bff',dot:'#3fb950'},
+      {name:'dashboard-ui',meta:'React · edited yesterday',files:'28 files',icon:'web',tint:'#61dafb',dot:'#3fb950'},
+      {name:'data-pipeline',meta:'Python · edited 3d ago',files:'12 files',icon:'terminal',tint:'#ffd24a',dot:'#d29922'}
+    ].map(p=>({...L,...p,open:()=>this.setState({codeView:'editor',codeActive:'app.js'})}));
+    const codeCaps=[
+      {icon:'lightbulb',label:'Explain this file',q:'Explain what '+S.codeActive+' does'},
+      {icon:'bug_report',label:'Find & fix bugs',q:'Find and fix bugs in '+S.codeActive},
+      {icon:'auto_fix_high',label:'Refactor / clean up',q:'Refactor and clean up '+S.codeActive},
+      {icon:'add_circle',label:'Add a feature',q:'Add a logout feature'},
+      {icon:'science',label:'Write tests',q:'Write tests for '+S.codeActive},
+      {icon:'rocket_launch',label:'Build an app / site',q:'Build a landing page website'}
+    ].map(c=>({...L,...c,go:()=>this.sendCode(c.q)}));
+    const codeExamples=[
+      {icon:'account_tree',text:'Walk me through how a login request flows through these files',q:'Explain how a login request flows through the project'},
+      {icon:'shield',text:'Add rate limiting to the login route',q:'Add a rate limiting feature to the login endpoint'},
+      {icon:'speed',text:'Why might /health be slow under load? Find the issue',q:'Find the bug causing slow responses under load'},
+      {icon:'web',text:'Scaffold a landing page for this API',q:'Build a landing page website for this product'}
+    ].map(e=>({...L,...e,go:()=>this.sendCode(e.q)}));
+
+    // layout
+    const frameStyle = isMobile
+      ? 'position:relative;width:380px;height:min(788px,calc(100vh - 56px));border-radius:46px;background:#05060b;padding:11px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.08)'
+      : 'position:relative;width:min(1240px,calc(100vw - 60px));height:min(760px,calc(100vh - 84px));border-radius:22px;overflow:hidden;border:1px solid '+t.borderStrong+';box-shadow:'+t.shadow;
+    const innerWrap = isMobile ? 'position:absolute;inset:11px;border-radius:36px;overflow:hidden' : '';
+
+    const sidebarW = S.sidebarOpen?'248px':'76px';
+    const sidebarStyle = isMobile
+      ? `position:absolute;top:0;left:0;bottom:0;z-index:50;width:240px;padding:18px 12px;display:flex;flex-direction:column;overflow-y:auto;background:${t.glassSolid};backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border-right:1px solid ${t.borderStrong};transform:translateX(${S.drawer?'0':'-110%'});transition:transform .26s ease`
+      : `position:relative;width:${sidebarW};flex:none;padding:18px 12px;display:flex;flex-direction:column;overflow-y:auto;background:${t.topbar};backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-right:1px solid ${t.border};transition:width .22s ease`;
+
+    const titles={chat:['Chat','live'],qa:['QA Studio','8 tools'],qadetail:['Test Case Generator','tool'],code:['Code Studio','workspace'],docs:['Documents','RAG · 4 docs'],wellness:['Wellness','calm'],settings:['Settings','']};
+    const tt=titles[S.screen]||['Chat','live'];
+
+    return {
+      t, isMobile,
+      isAuth:S.screen==='auth',
+      isApp:S.screen!=='auth',
+      isChat:S.screen==='chat',
+      isQAGrid:S.screen==='qa',
+      isQADetail:S.screen==='qadetail',
+      isDocs:S.screen==='docs',
+      isCode:S.screen==='code',
+      isCodeHome:S.screen==='code'&&S.codeView==='home',
+      isCodeEditor:S.screen==='code'&&S.codeView==='editor',
+      codeTree, codeLines, codeChat, codeTemplates, codeProjects, codeCaps, codeExamples,
+      codeActiveFile:S.codeActive,
+      codeLang:active.lang,
+      codeThinking:S.codeThinking,
+      codeInput:S.codeInput,
+      codeChatEmpty:(S.codeChat||[]).length===0,
+      folderPicked:S.folderPicked,
+      codeCols: isMobile?'1fr':'210px minmax(0,1fr) 300px',
+      codeHomeCols: isMobile?'1fr':'1fr 1fr',
+      showCodeAssistant: !isMobile,
+      isWellness:S.screen==='wellness',
+      isWellToday: S.screen==='wellness' && S.wellSection==='today',
+      isWellTalk: S.screen==='wellness' && S.wellSection==='talk',
+      isWellJournal: S.screen==='wellness' && S.wellSection==='journal',
+      isWellInsights: S.screen==='wellness' && S.wellSection==='insights',
+      goTalk:()=>this.setState({wellSection:'talk'}),
+      saveJournal:()=>this.toastMsg('Journal entry saved'),
+      journalEntries:(S.journalEntries||[]).map(j=>({...L,...j,dateLabel:this.relTime(j.mins)})),
+      isSettings:S.screen==='settings',
+      sidebarOpen:S.sidebarOpen,
+      sidebarVisible: isMobile ? S.drawer : true,
+      showBackdrop: isMobile && S.drawer,
+      showMenuBtn: isMobile,
+      showCollapseBtn: !isMobile,
+      topTabs: wellnessActive ? [] : ['chat','qa','code','docs'].map(id=>{
+        const meta={chat:{icon:'forum',label:'Chat'},qa:{icon:'science',label:'QA Studio'},code:{icon:'terminal',label:'Code Studio'},docs:{icon:'description',label:'Documents'}}[id];
+        const active=(S.screen===id)||(id==='qa'&&S.screen==='qadetail');
+        return {id,...meta,active,
+          bg:active?t.gradSoft:'transparent', color:active?t.text:t.muted, border:active?t.borderStrong:'transparent', iconColor:active?t.accentSolid:t.faint,
+          go:()=>this.go(id)};
+      }),
+      showTopTabs: !wellnessActive && !isMobile,
+      hideTopTabs: wellnessActive || isMobile,
+      navJustify: S.sidebarOpen?'flex-start':'center',
+      screenTitle: tt[0], screenTag: tt[1],
+      cmdk:S.cmdk, toast:S.toast, listening:S.listening, thinking:S.thinking,
+      convoLoaded:S.convoLoaded,
+      input:S.input, showEmpty:S.showEmpty, showThread:!S.showEmpty,
+      messages:(S.messages||[]).map(m=>({...L,...m})), ranTool:S.ranTool, notRun:!S.ranTool, docPanel:S.docPanel,
+      navItems, conversations, suggested, qaTools, coverChips, testRows, documents, personas, moods, cmdItems, settingRows,
+      goSettings:()=>this.go('settings'),
+      settingsColor: S.screen==='settings'?t.text:t.muted,
+      settingsBg: S.screen==='settings'?t.panel2:'transparent',
+      settingsWeight: S.screen==='settings'?'600':'500',
+      settingsIconColor: S.screen==='settings'?t.accentSolid:t.muted,
+      resultCount: S.ranTool?'5 cases':'—',
+      frameStyle, innerWrap, sidebarStyle,
+      // responsive grids
+      qaCols: isMobile?'1fr':'repeat(4,1fr)',
+      detailCols: isMobile?'1fr':'minmax(0,0.85fr) minmax(0,1.15fr)',
+      wellCols: isMobile?'1fr':'minmax(0,1.1fr) minmax(0,0.9fr)',
+      chipCols: isMobile?'1fr':'1fr 1fr',
+      threadW: isMobile?'100%':'780px',
+      heroSize: isMobile?'42px':'62px',
+      coreSize: isMobile?'118px':'150px',
+      coreLetter: isMobile?'26px':'34px',
+      model:S.model,
+      wellnessActive,
+      newBtnLabel: {chat:'New chat',qa:'New QA session',code:'New code session',docs:'New doc chat',wellness:'New session'}[recentCtx],
+      newBtnIcon: wellnessActive?'spa':'add',
+      recentLabel: ctxMeta.label,
+      recentIcon: ctxMeta.icon,
+      noRecents: filteredConversations.length===0,
+      filteredConversations, hasSearchQuery: !!(S.sessionSearch||'').trim(),
+      sessionSearch:S.sessionSearch,
+      onSessionSearch:(e)=>this.setState({sessionSearch:e.target.value}),
+      clearSearch:()=>this.setState({sessionSearch:''}),
+      noRecentsMsg: (S.sessionSearch||'').trim() ? 'No matches for "'+S.sessionSearch.trim()+'".' : 'No history here yet — start something new above.',
+      sidebarChats, noSidebarChats: sidebarChats.length===0,
+      sidebarRecentLabel: wellnessActive?'Sessions':'Recent chats',
+      showSessionStrip: !wellnessActive && (S.screen==='qa'||S.screen==='qadetail'||S.screen==='code'||S.screen==='docs'),
+      sessionStripLabel: ctxMeta.label,
+      addSession:()=>this.addSession(recentCtx),
+      breathe:S.breathe, breathePhase:S.breathePhase,
+      authHeading: S.authTab==='in'?'Welcome back':'Create your workspace',
+      authSub: S.authTab==='in'?'Sign in to enter the workspace.':'Start free — no credit card needed.',
+      authCta: S.authTab==='in'?'Sign in':'Create account',
+      siColor: S.authTab==='in'?t.text:t.muted, siBg: S.authTab==='in'?t.panel2:'transparent', siShadow: S.authTab==='in'?'0 2px 8px rgba(0,0,0,.14)':'none',
+      suColor: S.authTab==='up'?t.text:t.muted, suBg: S.authTab==='up'?t.panel2:'transparent', suShadow: S.authTab==='up'?'0 2px 8px rgba(0,0,0,.14)':'none',
+      tabSignIn:()=>this.setState({authTab:'in'}),
+      tabSignUp:()=>this.setState({authTab:'up'}),
+      wordSize: isMobile?'40px':'56px',
+      badgeSpace: isMobile?'62px':'82px',
+      authDir: isMobile?'column':'row',
+      authBrandMin: isMobile?'auto':'100%',
+      authPad: isMobile?'28px 26px':'20px 40px',
+      sourceW: isMobile?'88%':'400px',
+      // theme dots
+      dDark:S.theme==='dark'?t.grad:'transparent',
+      dLight:S.theme==='light'?t.grad:'transparent',
+      dWell:S.theme==='wellness'?t.grad:'transparent',
+      dDesk:!isMobile?t.grad:'transparent',
+      dMob:isMobile?t.grad:'transparent',
+      selDark:S.theme==='dark'?t.accentSolid:'transparent',
+      selLight:S.theme==='light'?t.accentSolid:'transparent',
+      selWell:S.theme==='wellness'?t.accentSolid:'transparent',
+      // wellness sidebar toggle visuals
+      wellBtnBg:S.screen==='wellness'?t.gradSoft:'transparent',
+      wellBtnBorder:S.screen==='wellness'?'transparent':t.border,
+      wellIconColor:S.screen==='wellness'?t.accentSolid:t.muted,
+      wellTrack:S.screen==='wellness'?t.accentSolid:t.inset,
+      wellKnob:S.screen==='wellness'?'17px':'2px',
+      // mic
+      micBg:S.listening?t.gradSoft:'transparent',
+      micColor:S.listening?t.accentSolid:t.muted,
+      // mood chart
+      moodPath:'M0,62 L50,74 L100,58 L150,40 L200,56 L250,25 L300,38',
+      moodArea:'M0,62 L50,74 L100,58 L150,40 L200,56 L250,25 L300,38 L300,110 L0,110 Z',
+      // handlers
+      themeDark:()=>this.setState({theme:'dark'}),
+      themeLight:()=>this.setState({theme:'light'}),
+      themeWell:()=>this.setState({theme:'wellness'}),
+      vDesktop:()=>this.setState({viewport:'desktop',drawer:false}),
+      vMobile:()=>this.setState({viewport:'mobile'}),
+      login:()=>this.setState({screen:'chat',showEmpty:true,convoLoaded:false,messages:[]}),
+      guest:()=>this.setState({screen:'chat',showEmpty:true,convoLoaded:false,messages:[]}),
+      signOut:(e)=>{ e&&e.stopPropagation&&e.stopPropagation(); this.setState({screen:'auth',authTab:'in'}); this.toastMsg('Signed out'); },
+      goChat:()=>this.go('chat'),
+      newChat:()=>this.newInContext(recentCtx),
+      toggleSidebar:()=>this.setState(s=>({sidebarOpen:!s.sidebarOpen})),
+      openDrawer:()=>this.setState({drawer:true}),
+      closeDrawer:()=>this.setState({drawer:false}),
+      toggleWellness:()=>{const on=S.screen==='wellness';this.setState({screen:on?'chat':'wellness',theme:on?'dark':'wellness',drawer:false,cmdk:false});},
+      openCmd:()=>this.setState({cmdk:true}),
+      closeCmd:()=>this.setState({cmdk:false}),
+      stop:(e)=>{e.stopPropagation&&e.stopPropagation();},
+      onInput:(e)=>this.setState({input:e.target.value}),
+      send:()=>this.send(),
+      toggleMic:()=>{this.setState(s=>({listening:!s.listening})); if(!S.listening){clearTimeout(this._m);this._m=setTimeout(()=>this.setState({listening:false}),3200);}},
+      copyCode:()=>this.toastMsg('Code copied to clipboard'),
+      copyTable:()=>this.toastMsg('Table copied'),
+      exportTable:()=>this.toastMsg('Exported as CSV'),
+      runTool:()=>{this.setState({ranTool:true});this.toastMsg('Generated 5 test cases');},
+      backTools:()=>this.go('qa'),
+      openSource:()=>this.setState({docPanel:true}),
+      closeSource:()=>this.setState({docPanel:false}),
+      cycleModel:()=>{const ms=['AbhiNova 2.0','AbhiNova Flash','AbhiNova Reason'];this.setState(s=>({model:ms[(ms.indexOf(s.model)+1)%ms.length]}));},
+      startBreathe:()=>this.startBreathe(),
+      closeBreathe:()=>this.stopBreathe(),
+      onCodeInput:(e)=>this.setState({codeInput:e.target.value}),
+      sendCode:()=>this.sendCode(),
+      codeFix:()=>this.sendCode('Find and fix bugs in '+S.codeActive),
+      codeExplain:()=>this.sendCode('Explain what '+S.codeActive+' does'),
+      codeTest:()=>this.sendCode('Write unit tests for '+S.codeActive),
+      pickFolder:()=>{this.setState({codeView:'editor',codeActive:'app.js'});this.toastMsg('Folder connected · 4 files');},
+      openProject:()=>this.setState({codeView:'editor',codeActive:'app.js'}),
+      backCodeHome:()=>this.setState({codeView:'home'}),
+      startTemplate:()=>{this.setState({codeView:'editor',codeActive:'app.js'});this.toastMsg('Scaffolding project…');},
+      runCode:()=>this.toastMsg('Running app.js…'),
+      saveCode:()=>this.toastMsg('All files saved'),
+      newCodeFile:()=>this.toastMsg('New file created')
+    };
+  }
+}
+</script>
+</body>
+</html>

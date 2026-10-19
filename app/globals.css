@@ -2,26 +2,229 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  AbhiNova AI design tokens — SYNCED from design-reference/AbhiNova AI.dc.html
+  (Claude Design export). Three theme sets: dark (default), light, wellness.
+  Values are HSL triplets consumed as hsl(var(--token)) by tailwind.config.ts.
 
-@media (prefers-color-scheme: dark) {
+  Source palette:
+    dark:     bg #06070d · text #eef0fa · primary #7c8cff · grad #4f8cff→#9a6bff
+    light:    bg #f3f1ec · text #1b1d28 · primary #5566e0 · grad #3b6fe0→#8b5cf6
+    wellness: bg #f4ede4 · text #3c342e · primary #dd9070 · grad #f0a868→#e58aa0
+  Fonts: Space Grotesk (sans/display) + JetBrains Mono. Radius 18px (wellness 24px).
+*/
+
+@layer base {
+  /* ---------- Light theme (warm off-white) ---------- */
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 43 23% 94%; /* #f3f1ec */
+    --foreground: 231 19% 13%; /* #1b1d28 */
+    --card: 0 0% 100%;
+    --card-foreground: 231 19% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 231 19% 13%;
+    --primary: 233 69% 61%; /* #5566e0 accentSolid */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 12% 90%;
+    --secondary-foreground: 231 19% 15%;
+    --muted: 40 12% 90%;
+    --muted-foreground: 227 11% 40%; /* #5b6072 */
+    --accent: 258 90% 66%; /* #8b5cf6 gradient end */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 3 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 128 45% 40%;
+    --warning: 41 72% 48%; /* #d29922 */
+    --border: 30 9% 81%;
+    --input: 30 9% 81%;
+    --ring: 233 69% 61%;
+    --grad-from: 221 73% 55%; /* #3b6fe0 */
+    --grad-to: 258 90% 66%; /* #8b5cf6 */
+    --chart-1: 221 73% 55%;
+    --chart-2: 258 90% 66%;
+    --chart-3: 128 45% 40%;
+    --chart-4: 41 72% 48%;
+    --chart-5: 345 55% 60%;
+    --radius: 1.125rem; /* 18px */
+  }
+
+  /* ---------- Dark theme (default — deep space + neon blue/violet) ---------- */
+  .dark {
+    --background: 231 37% 4%; /* #06070d */
+    --foreground: 230 55% 96%; /* #eef0fa */
+    --card: 230 27% 9%; /* glassSolid #10121c */
+    --card-foreground: 230 55% 96%;
+    --popover: 230 27% 8%;
+    --popover-foreground: 230 55% 96%;
+    --primary: 233 100% 74%; /* #7c8cff accentSolid */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 231 13% 10%; /* panel2 */
+    --secondary-foreground: 230 55% 96%;
+    --muted: 231 16% 8%;
+    --muted-foreground: 228 15% 62%; /* #9096ad */
+    --accent: 259 100% 71%; /* #9a6bff gradient end */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 3 93% 63%; /* #f85149 */
+    --destructive-foreground: 0 0% 100%;
+    --success: 128 49% 49%; /* #3fb950 */
+    --warning: 45 100% 65%; /* #ffd24a */
+    --border: 231 11% 13%;
+    --input: 231 11% 13%;
+    --ring: 233 100% 74%;
+    --grad-from: 219 100% 65%; /* #4f8cff */
+    --grad-to: 259 100% 71%; /* #9a6bff */
+    --chart-1: 219 100% 65%;
+    --chart-2: 259 100% 71%;
+    --chart-3: 128 49% 49%;
+    --chart-4: 45 100% 65%;
+    --chart-5: 345 64% 72%;
+    --radius: 1.125rem; /* 18px */
+  }
+
+  /* ---------- Wellness theme (warm cream + peach/rose, extra round) ---------- */
+  .wellness {
+    --background: 34 42% 93%; /* #f4ede4 */
+    --foreground: 26 13% 21%; /* #3c342e */
+    --card: 34 70% 96%; /* glassSolid #fcf6ee */
+    --card-foreground: 26 13% 21%;
+    --popover: 34 70% 96%;
+    --popover-foreground: 26 13% 21%;
+    --primary: 18 62% 65%; /* #dd9070 accentSolid */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 30 33% 89%;
+    --secondary-foreground: 26 13% 24%;
+    --muted: 30 33% 89%;
+    --muted-foreground: 30 10% 44%; /* #7a6f64 */
+    --accent: 345 64% 72%; /* #e58aa0 gradient end */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 3 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 140 30% 42%;
+    --warning: 40 80% 50%;
+    --border: 30 28% 86%;
+    --input: 30 28% 86%;
+    --ring: 18 62% 65%;
+    --grad-from: 28 82% 67%; /* #f0a868 */
+    --grad-to: 345 64% 72%; /* #e58aa0 */
+    --chart-1: 28 82% 67%;
+    --chart-2: 345 64% 72%;
+    --chart-3: 140 30% 42%;
+    --chart-4: 40 80% 50%;
+    --chart-5: 18 62% 65%;
+    --radius: 1.5rem; /* 24px — rounder = calmer */
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  /* Signature brand gradient (per-theme, 120deg — from the design source) */
+  .brand-gradient {
+    background: linear-gradient(120deg, hsl(var(--grad-from)), hsl(var(--grad-to)));
+  }
+  .text-gradient {
+    background: linear-gradient(120deg, hsl(var(--grad-from)), hsl(var(--grad-to)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Soft neon glow for headings/CTAs */
+  .text-glow {
+    text-shadow: 0 0 24px hsl(var(--primary) / 0.45);
+  }
+  /* Glassmorphism surface — pair with a border and rounded corners */
+  .glass {
+    background: hsl(var(--card) / 0.75);
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    border: 1px solid hsl(var(--border) / 0.8);
+  }
+  /* Micro-interaction: card lift on hover (transform-only, GPU friendly) */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-3px);
+  }
+}
+
+/* Design-source animations (anv-* from the Claude Design export) */
+@keyframes anv-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes anv-orbit-r {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes anv-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+@keyframes anv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes anv-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+/* Ambient animated gradient blobs (see components/shared/ambient-background) */
+.ambient-blob {
+  position: absolute;
+  width: 42vw;
+  height: 42vw;
+  border-radius: 9999px;
+  filter: blur(90px);
+  animation: ambient-drift 26s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes ambient-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(7vw, -6vh, 0) scale(1.15);
+  }
+}
+
+/* Reduced motion: calm, static experience — freeze ALL CSS animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
