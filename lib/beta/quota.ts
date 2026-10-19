@@ -31,12 +31,20 @@ function today(): string {
 }
 
 /**
- * Client IP from proxy headers (Vercel sets x-forwarded-for). Stored only as a
- * salted hash — we never keep raw IPs.
+ * Client IP, preferring headers the client can't forge. On Vercel,
+ * x-vercel-forwarded-for / x-real-ip are set by the edge network; a
+ * client-supplied x-forwarded-for is only a last resort (local dev / other
+ * hosts) so spoofing it can't mint fresh per-IP quota on Vercel. A missing IP
+ * falls into one shared "unknown" bucket — stricter, never looser.
+ * Stored only as a salted hash — we never keep raw IPs.
  */
 function ipSubject(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ip = forwarded || request.headers.get("x-real-ip") || "unknown";
+  const first = (value: string | null) => value?.split(",")[0]?.trim() || null;
+  const ip =
+    first(request.headers.get("x-vercel-forwarded-for")) ??
+    first(request.headers.get("x-real-ip")) ??
+    first(request.headers.get("x-forwarded-for")) ??
+    "unknown";
   const salt = process.env.ENCRYPTION_KEY ?? "abhinova-beta";
   return `ip:${createHash("sha256").update(`${salt}:${ip}`).digest("hex").slice(0, 32)}`;
 }
