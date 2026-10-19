@@ -51,6 +51,21 @@ Next.js 14 (App Router) · TypeScript (strict) · Tailwind CSS · shadcn/ui · F
 
 ---
 
+## Run it yourself
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FAbhi-tech-geek%2Fabhinova-ai&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,GROQ_API_KEY,GEMINI_API_KEY,ENCRYPTION_KEY&envDescription=Supabase%2C%20Groq%20and%20Gemini%20keys%20%E2%80%94%20see%20the%20README%20Setup%20section&envLink=https%3A%2F%2Fgithub.com%2FAbhi-tech-geek%2Fabhinova-ai%23setup&project-name=abhinova-ai&repository-name=abhinova-ai)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Abhi-tech-geek/abhinova-ai)
+
+| Option | Best for | What you need |
+|---|---|---|
+| **Deploy with Vercel** | A live site that redeploys on every `git push` | Vercel account + the env vars below + a Supabase project with the migrations run |
+| **Open in Codespaces** | Coding from any browser, nothing to install | Add the same keys as [Codespaces secrets](https://github.com/settings/codespaces) — the dev server starts automatically on port 3000 |
+| **Clone locally** | Your own machine | Node 20+, then follow [Setup](#setup) |
+
+Keys never live in git: use Vercel environment variables, Codespaces secrets, or a local `.env.local`. If two environments share one Supabase database, they must use the **same** `ENCRYPTION_KEY` (it decrypts stored API keys and OAuth tokens).
+
+---
+
 ## Setup
 
 1. Install dependencies:

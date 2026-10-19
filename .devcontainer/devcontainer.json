@@ -1,0 +1,49 @@
+{
+  // GitHub Codespaces / VS Code Dev Containers: a ready-to-run AbhiNova setup.
+  // Keys are NOT stored here — add them as Codespaces secrets
+  // (GitHub → Settings → Codespaces → Secrets, give this repo access).
+  // Codespaces injects them as environment variables, which Next.js reads
+  // directly — no .env.local needed.
+  "name": "AbhiNova AI",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm",
+  "postCreateCommand": "npm ci",
+  "postAttachCommand": {
+    "dev": "npm run dev"
+  },
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "AbhiNova AI",
+      "onAutoForward": "openPreview"
+    }
+  },
+  "secrets": {
+    "NEXT_PUBLIC_SUPABASE_URL": {
+      "description": "Supabase project URL (Project Settings → API)."
+    },
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
+      "description": "Supabase anon/public key (Project Settings → API)."
+    },
+    "SUPABASE_SERVICE_ROLE_KEY": {
+      "description": "Supabase service-role key — server only, required for open-beta limits."
+    },
+    "GROQ_API_KEY": {
+      "description": "Groq API key (console.groq.com)."
+    },
+    "GEMINI_API_KEY": {
+      "description": "Google Gemini API key (aistudio.google.com) — fallback model + embeddings."
+    },
+    "ENCRYPTION_KEY": {
+      "description": "32 random bytes, base64 (openssl rand -base64 32). Encrypts user API keys and OAuth tokens."
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
