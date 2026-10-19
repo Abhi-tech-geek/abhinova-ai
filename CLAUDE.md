@@ -77,7 +77,7 @@ abhinova-ai/
 │   └── globals.css
 ├── components/
 │   ├── ui/                         # shadcn components ONLY (auto-generated)
-│   ├── shared/                     # CommandPalette, Logo, LocalTime, EmptyState, ErrorBoundary
+│   ├── shared/                     # CommandPalette, WelcomeTour (first-visit product tour), Logo, LocalTime, EmptyState, ErrorBoundary
 │   ├── workspace/                  # Sidebar (nav + history, Claude-style), UserMenu, SessionList, ConversationList, ChatMessage, ChatInput, ThinkingOrb
 │   ├── qa-studio/                  # ToolCard, ToolForm, OutputPanel, HistoryTab, ExportButtons
 │   ├── documents/                  # UploadDropzone, DocumentList, DocumentPicker, CitationChip, ChunkViewer
