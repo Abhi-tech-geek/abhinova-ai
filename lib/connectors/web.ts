@@ -238,31 +238,156 @@ function decodeEntities(text: string): string {
  * Lightweight readability: drop chrome (scripts, nav, footer…), prefer
  * <main>/<article>, then split by headings so citations can name a section.
  */
-export function htmlToBlocks(html: string): { title: string; blocks: ExtractedBlock[] } {
-  const title = decodeEntities(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? "");
-  let body = html
-    .replace(/<(script|style|noscript|svg|nav|footer|header|aside|form|iframe)[\s\S]*?<\/\1>/gi, " ")
-    .replace(/<!--[\s\S]*?-->/g, " ");
-  const main = body.match(/<(main|article)[^>]*>([\s\S]*?)<\/\1>/i)?.[2];
-  if (main && main.length > 500) body = main;
+// Elements whose whole content is dropped (code, chrome, embeds).
+const SKIP_TAGS = new Set(["script", "style", "noscript", "svg", "nav", "footer", "header", "aside", "form", "iframe", "template"]);
+// Closing one of these (or <br>) ends a line of text.
+const LINE_BREAK_TAGS = new Set(["p", "li", "h1", "h2", "h3", "h4", "h5", "h6", "tr", "div", "section", "pre", "blockquote", "br"]);
+const SECTION_HEADINGS = new Set(["h1", "h2", "h3"]);
 
+interface Section {
+  heading: string;
+  text: string;
+}
+
+/** Collects text into heading-delimited sections. */
+class SectionCollector {
+  sections: Section[] = [{ heading: "", text: "" }];
+  private headingOpen = false;
+
+  get size(): number {
+    return this.sections.reduce((n, s) => n + s.text.length, 0);
+  }
+  text(chunk: string) {
+    const current = this.sections[this.sections.length - 1];
+    current.text += chunk;
+    if (this.headingOpen) current.heading += chunk;
+  }
+  startHeading() {
+    this.sections.push({ heading: "", text: "" });
+    this.headingOpen = true;
+  }
+  endHeading() {
+    this.headingOpen = false;
+    this.text("\n");
+  }
+}
+
+/**
+ * HTML → title + heading-delimited text blocks in ONE forward pass (linear
+ * time). The page is attacker-controlled, so no backtracking regexes run over
+ * the document — an unclosed <script> or a flood of tags can't burn CPU.
+ * Prefers the first <main>/<article> when it holds real content.
+ */
+export function htmlToBlocks(html: string): { title: string; blocks: ExtractedBlock[] } {
+  const all = new SectionCollector();
+  const main = new SectionCollector();
+  let title = "";
+  let inTitle = false;
+  let skipTag: string | null = null;
+  let skipDepth = 0;
+  let mainTag: string | null = null; // first <main>/<article> being collected
+  let mainDepth = 0;
+  let mainDone = false;
+
+  const emit = (fn: (c: SectionCollector) => void) => {
+    fn(all);
+    if (mainTag) fn(main);
+  };
+
+  let i = 0;
+  const n = html.length;
+  while (i < n) {
+    const lt = html.indexOf("<", i);
+    const textEnd = lt === -1 ? n : lt;
+    if (textEnd > i && !skipTag) {
+      const chunk = html.slice(i, textEnd);
+      if (inTitle) title += chunk;
+      else emit((c) => c.text(chunk));
+    }
+    if (lt === -1) break;
+
+    // "<" not followed by a tag start (e.g. `a < b` in a script) is plain text —
+    // never let it swallow everything up to the next ">" (like a </script>).
+    const next = html.charCodeAt(lt + 1);
+    const isLetter = (next >= 65 && next <= 90) || (next >= 97 && next <= 122);
+    if (!isLetter && next !== 47 /* / */ && next !== 33 /* ! */) {
+      if (!skipTag) {
+        if (inTitle) title += "<";
+        else emit((c) => c.text("<"));
+      }
+      i = lt + 1;
+      continue;
+    }
+
+    // Comments: jump to the end marker (or the end of the document).
+    if (html.startsWith("<!--", lt)) {
+      const end = html.indexOf("-->", lt + 4);
+      i = end === -1 ? n : end + 3;
+      continue;
+    }
+    const gt = html.indexOf(">", lt + 1);
+    if (gt === -1) break; // unterminated tag: ignore the rest
+    i = gt + 1;
+
+    const tag = html.slice(lt + 1, gt);
+    const closing = tag.startsWith("/");
+    const name = (closing ? tag.slice(1) : tag).match(/^[a-zA-Z][a-zA-Z0-9]*/)?.[0]?.toLowerCase();
+    if (!name) continue; // "<!doctype", "< 3", etc.
+    const selfClosing = tag.endsWith("/");
+
+    if (skipTag) {
+      if (name === skipTag) skipDepth += closing ? -1 : selfClosing ? 0 : 1;
+      if (skipDepth <= 0) skipTag = null;
+      continue;
+    }
+    if (!closing && !selfClosing && SKIP_TAGS.has(name)) {
+      skipTag = name;
+      skipDepth = 1;
+      continue;
+    }
+    if (name === "title") {
+      inTitle = !closing;
+      continue;
+    }
+
+    if ((name === "main" || name === "article") && !mainDone) {
+      if (!closing && !mainTag) {
+        mainTag = name;
+        mainDepth = 1;
+        continue;
+      }
+      if (name === mainTag) {
+        mainDepth += closing ? -1 : 1;
+        if (mainDepth <= 0) {
+          mainTag = null;
+          mainDone = true;
+        }
+        continue;
+      }
+    }
+
+    if (SECTION_HEADINGS.has(name)) {
+      emit((c) => (closing ? c.endHeading() : c.startHeading()));
+    } else if (LINE_BREAK_TAGS.has(name) && (closing || name === "br")) {
+      emit((c) => c.text("\n"));
+    } else {
+      emit((c) => c.text(" "));
+    }
+  }
+
+  const chosen = main.size > 500 ? main : all;
   const blocks: ExtractedBlock[] = [];
-  for (const part of body.split(/(?=<h[1-3][^>]*>)/i)) {
-    const heading = part.match(/^<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/i)?.[1];
-    const text = decodeEntities(
-      part
-        .replace(/<\/(p|li|h[1-6]|tr|div|section|pre|blockquote)>/gi, "\n")
-        .replace(/<br\s*\/?>/gi, "\n")
-        .replace(/<[^>]+>/g, " ")
-    )
+  for (const section of chosen.sections) {
+    const text = decodeEntities(section.text)
       .replace(/[ \t]+/g, " ")
-      .replace(/\n\s*\n+/g, "\n\n")
+      .replace(/ ?\n ?/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
     if (text.length < 20) continue;
-    const cleanHeading = heading ? decodeEntities(heading.replace(/<[^>]+>/g, "")).trim() : "";
-    blocks.push({ text, metadata: cleanHeading ? { heading: cleanHeading.slice(0, 120) } : {} });
+    const heading = decodeEntities(section.heading).replace(/\s+/g, " ").trim();
+    blocks.push({ text, metadata: heading ? { heading: heading.slice(0, 120) } : {} });
   }
-  return { title, blocks };
+  return { title: decodeEntities(title).replace(/\s+/g, " ").trim(), blocks };
 }
 
 /** URL source adapter → one NormalizedDoc for the shared pipeline. */
