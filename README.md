@@ -1,6 +1,55 @@
-# AbhiNova AI
+# AbhiNova AI ✦
 
-A futuristic, productivity-first AI workspace — chat, QA tools, document intelligence, and a code studio, with an optional Wellness Mode.
+**A productivity-first AI workspace — chat, project knowledge bases, QA tools, document Q&A and a code studio in one app, with an optional calm Wellness mode.**
+
+Built with Next.js 14, Supabase (Postgres + pgvector) and Groq / Gemini. Talks English, Hindi and Hinglish.
+
+> 🧪 **Open beta:** no sign-up — open the site and start. Free daily limits keep it fair for everyone (see [Open beta mode](#open-beta-mode-default-on)).
+
+---
+
+## What it does
+
+| | Feature | Highlights |
+|---|---|---|
+| 💬 | **Chat** | Streaming answers, model picker (Groq → Gemini fallback, or bring your own key), voice input + read-aloud, Ctrl+K command palette |
+| 📁 | **Projects** | A mini-AI per project: its own files, links, notes and custom instructions; answers cite the exact page, slide or **Excel sheet + row** |
+| 🧪 | **QA Studio** | 8 tools for testers — test cases, bug reports, edge cases, API tests, SQL checks, regression lists, test data, automation snippets; CSV / Markdown export |
+| 📄 | **Documents** | Upload PDF, Word, PowerPoint, Excel, CSV, Markdown, JSON or code and ask across them with citations |
+| ⌨️ | **Code Studio** | Open a local folder in the browser; explain / fix / refactor with **diffs you approve**; generate PRDs, tech docs and API specs |
+| 🔌 | **Connectors** | Pull Jira, GitHub, Notion and Google Drive content into a project (read-only OAuth, incremental sync) |
+| 🌿 | **Wellness** *(optional)* | Talk personas, mood check-ins, private journal, gentle insights — with crisis helplines always surfaced; not a replacement for a therapist |
+
+The UI is a Claude/ChatGPT-style sidebar with history grouped by day, dark + light themes, and a first-visit product tour.
+
+## How it's built
+
+```
+Browser (Next.js App Router, React, Tailwind, shadcn/ui)
+   │  streaming fetch
+   ▼
+API routes ── auth (Supabase) → zod validation → rate limit → beta quota
+   │                                                    │
+   │  Groq (primary) ⇄ Gemini (fallback)                │  service-role RPC
+   ▼                                                    ▼
+One RAG pipeline: extract → redact secrets → chunk → embed (Gemini) → pgvector
+   ▲
+   └─ files · web links (SSRF-guarded) · Jira / GitHub / Notion / Drive
+```
+
+**Security by design**
+- Row Level Security on every table; each user only ever sees their own rows.
+- Secrets live only in server env vars; user API keys and OAuth tokens are AES-GCM encrypted at rest and never sent to the browser.
+- Every document, page and ticket is treated as untrusted data (prompt-injection defence); secrets are redacted before embedding.
+- Link import blocks private/internal addresses at connect time (SSRF), with redirect re-checks, size and time caps.
+- Code Studio never writes to disk or runs code on the server — every edit is a reviewed diff.
+- Open-beta limits are counted server-side in a table guests can't read or reset.
+
+## Tech stack
+
+Next.js 14 (App Router) · TypeScript (strict) · Tailwind CSS · shadcn/ui · Framer Motion · Supabase (Postgres, Auth, Storage, pgvector) · Groq · Google Gemini · Web Speech API · Recharts · SheetJS · Mammoth · undici
+
+---
 
 ## Setup
 
@@ -79,8 +128,10 @@ The Music corner ships with placeholder tracks. Add royalty-free audio (e.g. fro
 7. Known limits on Vercel: uploads >4.5MB need the future direct-to-storage
    upload; WebContainers (Code Studio Run) require a Chromium browser.
 
-## Stack
+## Project conventions
 
-Next.js 14 (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Framer Motion · Supabase (Postgres + Auth + Storage + pgvector) · Groq + Google Gemini · Recharts
+Folder structure, security rules and design tokens are documented in [`CLAUDE.md`](CLAUDE.md) — the rulebook every change follows. Database changes live in numbered migrations under [`supabase/migrations`](supabase/migrations).
 
-See `CLAUDE.md` for project conventions and folder structure.
+---
+
+Made by [Abhinav](https://github.com/Abhi-tech-geek) · [abhinova.theabhinavsaxena.in](https://abhinova.theabhinavsaxena.in)
