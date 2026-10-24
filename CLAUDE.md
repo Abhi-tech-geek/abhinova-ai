@@ -72,6 +72,7 @@ abhinova-ai/
 │   │       ├── chat/route.ts
 │   │       ├── mood/route.ts
 │   │       └── journal/route.ts
+│   ├── admin/                      # owner-only usage dashboard (page + login/logout routes)
 │   ├── layout.tsx                  # root layout + ThemeProvider
 │   ├── page.tsx                    # landing → redirect to /chat or /login
 │   └── globals.css
@@ -83,6 +84,7 @@ abhinova-ai/
 │   ├── documents/                  # UploadDropzone, DocumentList, DocumentPicker, CitationChip, ChunkViewer
 │   ├── projects/                   # ProjectCard, ProjectGrid, CreateProjectDialog, KnowledgePanel, ProjectInstructions, ProjectNotes, ProjectChatList, ProjectSwitcher, ProjectHeader, ProjectSelect, SourceCard, AddSourceDialog, SyncStatusBadge
 │   ├── connectors/                 # ConnectorGrid, ConnectorCard, ConnectDialog (rendered from the registry)
+│   ├── admin/                      # UsageDashboard, usage charts (Recharts), AdminLogin — owner-only /admin
 │   ├── code-studio/                # ProjectPicker, FileTree, DiffViewer, CodeEditor, RunPanel, TerminalOutput, ModelPicker, DocGenPanel
 │   ├── voice/                      # MicButton, VoiceRing, TtsToggle
 │   └── wellness/                   # WellnessBanner, PersonaPicker, MoodCheckIn, MoodChart, JournalEditor, CrisisCard, MusicPlayer, SessionSummary
@@ -143,9 +145,12 @@ abhinova-ai/
 │   │   ├── projects.ts
 │   │   ├── connectors.ts
 │   │   ├── feedback.ts
+│   │   ├── admin.ts
 │   │   ├── code.ts
 │   │   ├── models.ts
 │   │   └── wellness.ts
+│   ├── admin/
+│   │   └── auth.ts                 # ADMIN_DASHBOARD_TOKEN check + HMAC cookie (server-only)
 │   ├── beta/
 │   │   ├── config.ts               # isOpenBeta() + BETA_LIMITS + friendly error copy (client-safe)
 │   │   ├── quota.ts                # enforceBetaQuota() / getBetaUsage() (server-only, service role)
@@ -169,7 +174,8 @@ abhinova-ai/
 │       ├── 001_init.sql            # never edit — new changes go in new numbered files
 │       ├── 002_projects_connectors.sql
 │       ├── 003_open_beta.sql      # beta_usage counters + consume_beta_quota() + guest write access
-│       └── 004_feedback.sql       # in-app feedback (server-only submit_feedback RPC, 10/user/24h)
+│       ├── 004_feedback.sql       # in-app feedback (server-only submit_feedback RPC, 10/user/24h)
+│       └── 005_admin_stats.sql    # admin_usage_stats() aggregates for /admin (service role only)
 ├── design-reference/               # Claude Design export (source design) — read as the visual foundation
 ├── private-learning/               # NEVER pushed to git (in .gitignore)
 ├── public/

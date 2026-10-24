@@ -79,6 +79,7 @@ Keys never live in git: use Vercel environment variables, Codespaces secrets, or
      2. `supabase/migrations/002_projects_connectors.sql` (Projects, knowledge sources, connectors)
      3. `supabase/migrations/003_open_beta.sql` (open-beta usage limits — required while `NEXT_PUBLIC_OPEN_BETA` is on)
      4. `supabase/migrations/004_feedback.sql` (in-app feedback — read it in Table Editor → `feedback`)
+     5. `supabase/migrations/005_admin_stats.sql` (owner usage dashboard at `/admin`, needs `ADMIN_DASHBOARD_TOKEN`)
    - **Auth → Sign In / Up:** enable **"Allow anonymous sign-ins"** (required for Guest Login) and the **Google** provider (add your OAuth client ID/secret).
    - **Auth → URL Configuration:** set the Site URL and add `http://localhost:3000/auth/callback` (and your production domain) to the redirect allowlist.
 4. Run the dev server:
@@ -132,6 +133,7 @@ The Music corner ships with placeholder tracks. Add royalty-free audio (e.g. fro
    - `GEMINI_API_KEY`
    - `ENCRYPTION_KEY` *(32 random bytes base64 — `openssl rand -base64 32`)*
    - `NEXT_PUBLIC_OPEN_BETA` *("true" during the beta; "false" brings login back)*
+   - `ADMIN_DASHBOARD_TOKEN` *(16+ random chars — unlocks the owner usage dashboard at `/admin`)*
    - Optional connector OAuth keys (`ATLASSIAN_*`, `GITHUB_*`, `NOTION_*`, `GOOGLE_*` — see `.env.example`)
 3. **Custom domain:** Vercel → Domains → add `abhinova.theabhinavsaxena.in`, then at your DNS provider add a **CNAME**: `abhinova` → `cname.vercel-dns.com`.
 4. **Supabase → Auth → URL Configuration:**

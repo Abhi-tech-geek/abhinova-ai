@@ -45,6 +45,8 @@
     --chart-3: 128 45% 40%;
     --chart-4: 41 72% 48%;
     --chart-5: 345 55% 60%;
+    /* Contrast partner for --chart-1 in 2-series charts (CVD-validated: ΔE 27+) */
+    --chart-pair: 17 82% 56%; /* #eb6834 */
     --radius: 1.125rem; /* 18px */
   }
 
@@ -78,6 +80,7 @@
     --chart-3: 128 49% 49%;
     --chart-4: 45 100% 65%;
     --chart-5: 345 64% 72%;
+    --chart-pair: 17 70% 50%; /* #d95926 */
     --radius: 1.125rem; /* 18px */
   }
 
@@ -111,6 +114,7 @@
     --chart-3: 140 30% 42%;
     --chart-4: 40 80% 50%;
     --chart-5: 18 62% 65%;
+    --chart-pair: 220 45% 50%;
     --radius: 1.5rem; /* 24px — rounder = calmer */
   }
 }

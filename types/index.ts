@@ -6,3 +6,4 @@ export * from "./connectors";
 export * from "./code";
 export * from "./models";
 export * from "./wellness";
+export * from "./admin";
