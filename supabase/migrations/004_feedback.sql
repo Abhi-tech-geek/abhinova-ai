@@ -75,3 +75,6 @@ grant execute on function public.submit_feedback(uuid, boolean, text, text, text
 -- Read feedback in the SQL editor (newest first):
 --   select created_at, category, message, page, is_guest
 --   from public.feedback order by created_at desc;
+
+-- Make the API layer (PostgREST) see the new function immediately.
+notify pgrst, 'reload schema';
