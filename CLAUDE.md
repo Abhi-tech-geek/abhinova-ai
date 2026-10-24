@@ -5,7 +5,7 @@ Read this file fully before making any change. Every rule here is binding for ev
 ## Project Identity
 - AbhiNova AI is **productivity-first**. Wellness Mode is an optional, isolated layer. Default UX must NEVER feel therapy-like.
 - Design language: dark mode first, glassmorphism, soft neon accents, premium typography, smooth Framer Motion animations. Light mode must also be fully supported via a theme toggle.
-- Stack (FINAL — do not substitute): Next.js 16 App Router (React 19) + TypeScript strict, Tailwind CSS + shadcn/ui + Framer Motion, Supabase (Postgres + Auth + Storage + pgvector), Groq API (primary LLM, default `openai/gpt-oss-120b`) + Google Gemini (fallback LLM `gemini-flash-latest` + `gemini-embedding-001` embeddings @ 768 dims), Web Speech API (voice), Recharts (charts). Deployed on Vercel at abhinova.theabhinavsaxena.in.
+- Stack (FINAL — do not substitute): Next.js 16 App Router (React 19) + TypeScript strict, Tailwind CSS + shadcn/ui + Framer Motion, Supabase (Postgres + Auth + Storage + pgvector), Groq API (primary LLM, default `openai/gpt-oss-120b`) + Google Gemini (fallback LLMs `gemini-flash-latest` → `gemini-flash-lite-latest`, then one delayed Groq retry — `lib/ai/router.ts`; embeddings `gemini-embedding-001` @ 768 dims), Web Speech API (voice), Recharts (charts). Deployed on Vercel at abhinova.theabhinavsaxena.in.
 
 ## Commands
 - `npm run dev` — start dev server
