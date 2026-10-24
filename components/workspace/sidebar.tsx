@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { ConversationList } from "@/components/workspace/conversation-list";
 import { SessionList, type SessionItem } from "@/components/workspace/session-list";
 import { UserMenu } from "@/components/workspace/user-menu";
+import { FeedbackDialog } from "@/components/shared/feedback-dialog";
 import { Logo } from "@/components/shared/logo";
 import { openCommandPalette } from "@/components/shared/command-palette";
 import type { ConversationRecord } from "@/types/chat";
@@ -247,8 +248,9 @@ function SidebarContent({
         </div>
       )}
 
-      {/* Account */}
-      <div className={`border-t border-border/40 p-2 ${collapsed ? "flex justify-center" : ""}`}>
+      {/* Feedback + account */}
+      <div className={`border-t border-border/40 p-2 ${collapsed ? "flex flex-col items-center gap-1" : "space-y-1"}`}>
+        <FeedbackDialog collapsed={collapsed} />
         <UserMenu
           userEmail={userEmail}
           displayName={displayName}

@@ -77,7 +77,7 @@ abhinova-ai/
 │   └── globals.css
 ├── components/
 │   ├── ui/                         # shadcn components ONLY (auto-generated)
-│   ├── shared/                     # CommandPalette, WelcomeTour (first-visit product tour), Logo, LocalTime, EmptyState, ErrorBoundary
+│   ├── shared/                     # CommandPalette, WelcomeTour (first-visit product tour), FeedbackDialog, Logo, LocalTime, EmptyState, ErrorBoundary
 │   ├── workspace/                  # Sidebar (nav + history, Claude-style), UserMenu, SessionList, ConversationList, ChatMessage, ChatInput, ThinkingOrb
 │   ├── qa-studio/                  # ToolCard, ToolForm, OutputPanel, HistoryTab, ExportButtons
 │   ├── documents/                  # UploadDropzone, DocumentList, DocumentPicker, CitationChip, ChunkViewer
@@ -142,6 +142,7 @@ abhinova-ai/
 │   │   ├── documents.ts
 │   │   ├── projects.ts
 │   │   ├── connectors.ts
+│   │   ├── feedback.ts
 │   │   ├── code.ts
 │   │   ├── models.ts
 │   │   └── wellness.ts
@@ -167,7 +168,8 @@ abhinova-ai/
 │   └── migrations/
 │       ├── 001_init.sql            # never edit — new changes go in new numbered files
 │       ├── 002_projects_connectors.sql
-│       └── 003_open_beta.sql      # beta_usage counters + consume_beta_quota() + guest write access
+│       ├── 003_open_beta.sql      # beta_usage counters + consume_beta_quota() + guest write access
+│       └── 004_feedback.sql       # in-app feedback (insert-only, 10/user/24h via RLS)
 ├── design-reference/               # Claude Design export (source design) — read as the visual foundation
 ├── private-learning/               # NEVER pushed to git (in .gitignore)
 ├── public/

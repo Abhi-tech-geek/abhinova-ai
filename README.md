@@ -78,6 +78,7 @@ Keys never live in git: use Vercel environment variables, Codespaces secrets, or
      1. `supabase/migrations/001_init.sql`
      2. `supabase/migrations/002_projects_connectors.sql` (Projects, knowledge sources, connectors)
      3. `supabase/migrations/003_open_beta.sql` (open-beta usage limits — required while `NEXT_PUBLIC_OPEN_BETA` is on)
+     4. `supabase/migrations/004_feedback.sql` (in-app feedback — read it in Table Editor → `feedback`)
    - **Auth → Sign In / Up:** enable **"Allow anonymous sign-ins"** (required for Guest Login) and the **Google** provider (add your OAuth client ID/secret).
    - **Auth → URL Configuration:** set the Site URL and add `http://localhost:3000/auth/callback` (and your production domain) to the redirect allowlist.
 4. Run the dev server:
