@@ -22,6 +22,8 @@ const PROTECTED_PREFIXES = [
 // Link-preview bots and crawlers (never auto-create guests for them).
 const BOT_UA = /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|discord|slack|curl|wget|python-requests|headless/i;
 
+const UUID_SEGMENT = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+
 function redirectTo(request: NextRequest, pathAndQuery: string) {
   return NextResponse.redirect(new URL(pathAndQuery, request.url));
 }
@@ -61,7 +63,14 @@ export async function proxy(request: NextRequest) {
   // Unknown QA tool → real 404. The page's notFound() runs after the
   // workspace loading.tsx has already streamed a 200 (audit bug B7).
   const qaTool = path.match(/^\/qa-studio\/([^/]+)\/?$/)?.[1];
-  if (qaTool && !qaToolIdSchema.safeParse(qaTool).success) {
+  // Same for chat / project URLs whose id isn't even a UUID ("new" is the
+  // fresh-project-chat route).
+  const shape = path.replace(UUID_SEGMENT, "UUID").replace(/\/$/, "");
+  const badId =
+    /^\/chat\/(?!UUID$)[^/]+$/.test(shape) ||
+    /^\/projects\/(?!UUID(\/|$))[^/]+/.test(shape) ||
+    /^\/projects\/UUID\/chat\/(?!UUID$|new$)[^/]+$/.test(shape);
+  if ((qaTool && !qaToolIdSchema.safeParse(qaTool).success) || badId) {
     return NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 });
   }
 

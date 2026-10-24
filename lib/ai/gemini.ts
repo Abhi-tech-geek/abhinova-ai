@@ -5,6 +5,9 @@ import type { AiMessage } from "@/types/chat";
 // "-latest" alias tracks Google's current Flash, so retirements of pinned
 // versions (2.0 / 2.5 were both pulled) don't break the fallback again.
 export const GEMINI_MODEL = "gemini-flash-latest";
+/** Second fallback: separate capacity pool, so it often works while Flash is overloaded. */
+export const GEMINI_LITE_MODEL = "gemini-flash-lite-latest";
+const CONNECT_TIMEOUT_MS = 15_000;
 
 /**
  * Starts a streaming generation; returns the raw SSE Response.
@@ -31,6 +34,11 @@ export async function geminiStream(
       parts: [{ text: m.content }],
     }));
 
+  // An overloaded model can take 20s+ just to return a 503. Give up on the
+  // first byte after a while so the router can try the next provider; the
+  // timer is cleared once headers arrive, so long streams aren't cut off.
+  const connect = new AbortController();
+  const timer = setTimeout(() => connect.abort(), CONNECT_TIMEOUT_MS);
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -45,14 +53,16 @@ export async function geminiStream(
         : {}),
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 2048,
+        // Room for long structured QA output (API test suites run ~3k tokens).
+        maxOutputTokens: 4096,
         // Current Flash "thinks" by default (~10s, and thinking tokens eat the
-        // 2048 output budget, truncating JSON). Fallback must be fast.
-        thinkingConfig: { thinkingBudget: 0 },
+        // output budget, truncating JSON). Fallback must be fast. Lite is a
+        // Gemini 3.x model: it rejects thinkingBudget and takes a level.
+        thinkingConfig: model.includes("lite") ? { thinkingLevel: "minimal" } : { thinkingBudget: 0 },
       },
     }),
-    signal,
-  });
+    signal: signal ? AbortSignal.any([signal, connect.signal]) : connect.signal,
+  }).finally(() => clearTimeout(timer));
 
   if (!res.ok || !res.body) {
     throw new Error(`Gemini request failed with status ${res.status}`);

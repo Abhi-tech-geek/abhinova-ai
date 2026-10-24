@@ -42,6 +42,8 @@ const nextConfig = {
   // /_next/image endpoint, which the open Next 14 RCE/DoS advisories target
   // (audit bug B5) until the Next 16 upgrade.
   images: { unoptimized: true },
+  // Don't advertise the framework/version in every response.
+  poweredByHeader: false,
   async headers() {
     return [
       { source: "/(.*)", headers: securityHeaders },

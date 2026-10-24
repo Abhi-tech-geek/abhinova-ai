@@ -1,11 +1,13 @@
 import { groqStream, GROQ_MODEL } from "@/lib/ai/groq";
-import { geminiStream, GEMINI_MODEL } from "@/lib/ai/gemini";
+import { geminiStream, GEMINI_MODEL, GEMINI_LITE_MODEL } from "@/lib/ai/gemini";
 import { PROVIDERS, type Provider, type ResolvedModel } from "@/lib/models/registry";
 import type { AiMessage } from "@/types/chat";
 
-// Provider routing: Groq first (fast), automatic Gemini fallback on any Groq
-// failure (rate limit, missing key, outage). Logs which provider served each
-// request — provider/model only, NEVER message content.
+// Provider routing: Groq first (fast), then Gemini Flash, Gemini Flash-Lite and
+// one delayed Groq retry on any failure (rate limit, missing key, outage). Logs
+// which provider served each request — provider/model only, NEVER content.
+
+const GROQ_RETRY_DELAY_MS = 2500;
 
 interface GroqChunk {
   choices?: { delta?: { content?: string } }[];
@@ -184,28 +186,39 @@ export async function streamChat(
   // Explicit model chosen (ModelPicker) — no fallback chain, fail honestly.
   if (resolved) return resolvedStream(resolved, messages, signal);
 
-  try {
-    const res = await groqStream(messages, signal);
-    console.log(`[ai-router] provider=groq model=${GROQ_MODEL}`);
-    return {
-      provider: "groq",
-      model: GROQ_MODEL,
-      textStream: sseTextStream(res, extractGroqText),
-    };
-  } catch (err) {
-    // Client aborted — don't burn a Gemini call on a dead request.
-    if (signal?.aborted) throw err;
-    console.warn(
-      `[ai-router] groq failed (${err instanceof Error ? err.message : "unknown"}); falling back to gemini`
-    );
-    const res = await geminiStream(messages, signal);
-    console.log(`[ai-router] provider=gemini model=${GEMINI_MODEL}`);
-    return {
-      provider: "gemini",
-      model: GEMINI_MODEL,
-      textStream: sseTextStream(res, extractGeminiText),
-    };
+  // Free tiers fail in bursts (Groq 429 per-minute caps, Gemini 503 "high
+  // demand"), so try each pool once and give Groq one late retry after its
+  // per-minute window has had a moment to recover.
+  const attempts: { provider: "groq" | "gemini"; model: string; delayMs?: number }[] = [
+    { provider: "groq", model: GROQ_MODEL },
+    { provider: "gemini", model: GEMINI_MODEL },
+    { provider: "gemini", model: GEMINI_LITE_MODEL },
+    { provider: "groq", model: GROQ_MODEL, delayMs: GROQ_RETRY_DELAY_MS },
+  ];
+  let lastError: unknown;
+  for (const attempt of attempts) {
+    // Client aborted — don't burn more calls on a dead request.
+    if (signal?.aborted) throw lastError ?? new Error("aborted");
+    if (attempt.delayMs) await new Promise((r) => setTimeout(r, attempt.delayMs));
+    try {
+      const res =
+        attempt.provider === "groq"
+          ? await groqStream(messages, signal)
+          : await geminiStream(messages, signal, { model: attempt.model });
+      console.log(`[ai-router] provider=${attempt.provider} model=${attempt.model}`);
+      return {
+        provider: attempt.provider,
+        model: attempt.model,
+        textStream: sseTextStream(res, attempt.provider === "groq" ? extractGroqText : extractGeminiText),
+      };
+    } catch (err) {
+      lastError = err;
+      console.warn(
+        `[ai-router] ${attempt.provider}/${attempt.model} failed (${err instanceof Error ? err.message : "unknown"})`
+      );
+    }
   }
+  throw lastError;
 }
 
 /** Non-streaming completion: collects the routed stream into one string. */
