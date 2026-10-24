@@ -100,6 +100,13 @@ export function ChatMessage({
               remarkPlugins={[remarkGfm]}
               components={{
                 pre: ({ children }) => <>{children}</>,
+                // Wide tables scroll inside their own box; without it a long
+                // URL or many columns made the whole chat list pan sideways.
+                table: ({ children }) => (
+                  <div className="my-2 max-w-full overflow-x-auto" data-testid="chat-message-table">
+                    <table className="min-w-full border-collapse">{children}</table>
+                  </div>
+                ),
                 code: ({ className, children }) => {
                   const text = String(children).replace(/\n$/, "");
                   const isBlock =

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { isFsAccessSupported, pickDirectory } from "@/lib/code/fs-access";
+import { useMounted } from "@/hooks/use-mounted";
 
 export function ProjectPicker({
   onFolder,
@@ -17,6 +18,11 @@ export function ProjectPicker({
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteName, setPasteName] = useState("snippet.ts");
   const [pasteContent, setPasteContent] = useState("");
+  // Phones and Safari/Firefox have no folder access — say so up front and
+  // open the paste box instead of offering a button that can't work.
+  const mounted = useMounted();
+  const noFolderAccess = mounted && !isFsAccessSupported();
+  const showPaste = pasteOpen || noFolderAccess;
 
   async function openFolder() {
     if (!isFsAccessSupported()) {
@@ -39,9 +45,20 @@ export function ProjectPicker({
         files (.env, keys) are never indexed or sent to any model.
       </p>
       <div className="mt-6 flex flex-col items-center gap-2">
-        <Button onClick={openFolder} className="shadow-glow-primary" data-testid="codestudio-open-folder">
+        <Button
+          onClick={openFolder}
+          disabled={noFolderAccess}
+          className="shadow-glow-primary"
+          data-testid="codestudio-open-folder"
+        >
           📂 Open local folder
         </Button>
+        {noFolderAccess && (
+          <p className="text-[11px] text-muted-foreground" data-testid="codestudio-no-folder-access">
+            This browser can&apos;t open folders (phones, Safari and Firefox). Use desktop
+            Chrome or Edge for full projects — or paste a file below.
+          </p>
+        )}
         <Button
           variant="outline"
           disabled
@@ -50,17 +67,19 @@ export function ProjectPicker({
         >
           GitHub repo (coming soon)
         </Button>
-        <button
-          type="button"
-          onClick={() => setPasteOpen((v) => !v)}
-          className="mt-1 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          data-testid="codestudio-paste-toggle"
-        >
-          …or paste a single file for a quick task
-        </button>
+        {!noFolderAccess && (
+          <button
+            type="button"
+            onClick={() => setPasteOpen((v) => !v)}
+            className="mt-1 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            data-testid="codestudio-paste-toggle"
+          >
+            …or paste a single file for a quick task
+          </button>
+        )}
       </div>
 
-      {pasteOpen && (
+      {showPaste && (
         <div className="mt-4 space-y-2 text-left">
           <Input
             value={pasteName}

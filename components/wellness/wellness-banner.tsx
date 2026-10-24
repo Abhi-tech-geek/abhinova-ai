@@ -37,7 +37,7 @@ export function WellnessBanner() {
 
   return (
     <header
-      className="glass sticky top-0 z-40 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border/60 px-4 py-2.5 sm:flex-nowrap sm:px-5"
+      className="glass sticky top-0 z-40 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border/60 px-4 py-2.5 sm:px-5 lg:flex-nowrap"
       data-testid="wellness-banner"
     >
       {/* Mobile: row 1 = brand + exit, row 2 = full-width nav. sm+: one row. */}
@@ -83,6 +83,13 @@ export function WellnessBanner() {
           ← Back to work
         </Button>
       </div>
+      {/* Phones/tablets: the standing disclaimer gets its own line under the nav. */}
+      <p
+        className="order-last w-full text-center text-[10px] text-muted-foreground lg:hidden"
+        data-testid="wellness-banner-disclaimer"
+      >
+        AbhiNova is not a replacement for a professional therapist.
+      </p>
     </header>
   );
 }

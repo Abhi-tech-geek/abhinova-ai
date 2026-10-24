@@ -86,7 +86,33 @@ function TestCasesView({ data }: { data: TestCasesOutput }) {
         markdown={() => testCasesToMarkdown(data)}
         json={() => JSON.stringify(data, null, 2)}
       />
-      <div className="overflow-x-auto">
+      {/* Phones: one card per case — a 7-column table is unreadable at 375px. */}
+      <ul className="space-y-2 sm:hidden" data-testid="qastudio-testcases-cards">
+        {data.testCases.map((tc) => (
+          <li key={tc.id} className="rounded-md border border-border/60 p-3 text-xs">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="font-mono text-[11px] text-muted-foreground">{tc.id}</span>
+              <Pill value={tc.priority} />
+              <Pill value={tc.type} />
+            </div>
+            <p className="mt-1.5 text-sm font-medium">{tc.title}</p>
+            {tc.preconditions && (
+              <p className="mt-1.5 text-muted-foreground">
+                <span className="font-medium text-foreground">Pre: </span>
+                {tc.preconditions}
+              </p>
+            )}
+            <ol className="mt-1.5 list-decimal space-y-0.5 pl-4">
+              {tc.steps.map((s, i) => <li key={i}>{s}</li>)}
+            </ol>
+            <p className="mt-1.5 rounded bg-success/10 px-2 py-1">
+              <span className="font-medium text-success">Expected: </span>
+              {tc.expectedResult}
+            </p>
+          </li>
+        ))}
+      </ul>
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full border-collapse">
           <thead>
             <tr>
@@ -182,7 +208,19 @@ function ApiTestsView({ data }: { data: ApiTestsOutput }) {
   return (
     <div className="space-y-5">
       <ExportButtons toolId="api-tests" json={() => JSON.stringify(data, null, 2)} />
-      <div className="overflow-x-auto">
+      <ul className="space-y-2 sm:hidden" data-testid="qastudio-apitests-cards">
+        {data.scenarios.map((s, i) => (
+          <li key={i} className="rounded-md border border-border/60 p-3 text-xs">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Pill value={s.category} />
+              <code className="font-mono text-[11px]">{String(s.expectedStatus)}</code>
+            </div>
+            <p className="mt-1.5 text-sm font-medium">{s.name}</p>
+            <p className="mt-1 text-muted-foreground">{s.description}</p>
+          </li>
+        ))}
+      </ul>
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full border-collapse">
           <thead>
             <tr><Th>Scenario</Th><Th>Category</Th><Th>Status</Th><Th>Description</Th></tr>
