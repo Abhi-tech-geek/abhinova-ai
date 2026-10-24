@@ -29,5 +29,7 @@ export function formatProjectNotes(notes: string[]): string {
 }
 
 export function formatProjectSources(contextBlock: string): string {
-  return `Numbered sources from this project's knowledge base:\n\n${contextBlock}`;
+  // The "not in sources" reminder sits right after the chunks — placed only in
+  // the top rules, the model often answered from general knowledge silently.
+  return `Numbered sources from this project's knowledge base:\n\n${contextBlock}\n\nIf these sources don't answer the user's question, begin your reply by saying it isn't in the project's documents, then answer from general knowledge if helpful.`;
 }
