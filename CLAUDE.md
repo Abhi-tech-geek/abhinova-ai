@@ -169,7 +169,7 @@ abhinova-ai/
 │       ├── 001_init.sql            # never edit — new changes go in new numbered files
 │       ├── 002_projects_connectors.sql
 │       ├── 003_open_beta.sql      # beta_usage counters + consume_beta_quota() + guest write access
-│       └── 004_feedback.sql       # in-app feedback (insert-only, 10/user/24h via RLS)
+│       └── 004_feedback.sql       # in-app feedback (server-only submit_feedback RPC, 10/user/24h)
 ├── design-reference/               # Claude Design export (source design) — read as the visual foundation
 ├── private-learning/               # NEVER pushed to git (in .gitignore)
 ├── public/
