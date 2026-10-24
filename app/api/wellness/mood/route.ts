@@ -33,7 +33,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: "invalid_request" }, { status: 400 });
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from("mood_logs").insert({
     user_id: user.id,
     mood: parsed.data.mood,
@@ -67,7 +67,7 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ error: "guest_not_allowed" }, { status: 403 });
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const periodStart = mondayOfCurrentWeek();
 
   // Cached this week already?

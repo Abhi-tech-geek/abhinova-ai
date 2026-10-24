@@ -31,7 +31,7 @@ export async function retrieveChunks(
   matchCount = MATCH_COUNT
 ): Promise<RetrievedSource[]> {
   const queryEmbedding = await embedQuery(question);
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc("match_document_chunks", {
     query_embedding: queryEmbedding,
     match_count: matchCount,
@@ -47,7 +47,7 @@ export async function firstChunks(
   documentId: string,
   limit = 8
 ): Promise<RetrievedSource[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("document_chunks")
     .select("id, document_id, content, chunk_index, metadata, documents(file_name, source_url)")

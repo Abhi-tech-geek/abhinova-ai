@@ -9,7 +9,7 @@ import { DocChat } from "@/components/documents/doc-chat";
 import type { DocumentRecord } from "@/types/documents";
 
 export default async function DocumentsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

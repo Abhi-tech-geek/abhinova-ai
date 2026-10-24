@@ -12,14 +12,15 @@ import type { ChatMessageRecord } from "@/types/chat";
 // conversationId "new" = fresh chat; the first reply creates the conversation
 // inside this project and navigates to its real id.
 export default async function ProjectChatPage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { projectId: string; conversationId: string };
+  params: Promise<{ projectId: string; conversationId: string }>;
 }) {
+  const params = await paramsPromise;
   const projectId = projectIdSchema.safeParse(params.projectId);
   if (!projectId.success) notFound();
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const project = await getOwnedProject(supabase, projectId.data);
   if (!project) notFound();
 

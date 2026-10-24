@@ -21,7 +21,7 @@ export async function GET(): Promise<Response> {
   const models: ModelOption[] = [...BUILT_IN_MODELS];
 
   if (!isGuest(user)) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: keys } = await supabase
       .from("user_api_keys")
       .select("id, provider, key_masked, label")

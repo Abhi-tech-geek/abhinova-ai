@@ -6,15 +6,16 @@ import { ToolWorkspace } from "@/components/qa-studio/tool-workspace";
 import type { QaArtifactRecord } from "@/types/qa";
 
 export default async function QaToolPage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { tool: string };
+  params: Promise<{ tool: string }>;
 }) {
+  const params = await paramsPromise;
   const tool = getQaTool(params.tool);
   if (!tool) notFound();
 
   // History for this tool — RLS scopes it to the signed-in user.
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: artifacts } = await supabase
     .from("qa_artifacts")
     .select("id, type, input, output, created_at")

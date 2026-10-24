@@ -3,7 +3,7 @@ import { TalkPanel } from "@/components/wellness/talk-panel";
 import type { WellnessMessage } from "@/types/wellness";
 
 export default async function TalkPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Resume the latest un-ended wellness session, if any (RLS-scoped).
   const { data: conversation } = await supabase

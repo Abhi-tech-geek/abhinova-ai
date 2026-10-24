@@ -6,7 +6,7 @@ import { LockedFeature } from "@/components/shared/locked-feature";
 import { CodeStudioWorkspace } from "@/components/code-studio/code-studio-workspace";
 
 export default async function CodeStudioPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

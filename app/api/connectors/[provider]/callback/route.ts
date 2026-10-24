@@ -15,15 +15,16 @@ import { createClient } from "@/lib/supabase/server";
 // store tokens ENCRYPTED, then send the user back. Tokens never reach the
 // browser and are never logged.
 
-type Ctx = { params: { provider: string } };
+type Ctx = { params: Promise<{ provider: string }> };
 
-export async function GET(request: Request, { params }: Ctx): Promise<Response> {
+export async function GET(request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const url = new URL(request.url);
   const provider = connectorProviderSchema.safeParse(params.provider);
   if (!provider.success) return Response.json({ error: "unknown_provider" }, { status: 404 });
 
   const cookieName = stateCookieName(provider.data);
-  const raw = cookies().get(cookieName)?.value;
+  const raw = (await cookies()).get(cookieName)?.value;
   let saved: { state?: string; returnTo?: string } = {};
   try {
     saved = raw ? (JSON.parse(raw) as typeof saved) : {};
@@ -50,7 +51,7 @@ export async function GET(request: Request, { params }: Ctx): Promise<Response> 
 
   try {
     const tokens = await exchangeCode(provider.data, parsed.data.code, url.origin);
-    const supabase = createClient();
+    const supabase = await createClient();
     await saveConnectorAccount(supabase, guard.user.id, provider.data, tokens);
     return back(`connected=${provider.data}`);
   } catch {

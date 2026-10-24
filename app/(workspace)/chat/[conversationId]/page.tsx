@@ -5,15 +5,16 @@ import { ChatPanel } from "@/components/workspace/chat-panel";
 import type { ChatMessageRecord } from "@/types/chat";
 
 export default async function ConversationPage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { conversationId: string };
+  params: Promise<{ conversationId: string }>;
 }) {
+  const params = await paramsPromise;
   const parsed = conversationIdSchema.safeParse(params.conversationId);
   if (!parsed.success) notFound();
   const conversationId = parsed.data;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   // RLS: only the owner's conversation resolves.
   const { data: conversation } = await supabase
     .from("conversations")

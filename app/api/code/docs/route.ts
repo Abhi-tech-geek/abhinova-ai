@@ -84,7 +84,7 @@ export async function POST(request: Request): Promise<Response> {
     const { text } = await completeChat(messages, request.signal, resolved);
     const title = text.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? `${docType.toUpperCase()} document`;
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const project = parsed.data.projectId
       ? await getOwnedProject(supabase, parsed.data.projectId)
       : null;

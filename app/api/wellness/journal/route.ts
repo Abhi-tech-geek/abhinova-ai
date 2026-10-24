@@ -106,7 +106,7 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ error: "guest_not_allowed" }, { status: 403 });
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const periodStart = `${new Date().toISOString().slice(0, 7)}-01`; // month start
 
   const { data: cached } = await supabase

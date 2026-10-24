@@ -17,9 +17,10 @@ import { createClient } from "@/lib/supabase/server";
 //          ?deleteData=true also removes every source synced via it.
 // Guests can never connect (403).
 
-type Ctx = { params: { provider: string } };
+type Ctx = { params: Promise<{ provider: string }> };
 
-export async function GET(request: Request, { params }: Ctx): Promise<Response> {
+export async function GET(request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "connect", maxPerMinute: 10, blockGuests: true });
   if ("response" in guard) return guard.response;
   const provider = connectorProviderSchema.safeParse(params.provider);
@@ -45,13 +46,14 @@ export async function GET(request: Request, { params }: Ctx): Promise<Response> 
   return response;
 }
 
-export async function DELETE(request: Request, { params }: Ctx): Promise<Response> {
+export async function DELETE(request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "connect", maxPerMinute: 10, blockGuests: true });
   if ("response" in guard) return guard.response;
   const provider = connectorProviderSchema.safeParse(params.provider);
   if (!provider.success) return Response.json({ error: "unknown_provider" }, { status: 404 });
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const deleteData = new URL(request.url).searchParams.get("deleteData") === "true";
   if (deleteData) {
     // Synced documents + chunks cascade with their sources.

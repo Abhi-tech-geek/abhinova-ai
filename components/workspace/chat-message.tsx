@@ -37,12 +37,12 @@ function CodeBlock({ text, className }: { text: string; className?: string }) {
 
 // react-markdown with remark-gfm renders to React elements only — no raw HTML
 // pass-through, so AI output can't inject markup (safe renderer per CLAUDE.md).
-// [S1] / 【S1】 → a markdown link to #cite-S1, rendered as a citation chip
-// (only for tags that actually exist in this reply's sources).
+// [S1] / 【S1】 / [ S1 ] → a markdown link to #cite-S1, rendered as a citation
+// chip (only for tags that actually exist in this reply's sources).
 function linkCitations(content: string, sources: RetrievedSource[]): string {
   if (sources.length === 0) return content;
   const tags = new Set(sources.map((s) => s.tag));
-  return content.replace(/[[【](S\d+)[\]】]/g, (match, tag: string) =>
+  return content.replace(/[[【]\s*(S\d+)\s*[\]】]/g, (match, tag: string) =>
     tags.has(tag) ? `[${tag}](#cite-${tag})` : match
   );
 }

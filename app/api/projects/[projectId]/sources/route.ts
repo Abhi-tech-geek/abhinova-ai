@@ -15,17 +15,18 @@ import type { ProjectSourceRecord } from "@/types/connectors";
 // Guests can't use links or connectors (403); files only.
 export const maxDuration = 60;
 
-type Ctx = { params: { projectId: string } };
+type Ctx = { params: Promise<{ projectId: string }> };
 
 async function ownedProject(projectId: string) {
   const id = projectIdSchema.safeParse(projectId);
   if (!id.success) return null;
-  const supabase = createClient();
+  const supabase = await createClient();
   const project = await getOwnedProject(supabase, id.data);
   return project ? { supabase, project } : null;
 }
 
-export async function GET(_request: Request, { params }: Ctx): Promise<Response> {
+export async function GET(_request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "projects", maxPerMinute: 60 });
   if ("response" in guard) return guard.response;
   const owned = await ownedProject(params.projectId);
@@ -38,7 +39,8 @@ export async function GET(_request: Request, { params }: Ctx): Promise<Response>
   return Response.json({ sources: data ?? [] });
 }
 
-export async function POST(request: Request, { params }: Ctx): Promise<Response> {
+export async function POST(request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "sync", maxPerMinute: 6, blockGuests: true });
   if ("response" in guard) return guard.response;
   const owned = await ownedProject(params.projectId);
@@ -108,7 +110,8 @@ export async function POST(request: Request, { params }: Ctx): Promise<Response>
   return Response.json({ source, outcome }, { status: 201 });
 }
 
-export async function PUT(request: Request, { params }: Ctx): Promise<Response> {
+export async function PUT(request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "sync", maxPerMinute: 6, blockGuests: true });
   if ("response" in guard) return guard.response;
   const owned = await ownedProject(params.projectId);
@@ -131,7 +134,8 @@ export async function PUT(request: Request, { params }: Ctx): Promise<Response> 
   return Response.json({ outcome });
 }
 
-export async function DELETE(request: Request, { params }: Ctx): Promise<Response> {
+export async function DELETE(request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "projects", maxPerMinute: 60, blockGuests: true });
   if ("response" in guard) return guard.response;
   const owned = await ownedProject(params.projectId);

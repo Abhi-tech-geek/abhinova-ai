@@ -17,11 +17,12 @@ export const metadata: Metadata = {
 // lib/admin/auth.ts); stats come from the service-role-only
 // admin_usage_stats() function — aggregates only.
 export default async function AdminPage({
-  searchParams,
+  searchParams: searchParamsPromise,
 }: {
-  searchParams: { days?: string; error?: string };
+  searchParams: Promise<{ days?: string; error?: string }>;
 }) {
-  if (!isAdminSession()) {
+  const searchParams = await searchParamsPromise;
+  if (!(await isAdminSession())) {
     return <AdminLogin error={searchParams.error} configured={isAdminConfigured()} />;
   }
 

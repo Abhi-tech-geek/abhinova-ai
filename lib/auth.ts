@@ -20,7 +20,7 @@ export class UnauthorizedError extends Error {
 }
 
 export async function getAuthenticatedUser(): Promise<User> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

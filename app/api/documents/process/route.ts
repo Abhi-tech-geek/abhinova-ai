@@ -39,7 +39,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   // RLS: only the owner's document resolves.
   const { data: document } = await supabase
     .from("documents")

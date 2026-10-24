@@ -12,7 +12,7 @@ import { WellnessBanner } from "@/components/wellness/wellness-banner";
 export default async function WellnessLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

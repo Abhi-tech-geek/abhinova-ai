@@ -9,18 +9,19 @@ import { getOwnedProject, MAX_NOTES_PER_PROJECT } from "@/lib/projects/scope";
 import { createClient } from "@/lib/supabase/server";
 
 // Project memory notes — short permanent facts the project AI always sees.
-type Ctx = { params: { projectId: string } };
+type Ctx = { params: Promise<{ projectId: string }> };
 
 async function ownedProjectOr404(projectId: string) {
   const id = projectIdSchema.safeParse(projectId);
   if (!id.success) return { response: Response.json({ error: "invalid_project" }, { status: 400 }) };
-  const supabase = createClient();
+  const supabase = await createClient();
   const project = await getOwnedProject(supabase, id.data);
   if (!project) return { response: Response.json({ error: "project_not_found" }, { status: 404 }) };
   return { supabase, project };
 }
 
-export async function GET(_request: Request, { params }: Ctx): Promise<Response> {
+export async function GET(_request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "projects", maxPerMinute: 60 });
   if ("response" in guard) return guard.response;
   const owned = await ownedProjectOr404(params.projectId);
@@ -33,7 +34,8 @@ export async function GET(_request: Request, { params }: Ctx): Promise<Response>
   return Response.json({ notes: data ?? [] });
 }
 
-export async function POST(request: Request, { params }: Ctx): Promise<Response> {
+export async function POST(request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "projects", maxPerMinute: 60 });
   if ("response" in guard) return guard.response;
   const owned = await ownedProjectOr404(params.projectId);
@@ -58,7 +60,8 @@ export async function POST(request: Request, { params }: Ctx): Promise<Response>
   return Response.json({ note: data }, { status: 201 });
 }
 
-export async function PATCH(request: Request, { params }: Ctx): Promise<Response> {
+export async function PATCH(request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "projects", maxPerMinute: 60 });
   if ("response" in guard) return guard.response;
   const owned = await ownedProjectOr404(params.projectId);
@@ -77,7 +80,8 @@ export async function PATCH(request: Request, { params }: Ctx): Promise<Response
   return Response.json({ note: data });
 }
 
-export async function DELETE(request: Request, { params }: Ctx): Promise<Response> {
+export async function DELETE(request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "projects", maxPerMinute: 60 });
   if ("response" in guard) return guard.response;
   const owned = await ownedProjectOr404(params.projectId);

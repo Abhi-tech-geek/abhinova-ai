@@ -12,20 +12,22 @@ import { createClient } from "@/lib/supabase/server";
 // DELETE → remove project + notes + sources (and their synced items);
 //          ?deleteDocuments=true also deletes uploaded files, chunks, storage.
 
-type Ctx = { params: { projectId: string } };
+type Ctx = { params: Promise<{ projectId: string }> };
 
-export async function GET(_request: Request, { params }: Ctx): Promise<Response> {
+export async function GET(_request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "projects", maxPerMinute: 60 });
   if ("response" in guard) return guard.response;
   const id = projectIdSchema.safeParse(params.projectId);
   if (!id.success) return Response.json({ error: "invalid_project" }, { status: 400 });
 
-  const detail = await loadProjectDetail(createClient(), id.data);
+  const detail = await loadProjectDetail(await createClient(), id.data);
   if (!detail) return Response.json({ error: "project_not_found" }, { status: 404 });
   return Response.json(detail);
 }
 
-export async function PATCH(request: Request, { params }: Ctx): Promise<Response> {
+export async function PATCH(request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "projects", maxPerMinute: 60 });
   if ("response" in guard) return guard.response;
   const id = projectIdSchema.safeParse(params.projectId);
@@ -40,7 +42,7 @@ export async function PATCH(request: Request, { params }: Ctx): Promise<Response
     );
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const project = await getOwnedProject(supabase, id.data);
   if (!project) return Response.json({ error: "project_not_found" }, { status: 404 });
 
@@ -72,7 +74,8 @@ export async function PATCH(request: Request, { params }: Ctx): Promise<Response
   return Response.json({ project });
 }
 
-export async function DELETE(request: Request, { params }: Ctx): Promise<Response> {
+export async function DELETE(request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "projects", maxPerMinute: 30 });
   if ("response" in guard) return guard.response;
   const id = projectIdSchema.safeParse(params.projectId);
@@ -82,7 +85,7 @@ export async function DELETE(request: Request, { params }: Ctx): Promise<Respons
   );
   if (!query.success) return Response.json({ error: "invalid_request" }, { status: 400 });
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const project = await getOwnedProject(supabase, id.data);
   if (!project) return Response.json({ error: "project_not_found" }, { status: 404 });
 

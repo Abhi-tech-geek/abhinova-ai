@@ -15,7 +15,7 @@ import { getConnectorStatuses } from "@/lib/connectors/oauth";
 async function deleteAccountAction(): Promise<void> {
   "use server";
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -43,7 +43,7 @@ async function deleteAccountAction(): Promise<void> {
 }
 
 export default async function SettingsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

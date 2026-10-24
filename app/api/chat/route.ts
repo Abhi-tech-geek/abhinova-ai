@@ -60,7 +60,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // 4. Resolve conversation (RLS guarantees ownership on every query below).
   // A conversation's project comes from the DB, never from the request.

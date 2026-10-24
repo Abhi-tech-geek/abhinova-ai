@@ -4,7 +4,7 @@ import type { JournalEntryRecord } from "@/types/wellness";
 import { LocalTime } from "@/components/shared/local-time";
 
 export default async function JournalPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: entries } = await supabase
     .from("journal_entries")
     .select("id, content, distortions, reframe, created_at")

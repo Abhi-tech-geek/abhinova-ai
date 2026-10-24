@@ -9,9 +9,10 @@ import type { ProjectSourceRecord } from "@/types/connectors";
 // this provider.
 export const maxDuration = 60;
 
-type Ctx = { params: { provider: string } };
+type Ctx = { params: Promise<{ provider: string }> };
 
-export async function POST(request: Request, { params }: Ctx): Promise<Response> {
+export async function POST(request: Request, ctx: Ctx): Promise<Response> {
+  const params = await ctx.params;
   const guard = await guardRoute({ rateKey: "sync", maxPerMinute: 6, blockGuests: true });
   if ("response" in guard) return guard.response;
   const provider = connectorProviderSchema.safeParse(params.provider);
@@ -19,7 +20,7 @@ export async function POST(request: Request, { params }: Ctx): Promise<Response>
   const parsed = sourceIdSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400 });
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: source } = await supabase
     .from("project_sources")
     .select("*")

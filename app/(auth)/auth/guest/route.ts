@@ -12,7 +12,7 @@ export async function GET(request: Request) {
 
   if (!isOpenBeta()) return NextResponse.redirect(`${origin}/login`);
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -5,7 +5,7 @@ import { ProjectGrid } from "@/components/projects/project-grid";
 export const metadata = { title: "Projects" };
 
 export default async function ProjectsPage() {
-  const projects = await listProjectsWithStats(createClient());
+  const projects = await listProjectsWithStats(await createClient());
   return (
     <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
       <header className="mb-6">

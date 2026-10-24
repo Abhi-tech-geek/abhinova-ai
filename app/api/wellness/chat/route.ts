@@ -69,7 +69,7 @@ export async function POST(request: Request): Promise<Response> {
     return quotaBlocked;
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // ---------- End session → warm summary saved on the conversation ----------
   if (parsed.data.action === "end") {

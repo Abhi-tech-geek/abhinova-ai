@@ -6,7 +6,7 @@ import { MusicPlayer } from "@/components/wellness/music-player";
 import type { MoodLogRecord } from "@/types/wellness";
 
 export default async function MoodPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: logs } = await supabase
     .from("mood_logs")
     .select("id, mood, note, sleep_hours, created_at")

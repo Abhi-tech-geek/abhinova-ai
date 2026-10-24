@@ -40,8 +40,8 @@ export function isValidAdminKey(submitted: string): boolean {
 }
 
 /** True when the current request carries a valid admin cookie. */
-export function isAdminSession(): boolean {
+export async function isAdminSession(): Promise<boolean> {
   const expected = adminCookieValue();
-  const got = cookies().get(ADMIN_COOKIE)?.value;
+  const got = (await cookies()).get(ADMIN_COOKIE)?.value;
   return !!expected && !!got && safeEqual(got, expected);
 }

@@ -53,7 +53,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: "invalid_project" }, { status: 400 });
   }
   const projectId = projectIdParsed.data;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   if (projectId) {
     // RLS: only the owner's project resolves.

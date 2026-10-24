@@ -22,7 +22,7 @@ export async function GET(): Promise<Response> {
   }
   if (isGuest(user)) return Response.json({ error: "guest_not_allowed" }, { status: 403 });
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: keys } = await supabase
     .from("user_api_keys")
     .select("id, provider, key_masked, label, created_at")
@@ -86,7 +86,7 @@ export async function DELETE(request: Request): Promise<Response> {
     return Response.json({ error: "invalid_request" }, { status: 400 });
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase
     .from("user_api_keys")
     .delete()

@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(): Promise<Response> {
   const guard = await guardRoute({ rateKey: "projects", maxPerMinute: 60 });
   if ("response" in guard) return guard.response;
-  const projects = await listProjectsWithStats(createClient());
+  const projects = await listProjectsWithStats(await createClient());
   return Response.json({ projects });
 }
 
@@ -27,7 +27,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   if (isGuest(user)) {
     const { count } = await supabase.from("projects").select("id", { count: "exact", head: true });
     if ((count ?? 0) >= GUEST_MAX_PROJECTS) {

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 // AbhiNova AI design system — SYNCED from design-reference/ (Claude Design
 // export). All values resolve from the CSS variables in app/globals.css, so
@@ -85,6 +86,6 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 };
 export default config;

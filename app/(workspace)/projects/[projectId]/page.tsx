@@ -11,16 +11,17 @@ import { ProjectNotes } from "@/components/projects/project-notes";
 import { ProjectChatList } from "@/components/projects/project-chat-list";
 
 export default async function ProjectHomePage({
-  params,
-  searchParams,
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { projectId: string };
-  searchParams: { connected?: string; connector_error?: string };
+  params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ connected?: string; connector_error?: string }>;
 }) {
+  const [params, searchParams] = await Promise.all([paramsPromise, searchParamsPromise]);
   const id = projectIdSchema.safeParse(params.projectId);
   if (!id.success) notFound();
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

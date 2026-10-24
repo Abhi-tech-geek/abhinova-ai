@@ -4,7 +4,7 @@ import { InsightCard } from "@/components/wellness/insight-card";
 import type { MoodLogRecord } from "@/types/wellness";
 
 export default async function ProgressPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const [{ data: logs }, { count: journalCount }, { count: sessionCount }] =
     await Promise.all([

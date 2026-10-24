@@ -77,7 +77,7 @@ export async function saveApiKey(
   apiKey: string,
   label?: string
 ): Promise<{ id: string; key_masked: string } | null> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("user_api_keys")
     .insert({
@@ -103,7 +103,7 @@ export async function resolveModel(modelId: string): Promise<ResolvedModel | nul
     const [, keyId, ...modelParts] = parts;
     const model = modelParts.join("/"); // openrouter models contain "/"
     if (!keyId || !model) return null;
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: row } = await supabase
       .from("user_api_keys")
       .select("provider, encrypted_key")

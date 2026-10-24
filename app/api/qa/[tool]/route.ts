@@ -26,8 +26,9 @@ import type { AiMessage } from "@/types/chat";
 
 export async function POST(
   request: Request,
-  { params }: { params: { tool: string } }
+  ctx: { params: Promise<{ tool: string }> }
 ): Promise<Response> {
+  const params = await ctx.params;
   // 1. Auth
   let user;
   try {
@@ -74,7 +75,7 @@ export async function POST(
   if (quotaBlocked) return quotaBlocked;
 
   // 4. Optional project scope: its instructions + the most relevant chunks.
-  const supabase = createClient();
+  const supabase = await createClient();
   let projectContext = "";
   let scopedProjectId: string | null = null;
   if (projectId) {

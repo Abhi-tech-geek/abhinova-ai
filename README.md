@@ -2,7 +2,7 @@
 
 **A productivity-first AI workspace — chat, project knowledge bases, QA tools, document Q&A and a code studio in one app, with an optional calm Wellness mode.**
 
-Built with Next.js 14, Supabase (Postgres + pgvector) and Groq / Gemini. Talks English, Hindi and Hinglish.
+Built with Next.js 16, Supabase (Postgres + pgvector) and Groq / Gemini. Talks English, Hindi and Hinglish.
 
 > 🧪 **Open beta:** no sign-up — open the site and start. Free daily limits keep it fair for everyone (see [Open beta mode](#open-beta-mode-default-on)).
 
@@ -47,7 +47,7 @@ One RAG pipeline: extract → redact secrets → chunk → embed (Gemini) → pg
 
 ## Tech stack
 
-Next.js 14 (App Router) · TypeScript (strict) · Tailwind CSS · shadcn/ui · Framer Motion · Supabase (Postgres, Auth, Storage, pgvector) · Groq · Google Gemini · Web Speech API · Recharts · SheetJS · Mammoth · undici
+Next.js 16 (App Router, React 19) · TypeScript (strict) · Tailwind CSS · shadcn/ui · Framer Motion · Supabase (Postgres, Auth, Storage, pgvector) · Groq · Google Gemini · Web Speech API · Recharts · SheetJS · Mammoth · undici
 
 ---
 
