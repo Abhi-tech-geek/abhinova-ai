@@ -8,6 +8,7 @@ import {
   formatProjectNotes,
   formatProjectSources,
 } from "@/lib/ai/prompts/project-agent";
+import { GUARDRAILS_REMINDER } from "@/lib/ai/prompts/safety";
 import type { ProjectRecord } from "@/types/projects";
 import type { RetrievedSource } from "@/types/documents";
 
@@ -50,11 +51,12 @@ export async function assembleProjectContext(
 
   if (documentCount === 0) {
     if (isFirstMessage) fixedParts.push(PROJECT_NO_DOCUMENTS_NOTE);
-    return { systemPrompt: fixedParts.join("\n\n"), sources: [], documentCount };
+    // Last word goes to the guardrails, after any user-supplied text (bug B1).
+    return { systemPrompt: [...fixedParts, GUARDRAILS_REMINDER].join("\n\n"), sources: [], documentCount };
   }
 
   const fixed = fixedParts.join("\n\n");
-  let remainingChars = CONTEXT_BUDGET_TOKENS * CHARS_PER_TOKEN - fixed.length;
+  let remainingChars = CONTEXT_BUDGET_TOKENS * CHARS_PER_TOKEN - fixed.length - GUARDRAILS_REMINDER.length;
 
   // Retrieval failure (e.g. embeddings outage) degrades to a plain project chat.
   let ranked: RetrievedSource[] = [];
@@ -75,5 +77,7 @@ export async function assembleProjectContext(
 
   const parts = [fixed];
   if (kept.length > 0) parts.push(formatProjectSources(buildDocumentContext(kept)));
+  // Last word goes to the guardrails, after instructions/notes/sources (bug B1).
+  parts.push(GUARDRAILS_REMINDER);
   return { systemPrompt: parts.join("\n\n"), sources: kept, documentCount };
 }

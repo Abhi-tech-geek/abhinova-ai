@@ -9,7 +9,9 @@ const csp = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https:",
+  // No remote images: AI replies render image links instead of loading them,
+  // so a crafted image URL can't carry data out of the page (audit bug B2).
+  "img-src 'self' data: blob:",
   "media-src 'self' blob: https:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.webcontainer-api.io https://*.staticblitz.com blob: data:",
   "frame-src 'self' https://*.webcontainer-api.io",
@@ -36,6 +38,10 @@ const crossOriginIsolation = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // We never use next/image. Turning the optimizer off removes the
+  // /_next/image endpoint, which the open Next 14 RCE/DoS advisories target
+  // (audit bug B5) until the Next 16 upgrade.
+  images: { unoptimized: true },
   async headers() {
     return [
       { source: "/(.*)", headers: securityHeaders },

@@ -103,7 +103,8 @@ abhinova-ai/
 │   │       ├── qa-tools.ts
 │   │       ├── project-agent.ts
 │   │       ├── code-agent.ts
-│   │       └── wellness.ts
+│   │       ├── wellness.ts
+│   │       └── safety.ts           # GUARDRAILS (harm refusal + prompt confidentiality) + IST clock note
 │   ├── rag/
 │   │   ├── extract.ts              # pdf/docx/doc/pptx/xlsx/xls/csv/txt/md/json/code extraction
 │   │   ├── chunk.ts
@@ -217,6 +218,8 @@ abhinova-ai/
 - Rate limiting on all AI endpoints (simple in-memory or Upstash later): max 20 AI requests/minute/user (`lib/rate-limit.ts`).
 - Treat document content as untrusted: when injecting retrieved chunks into prompts, wrap them in delimiters and instruct the model that the content is data, not instructions (prompt injection defense).
 - Sanitize/escape any AI output rendered as HTML; render markdown through a safe renderer only.
+- AI-rendered markdown never auto-loads remote images (shown as links); CSP `img-src` stays `'self' data: blob:`.
+- Every user-facing system prompt ends with `GUARDRAILS` from `lib/ai/prompts/safety.ts`; prompts that embed user-supplied text (project instructions/notes/sources) end with `GUARDRAILS_REMINDER` after that text.
 
 ## Code Studio Security Rules (non-negotiable — this feature touches user files + code execution)
 - Local project access uses the browser File System Access API ONLY. The user explicitly picks a directory and grants permission; access is scoped to that directory, never traverses above it, and is revocable. No server ever receives the user's full local path.

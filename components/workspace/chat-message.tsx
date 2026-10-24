@@ -113,6 +113,31 @@ export function ChatMessage({
                   }
                   return <CodeBlock text={text} className={className} />;
                 },
+                // Never auto-load images from AI replies: an injected document
+                // could smuggle data out in an image URL (audit bug B2). Show a
+                // link the user can choose to open instead.
+                img: ({ src, alt }) => {
+                  const url = typeof src === "string" ? src : "";
+                  let host = "";
+                  try {
+                    host = new URL(url).hostname;
+                  } catch {
+                    host = "";
+                  }
+                  if (!host) return <span className="text-muted-foreground">[image]</span>;
+                  return (
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="inline-flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 text-xs no-underline"
+                      data-testid="chat-message-image-link"
+                    >
+                      🖼 {alt ? `${alt} · ` : "Image · "}
+                      {host}
+                    </a>
+                  );
+                },
                 a: ({ href, children }) => {
                   const tag = href?.startsWith("#cite-") ? href.slice(6) : null;
                   const source = tag ? sources.find((s) => s.tag === tag) : undefined;

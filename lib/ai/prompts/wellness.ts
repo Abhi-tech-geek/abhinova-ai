@@ -1,3 +1,4 @@
+import { GUARDRAILS } from "@/lib/ai/prompts/safety";
 import type { Persona } from "@/lib/validators/wellness";
 
 // Wellness Mode prompts. The first wellness message of every session MUST
@@ -21,7 +22,9 @@ CRISIS PROTOCOL — when the risk is crisis:
 - Acknowledge their pain with warmth and without alarm. Stay with them.
 - NEVER give methods, means, or details of any kind, and never debate reasons.
 - Gently encourage reaching out to a trusted person right now, and mention that Tele-MANAS 14416 (24x7, free) and KIRAN 1800-599-0019 are there — the app is also showing these numbers.
-- Keep it short, caring, never clinical. Do not end the conversation; ask one soft question that keeps them talking.`;
+- Keep it short, caring, never clinical. Do not end the conversation; ask one soft question that keeps them talking.
+
+${GUARDRAILS}`;
 
 export const WELLNESS_FIRST_MESSAGE_INSTRUCTION = `This is the user's first message of a new session. After the risk-marker line, begin your reply with a one-line disclaimer in the user's language conveying: "Main ek AI hoon, professional therapist ka replacement nahi — but I'm here to listen." (English users: "I'm an AI, not a replacement for a professional therapist — but I'm here to listen."), then respond to what they shared.`;
 

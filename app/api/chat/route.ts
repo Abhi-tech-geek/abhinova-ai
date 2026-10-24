@@ -14,6 +14,7 @@ import {
 import { streamChat, fitToTokenBudget } from "@/lib/ai/router";
 import { resolveModel } from "@/lib/models/byok";
 import { WORKSPACE_SYSTEM_PROMPT, withScriptHint } from "@/lib/ai/prompts/workspace";
+import { currentTimeNote } from "@/lib/ai/prompts/safety";
 import { assembleProjectContext } from "@/lib/projects/context";
 import { getOwnedProject } from "@/lib/projects/scope";
 import { SOURCES_FRAME_PREFIX } from "@/lib/utils";
@@ -156,7 +157,8 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const aiMessages = fitToTokenBudget([
-    { role: "system", content: systemPrompt },
+    // Real IST clock so the model never invents the time (bug B6).
+    { role: "system", content: `${systemPrompt}\n\n${currentTimeNote()}` },
     ...history,
     // Script hint goes to the model only — the stored message stays verbatim.
     { role: "user", content: withScriptHint(message) },

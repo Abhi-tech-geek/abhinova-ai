@@ -121,6 +121,15 @@ export async function POST(
     provider = first.provider;
     output = tryParse(first.text, schema);
 
+    // No JSON at all = the model declined under the safety rules. Show its
+    // short refusal instead of retrying for JSON (audit bug B4).
+    if (output === null && !first.text.includes("{")) {
+      return Response.json(
+        { error: "refused", message: first.text.trim().slice(0, 500) },
+        { status: 422 }
+      );
+    }
+
     if (output === null) {
       const retry = await completeChat(
         [

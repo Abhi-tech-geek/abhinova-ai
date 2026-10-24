@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isOpenBeta } from "@/lib/beta/config";
+import { qaToolIdSchema } from "@/lib/validators/qa";
 
 // Route groups don't appear in URLs, so (workspace) and (wellness) routes are
 // protected by path prefix. Anonymous (guest) sessions count as authenticated —
@@ -56,6 +57,14 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+
+  // Unknown QA tool → real 404. The page's notFound() runs after the
+  // workspace loading.tsx has already streamed a 200 (audit bug B7).
+  const qaTool = path.match(/^\/qa-studio\/([^/]+)\/?$/)?.[1];
+  if (qaTool && !qaToolIdSchema.safeParse(qaTool).success) {
+    return NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 });
+  }
+
   const isProtected = PROTECTED_PREFIXES.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}/`)
   );

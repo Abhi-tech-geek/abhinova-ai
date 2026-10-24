@@ -56,6 +56,13 @@ export function ToolWorkspace({
           return;
         }
         if (res.status === 422) {
+          const data = await res.json().catch(() => null);
+          if (data?.error === "refused") {
+            toast.warning("Request not allowed", {
+              description: data.message || "AbhiNova can't help with that request.",
+            });
+            return;
+          }
           toast.error("The AI couldn't produce clean structured output", {
             description: "This is rare — hit Generate again, it retries fresh.",
           });
