@@ -142,6 +142,24 @@ export function PeopleChart({ data }: { data: DailyUsage[] }) {
   );
 }
 
+const LABEL_WIDTH = 178;
+const LABEL_MAX_CHARS = 24;
+
+/**
+ * Category label that never wraps (Recharts' default tick breaks long labels
+ * into stacked lines): one line, ellipsis past LABEL_MAX_CHARS, full text on hover.
+ */
+function SingleLineTick({ x = 0, y = 0, payload }: { x?: number; y?: number; payload?: { value: string } }) {
+  const full = payload?.value ?? "";
+  const shown = full.length > LABEL_MAX_CHARS ? `${full.slice(0, LABEL_MAX_CHARS - 1)}…` : full;
+  return (
+    <text x={x - 8} y={y} dy={4} textAnchor="end" fontSize={12} fill="hsl(var(--foreground))">
+      <title>{full}</title>
+      {shown}
+    </text>
+  );
+}
+
 /** Horizontal single-hue bars with the value at each tip. */
 export function RankedBars({
   rows,
@@ -168,10 +186,10 @@ export function RankedBars({
           <YAxis
             type="category"
             dataKey="label"
-            tick={{ ...TICK, fill: "hsl(var(--foreground))" }}
+            tick={<SingleLineTick />}
             axisLine={false}
             tickLine={false}
-            width={138}
+            width={LABEL_WIDTH}
           />
           <Tooltip
             cursor={{ fill: "hsl(var(--secondary))", opacity: 0.4 }}

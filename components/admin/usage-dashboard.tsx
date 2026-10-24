@@ -111,45 +111,48 @@ export function UsageDashboard({ stats }: { stats: UsageStats }) {
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8" data-testid="admin-dashboard">
       {/* Header + the one filter row */}
       <header className="flex flex-wrap items-center gap-3">
-        <Logo size="sm" />
-        <div className="min-w-0 flex-1">
+        <Logo size="sm" withWordmark={false} />
+        <div className="min-w-[12rem] flex-1">
           <h1 className="font-display text-xl font-semibold tracking-tight">Usage dashboard</h1>
           <p className="text-xs text-muted-foreground">
             Updated <LocalTime iso={stats.generatedAt} format="relative" /> · days are UTC
           </p>
         </div>
-        <nav className="glass flex rounded-full p-1" aria-label="Date range">
-          {DASHBOARD_RANGES.map((d) => (
-            <Link
-              key={d}
-              href={`/admin?days=${d}`}
-              aria-current={stats.days === d ? "page" : undefined}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                stats.days === d ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-              data-testid={`admin-range-${d}`}
-            >
-              {d} days
-            </Link>
-          ))}
-        </nav>
-        <button
-          type="button"
-          onClick={() => {
-            setRefreshing(true);
-            router.refresh();
-            setTimeout(() => setRefreshing(false), 800);
-          }}
-          className="rounded-full border border-border/70 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-secondary"
-          data-testid="admin-refresh"
-        >
-          {refreshing ? "Refreshing…" : "↻ Refresh"}
-        </button>
-        <form action="/admin/logout" method="post">
-          <button type="submit" className="rounded-full px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground" data-testid="admin-logout">
-            Lock
+        {/* Controls: own row on phones, inline from sm up */}
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <nav className="glass flex rounded-full p-1" aria-label="Date range">
+            {DASHBOARD_RANGES.map((d) => (
+              <Link
+                key={d}
+                href={`/admin?days=${d}`}
+                aria-current={stats.days === d ? "page" : undefined}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  stats.days === d ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+                data-testid={`admin-range-${d}`}
+              >
+                {d} days
+              </Link>
+            ))}
+          </nav>
+          <button
+            type="button"
+            onClick={() => {
+              setRefreshing(true);
+              router.refresh();
+              setTimeout(() => setRefreshing(false), 800);
+            }}
+            className="rounded-full border border-border/70 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-secondary"
+            data-testid="admin-refresh"
+          >
+            {refreshing ? "Refreshing…" : "↻ Refresh"}
           </button>
-        </form>
+          <form action="/admin/logout" method="post">
+            <button type="submit" className="rounded-full px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground" data-testid="admin-logout">
+              Lock
+            </button>
+          </form>
+        </div>
       </header>
 
       {/* Headline numbers */}
