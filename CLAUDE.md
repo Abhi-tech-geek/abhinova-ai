@@ -180,7 +180,7 @@ abhinova-ai/
 ├── design-reference/               # Claude Design export (source design) — read as the visual foundation
 ├── private-learning/               # NEVER pushed to git (in .gitignore)
 ├── public/
-├── proxy.ts                        # Next 16 "proxy" (was middleware.ts): session refresh, open-beta guest redirect, QA 404
+├── proxy.ts                        # Next 16 "proxy" (was middleware.ts): session refresh, open-beta guest session, 404s
 ├── CLAUDE.md
 ├── .env.example
 └── .gitignore
@@ -203,7 +203,7 @@ abhinova-ai/
 ## Code Conventions
 - TypeScript strict. No `any`. All shared interfaces live in `/types`.
 - Every interactive component gets a testID prop (format: `screenname-element-action`, e.g. `"chat-input-send"`), rendered as `data-testid`.
-- Server Components by default; `"use client"` only when needed.
+- Server Components by default; `"use client"` only when needed. Keep heavy client-only UI that opens on demand (dialogs, palettes) behind `next/dynamic`, and keep zod out of client components (shared constants live in `types/`).
 - Next 16 request APIs are async: `await params` / `await searchParams` in pages and route handlers, `await cookies()`, and the server Supabase client is `await createClient()`.
 - All AI calls happen ONLY in server-side code (API routes / server actions). NEVER call Groq/Gemini from the client.
 - All user input validated with zod before processing.
@@ -242,7 +242,7 @@ abhinova-ai/
 - Conventional commits (`feat:`, `fix:`, `chore:`, `refactor:`).
 
 ## Open Beta Rules (while NEXT_PUBLIC_OPEN_BETA is not "false")
-- No login/signup screens: `proxy.ts` sends signed-out page views to `/auth/guest`, which creates an anonymous session. Never auto-create guests for bots, link previews or non-GET requests.
+- No login/signup screens: `proxy.ts` creates the anonymous session itself on a signed-out page view (one hop — each extra redirect can hit a cold start); `/auth/guest` is only the fallback that shows the "busy" page when Supabase rate-limits sign-ins. Never auto-create guests for bots, link previews or non-GET requests.
 - Every AI call goes through `enforceBetaQuota(user, request, kinds)` BEFORE the model runs (per-user, per-IP-hash, site-wide daily counters). New chats / wellness sessions / QA runs / uploads add their own kind. Fails CLOSED.
 - Limits are counted in `beta_usage` (no RLS policies → service role only), never from live rows a guest can delete.
 - Raw IPs are never stored — only a salted SHA-256 hash.

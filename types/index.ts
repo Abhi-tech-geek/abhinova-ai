@@ -7,3 +7,4 @@ export * from "./code";
 export * from "./models";
 export * from "./wellness";
 export * from "./admin";
+export * from "./feedback";

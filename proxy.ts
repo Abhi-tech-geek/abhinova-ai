@@ -28,6 +28,12 @@ function redirectTo(request: NextRequest, pathAndQuery: string) {
   return NextResponse.redirect(new URL(pathAndQuery, request.url));
 }
 
+/** Copies the session cookies Supabase set on `from` onto a redirect. */
+function withCookies(target: NextResponse, from: NextResponse) {
+  from.cookies.getAll().forEach((cookie) => target.cookies.set(cookie));
+  return target;
+}
+
 export async function proxy(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -79,10 +85,11 @@ export async function proxy(request: NextRequest) {
   );
 
   // Open beta: no login/signup screens — signed-out visitors get a guest
-  // session automatically via /auth/guest (see lib/beta/config.ts).
+  // session automatically (see lib/beta/config.ts).
   if (isOpenBeta()) {
     const isAuthPage = path === "/login" || path === "/signup";
-    if (user && isAuthPage) return redirectTo(request, "/chat");
+    // Root and auth pages go straight to the workspace (one hop, not two).
+    if (user && (isAuthPage || path === "/")) return redirectTo(request, "/chat");
     if (!user && (isProtected || isAuthPage || path === "/")) {
       // Crawlers, link previews and HEAD/prefetch requests must not mint a
       // new anonymous user on every hit.
@@ -92,6 +99,15 @@ export async function proxy(request: NextRequest) {
           headers: { "Content-Type": "text/plain; charset=utf-8", "X-Robots-Tag": "noindex" },
         });
       }
+      // Mint the guest session right here instead of bouncing through
+      // /auth/guest: a first visit used to cost three requests, and each one
+      // could hit a cold serverless start.
+      const { error } = await supabase.auth.signInAnonymously();
+      if (!error) {
+        if (isProtected) return response; // setAll() put the session cookies on it
+        return withCookies(redirectTo(request, "/chat"), response);
+      }
+      // Usually Supabase's per-IP sign-in limit: /auth/guest shows the "busy" page.
       const next = isProtected ? path : "/chat";
       return redirectTo(request, `/auth/guest?next=${encodeURIComponent(next)}`);
     }

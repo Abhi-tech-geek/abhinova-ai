@@ -1,8 +1,7 @@
 import { z } from "zod";
+import { FEEDBACK_CATEGORIES, FEEDBACK_MAX_CHARS } from "@/types/feedback";
 
 // In-app feedback (see components/shared/feedback-dialog.tsx).
-export const FEEDBACK_CATEGORIES = ["bug", "idea", "praise", "other"] as const;
-export const FEEDBACK_MAX_CHARS = 2000;
 
 export const feedbackRequestSchema = z.object({
   category: z.enum(FEEDBACK_CATEGORIES),
@@ -15,4 +14,3 @@ export const feedbackRequestSchema = z.object({
     .optional(),
 });
 export type FeedbackRequest = z.infer<typeof feedbackRequestSchema>;
-export type FeedbackCategory = (typeof FEEDBACK_CATEGORIES)[number];

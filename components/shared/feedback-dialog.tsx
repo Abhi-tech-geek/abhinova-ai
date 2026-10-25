@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { toast } from "sonner";
 import { Dialog, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
-import { FEEDBACK_MAX_CHARS, type FeedbackCategory } from "@/lib/validators/feedback";
+import { FEEDBACK_MAX_CHARS, type FeedbackCategory } from "@/types/feedback";
 
 const CATEGORIES: { id: FeedbackCategory; icon: string; label: string; placeholder: string }[] = [
   { id: "bug", icon: "🐞", label: "Bug", placeholder: "What went wrong? What did you expect instead?" },
