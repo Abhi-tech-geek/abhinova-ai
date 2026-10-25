@@ -26,8 +26,20 @@ const CRISIS_PATTERNS: RegExp[] = [
   /marna chah/i,
   /mar ja(?:u|un|na chahta|na chahti)/i,
   /jeena nahi chah/i,
+  // Common everyday phrasings — the keyword pass is the only check left when
+  // the AI (and its own risk flag) is unavailable.
+  /j(?:ee|e|i)na nahi? (?:hai|h\b|hain|rah|chah)/i,
+  /j(?:ee|i)ne ka (?:mann|man|dil) nahi/i,
+  /zinda nahi? (?:rehna|rahna)/i,
+  /(?:ab|aur) (?:aur )?nahi jee?/i,
+  /mar(?:na|ne|jana|ja) (?:hai|chahta|chahti|chahiye)/i,
   /apni jaan le/i,
-  /khatam kar (?:lu|loon|lunga|lungi)/i,
+  /khatam kar (?:lu|loon|lunga|lungi|dunga|dungi)/i,
+  /(?:sab|sabkuch|sab kuch|khud ko) khatam kar/i,
+  // Devanagari.
+  /आत्महत्या|ख़ुदकुशी|खुदकुशी/,
+  /मरना चाह|मर जाना चाह|मर जाऊ/,
+  /जीना नहीं|जीने का मन नहीं|ज़िंदा नहीं रहना|जिंदा नहीं रहना/,
 ];
 
 export function containsCrisisSignal(text: string): boolean {

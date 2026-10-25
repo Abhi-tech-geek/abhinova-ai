@@ -6,7 +6,7 @@ import {
 } from "@/lib/auth";
 import { codeDocsRequestSchema } from "@/lib/validators/code";
 import { checkRateLimit, AI_REQUESTS_PER_MINUTE } from "@/lib/rate-limit";
-import { completeChat } from "@/lib/ai/router";
+import { completeChat, aiFailureResponse } from "@/lib/ai/router";
 import { resolveModel } from "@/lib/models/byok";
 import {
   CODE_DOCS_SYSTEM_PROMPT,
@@ -130,7 +130,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     return Response.json({ markdown: text, title, docId: doc?.id ?? null, savedToProject });
-  } catch {
-    return Response.json({ error: "ai_unavailable" }, { status: 502 });
+  } catch (err) {
+    return aiFailureResponse(err);
   }
 }

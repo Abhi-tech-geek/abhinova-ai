@@ -6,7 +6,7 @@ import {
 } from "@/lib/auth";
 import { codeEditRequestSchema, codeEditOutputSchema } from "@/lib/validators/code";
 import { checkRateLimit, AI_REQUESTS_PER_MINUTE } from "@/lib/rate-limit";
-import { completeChat, extractJsonObject } from "@/lib/ai/router";
+import { completeChat, extractJsonObject, aiFailureResponse } from "@/lib/ai/router";
 import { resolveModel } from "@/lib/models/byok";
 import { CODE_EDIT_SYSTEM_PROMPT } from "@/lib/ai/prompts/code-agent";
 import { scanFile, isSecretPath } from "@/lib/code/secret-scan";
@@ -98,8 +98,8 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: "no_valid_changes" }, { status: 422 });
     }
     return Response.json({ edit: output });
-  } catch {
-    return Response.json({ error: "ai_unavailable" }, { status: 502 });
+  } catch (err) {
+    return aiFailureResponse(err);
   }
 }
 

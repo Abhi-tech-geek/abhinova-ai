@@ -9,7 +9,7 @@ import {
   journalAnalysisOutputSchema,
 } from "@/lib/validators/wellness";
 import { checkRateLimit, AI_REQUESTS_PER_MINUTE } from "@/lib/rate-limit";
-import { completeChat, extractJsonObject } from "@/lib/ai/router";
+import { completeChat, extractJsonObject, aiFailureResponse } from "@/lib/ai/router";
 import { JOURNAL_ANALYSIS_PROMPT, THEMES_PROMPT } from "@/lib/ai/prompts/wellness";
 import { COGNITIVE_DISTORTIONS } from "@/lib/wellness/distortions";
 import { createClient } from "@/lib/supabase/server";
@@ -79,8 +79,8 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: "generation_parse_failed" }, { status: 422 });
     }
     return Response.json({ analysis: output });
-  } catch {
-    return Response.json({ error: "ai_unavailable" }, { status: 502 });
+  } catch (err) {
+    return aiFailureResponse(err);
   }
 }
 
@@ -168,7 +168,7 @@ export async function GET(request: Request): Promise<Response> {
       { onConflict: "user_id,kind,period_start" }
     );
     return Response.json({ themes: text, cached: false });
-  } catch {
-    return Response.json({ error: "ai_unavailable" }, { status: 502 });
+  } catch (err) {
+    return aiFailureResponse(err);
   }
 }

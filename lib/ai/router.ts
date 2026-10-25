@@ -8,6 +8,8 @@ import type { AiMessage } from "@/types/chat";
 // which provider served each request — provider/model only, NEVER content.
 
 const GROQ_RETRY_DELAY_MS = 2500;
+/** What the UI suggests waiting after every provider failed. */
+const AI_BUSY_RETRY_MS = 60_000;
 
 interface GroqChunk {
   choices?: { delta?: { content?: string } }[];
@@ -218,7 +220,35 @@ export async function streamChat(
       );
     }
   }
-  throw lastError;
+  throw new AiBusyError(lastError);
+}
+
+/** Every provider in the fallback chain failed — free-tier limits, overload or an outage. */
+export class AiBusyError extends Error {
+  constructor(cause: unknown) {
+    super("All AI providers are busy", { cause });
+    this.name = "AiBusyError";
+  }
+}
+
+/** Checked by name, so it holds even if the class is transpiled or duplicated. */
+export function isAiBusyError(err: unknown): boolean {
+  return err instanceof Error && err.name === "AiBusyError";
+}
+
+/**
+ * The response for a failed AI call. "ai_busy" (whole fallback chain down) lets
+ * the UI say "taking a short break" instead of a generic error; anything else
+ * (e.g. a user's own BYOK key failing) stays "ai_unavailable".
+ */
+export function aiFailureResponse(err: unknown): Response {
+  if (isAiBusyError(err)) {
+    return Response.json(
+      { error: "ai_busy", retryAfterMs: AI_BUSY_RETRY_MS },
+      { status: 503, headers: { "Retry-After": String(AI_BUSY_RETRY_MS / 1000) } }
+    );
+  }
+  return Response.json({ error: "ai_unavailable" }, { status: 502 });
 }
 
 /** Non-streaming completion: collects the routed stream into one string. */

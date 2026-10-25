@@ -9,7 +9,7 @@ import {
   checkRateLimit,
   AI_REQUESTS_PER_MINUTE,
 } from "@/lib/rate-limit";
-import { streamChat, completeChat, fitToTokenBudget } from "@/lib/ai/router";
+import { streamChat, completeChat, fitToTokenBudget, aiFailureResponse } from "@/lib/ai/router";
 import {
   WELLNESS_SYSTEM_PROMPT,
   WELLNESS_FIRST_MESSAGE_INSTRUCTION,
@@ -96,8 +96,8 @@ export async function POST(request: Request): Promise<Response> {
         .update({ summary: text })
         .eq("id", conversationId);
       return Response.json({ summary: text });
-    } catch {
-      return Response.json({ error: "ai_unavailable" }, { status: 502 });
+    } catch (err) {
+      return aiFailureResponse(err);
     }
   }
 
@@ -143,14 +143,18 @@ export async function POST(request: Request): Promise<Response> {
     .map((row) => ({ role: row.role as ChatRole, content: row.content }));
   const isFirstMessage = history.length === 0;
 
-  const { error: insertError } = await supabase.from("messages").insert({
-    conversation_id: finalConversationId,
-    user_id: user.id,
-    role: "user",
-    content: message,
-    crisis_flag: keywordCrisis,
-  });
-  if (insertError) {
+  const { data: savedMessage, error: insertError } = await supabase
+    .from("messages")
+    .insert({
+      conversation_id: finalConversationId,
+      user_id: user.id,
+      role: "user",
+      content: message,
+      crisis_flag: keywordCrisis,
+    })
+    .select("id")
+    .single();
+  if (insertError || !savedMessage) {
     return Response.json({ error: "message_save_failed" }, { status: 500 });
   }
 
@@ -171,8 +175,17 @@ export async function POST(request: Request): Promise<Response> {
   let routed;
   try {
     routed = await streamChat(aiMessages, request.signal);
-  } catch {
-    return Response.json({ error: "ai_unavailable" }, { status: 502 });
+  } catch (err) {
+    // Safety beats outages: a crisis message gets the helplines even when
+    // every AI provider is down, same as when the quota is used up.
+    if (keywordCrisis) return crisisFallbackResponse(finalConversationId);
+    // No reply is coming: take the message back out (the UI returns it to the
+    // input box) so a resend doesn't store it twice. A new session is kept and
+    // its id sent back, since it already used one of the lifetime sessions.
+    await supabase.from("messages").delete().eq("id", savedMessage.id);
+    const failed = aiFailureResponse(err);
+    if (!parsed.data.conversationId) failed.headers.set("X-Conversation-Id", finalConversationId);
+    return failed;
   }
 
   // Buffer just enough of the stream to read + strip the risk marker, so the
@@ -252,10 +265,15 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 /** Non-AI crisis reply used when the AI can't run (e.g. beta quota used up). */
-function crisisFallbackResponse(): Response {
+function crisisFallbackResponse(conversationId?: string): Response {
   const lines = CRISIS_HELPLINES.map((h) => `• ${h.name}: ${h.number}`).join("\n");
   const text = `I'm really glad you told me. You don't have to go through this alone — please reach out to someone right now:\n${lines}\n\nAap akele nahi ho. Ek call kar lo — wahan log sunne ke liye hain, 24x7.`;
   return new Response(text, {
-    headers: { "Content-Type": "text/plain; charset=utf-8", "X-Crisis": "1", "Cache-Control": "no-store" },
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "X-Crisis": "1",
+      "Cache-Control": "no-store",
+      ...(conversationId ? { "X-Conversation-Id": conversationId } : {}),
+    },
   });
 }

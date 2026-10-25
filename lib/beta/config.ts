@@ -49,6 +49,14 @@ export const BETA_ERROR_MESSAGES: Record<string, string> = {
   quota_unavailable: "Usage limits couldn't be checked right now — please try again in a moment.",
 };
 
+/**
+ * "ai_busy": every AI provider (Groq → Gemini → Flash-Lite) is out of free
+ * quota or overloaded. Not the user's fault and usually gone in minutes.
+ */
+export const AI_BUSY_TITLE = "AbhiNova is taking a short break ☕";
+export const AI_BUSY_MESSAGE =
+  "Our free AI quota is used up for the moment. It usually comes back within a few minutes — your message is still in the box, just send it again.";
+
 /** UI helper: friendly text for a beta/limit error code, or null. */
 export function betaErrorMessage(code: unknown): string | null {
   return typeof code === "string" ? (BETA_ERROR_MESSAGES[code] ?? null) : null;

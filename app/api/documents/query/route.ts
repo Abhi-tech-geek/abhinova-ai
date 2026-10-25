@@ -6,7 +6,7 @@ import {
 } from "@/lib/auth";
 import { documentQuerySchema } from "@/lib/validators/documents";
 import { checkRateLimit, AI_REQUESTS_PER_MINUTE } from "@/lib/rate-limit";
-import { completeChat } from "@/lib/ai/router";
+import { completeChat, aiFailureResponse } from "@/lib/ai/router";
 import { DOC_QA_SYSTEM_PROMPT } from "@/lib/ai/prompts/workspace";
 import { retrieveChunks, firstChunks, buildDocumentContext } from "@/lib/rag/retrieve";
 import type { RetrievedSource } from "@/types/documents";
@@ -82,7 +82,7 @@ export async function POST(request: Request): Promise<Response> {
       { answer: text, sources },
       { headers: { "X-AI-Provider": provider } }
     );
-  } catch {
-    return Response.json({ error: "ai_unavailable" }, { status: 502 });
+  } catch (err) {
+    return aiFailureResponse(err);
   }
 }

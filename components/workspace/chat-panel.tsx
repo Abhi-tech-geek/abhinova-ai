@@ -15,7 +15,15 @@ import {
 } from "@/lib/voice/useSpeechSynthesis";
 import type { VoiceLang } from "@/lib/voice/useSpeechRecognition";
 import { SOURCES_FRAME_PREFIX } from "@/lib/utils";
-import { BETA_ERROR_MESSAGES, BETA_LIMITS, BETA_USAGE_EVENT, betaErrorMessage, isOpenBeta } from "@/lib/beta/config";
+import {
+  AI_BUSY_MESSAGE,
+  AI_BUSY_TITLE,
+  BETA_ERROR_MESSAGES,
+  BETA_LIMITS,
+  BETA_USAGE_EVENT,
+  betaErrorMessage,
+  isOpenBeta,
+} from "@/lib/beta/config";
 import type { ChatMessageRecord } from "@/types/chat";
 import type { RetrievedSource } from "@/types/documents";
 
@@ -67,6 +75,10 @@ export function ChatPanel({
   const [streaming, setStreaming] = useState(false);
   const [waitingFirstToken, setWaitingFirstToken] = useState(false);
   const [guestLimitHit, setGuestLimitHit] = useState(false);
+  // A new chat whose first send hit "ai_busy": the server kept the empty chat
+  // (it already used a chat slot), so the resend goes into it.
+  const [pendingConversationId, setPendingConversationId] = useState<string | null>(null);
+  const activeConversationId = conversationId ?? pendingConversationId;
   const [suggestWellness, setSuggestWellness] = useState(false);
   const [voiceLang, setVoiceLang] = useState<VoiceLang>("en-IN");
   const [ttsEnabled, setTtsEnabled] = useState(false);
@@ -116,8 +128,8 @@ export function ChatPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message,
-          ...(conversationId ? { conversationId } : {}),
-          ...(!conversationId && projectId ? { projectId } : {}),
+          ...(activeConversationId ? { conversationId: activeConversationId } : {}),
+          ...(!activeConversationId && projectId ? { projectId } : {}),
           ...(modelId ? { modelId } : {}),
         }),
         signal: controller.signal,
@@ -133,6 +145,13 @@ export function ChatPanel({
         const data = await res.json().catch(() => ({}));
         if (data.error === "guest_conversation_limit") {
           setGuestLimitHit(true);
+          return;
+        }
+        if (data.error === "ai_busy") {
+          const keptId = res.headers.get("X-Conversation-Id");
+          if (keptId) setPendingConversationId(keptId);
+          undoSend();
+          toast.warning(AI_BUSY_TITLE, { description: AI_BUSY_MESSAGE, duration: 10000 });
           return;
         }
         const betaMessage = betaErrorMessage(data.error);

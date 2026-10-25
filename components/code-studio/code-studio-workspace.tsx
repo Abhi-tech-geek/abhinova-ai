@@ -109,7 +109,8 @@ export function CodeStudioWorkspace() {
     if (!message || streaming) return;
     setInput("");
     setStreaming(true);
-    setMessages((prev) => [...prev, { id: `u-${Date.now()}`, role: "user", content: message }]);
+    const userId = `u-${Date.now()}`;
+    setMessages((prev) => [...prev, { id: userId, role: "user", content: message }]);
     const assistantId = `a-${Date.now()}`;
 
     try {
@@ -126,6 +127,9 @@ export function CodeStudioWorkspace() {
       });
       if (!res.ok) {
         setStreaming(false);
+        // Not delivered: drop the bubble and give the words back to the box.
+        setMessages((prev) => prev.filter((m) => m.id !== userId));
+        setInput(message);
         if (await showBetaLimitToast(res)) return;
         toast.error(
           res.status === 429

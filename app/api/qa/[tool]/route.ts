@@ -14,7 +14,7 @@ import {
   AI_REQUESTS_PER_MINUTE,
   GUEST_AI_REQUESTS_PER_MINUTE,
 } from "@/lib/rate-limit";
-import { completeChat, extractJsonObject } from "@/lib/ai/router";
+import { completeChat, extractJsonObject, aiFailureResponse } from "@/lib/ai/router";
 import { resolveModel } from "@/lib/models/byok";
 import { QA_BASE_PROMPT, QA_TOOL_PROMPTS, QA_PROJECT_CONTEXT_NOTE } from "@/lib/ai/prompts/qa-tools";
 import { formatProjectInstructions } from "@/lib/ai/prompts/project-agent";
@@ -148,8 +148,8 @@ export async function POST(
       provider = retry.provider;
       output = tryParse(retry.text, schema);
     }
-  } catch {
-    return Response.json({ error: "ai_unavailable" }, { status: 502 });
+  } catch (err) {
+    return aiFailureResponse(err);
   }
 
   if (output === null) {

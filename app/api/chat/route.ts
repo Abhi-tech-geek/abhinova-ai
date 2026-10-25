@@ -11,7 +11,7 @@ import {
   GUEST_AI_REQUESTS_PER_MINUTE,
   GUEST_MAX_MESSAGES_PER_CONVERSATION,
 } from "@/lib/rate-limit";
-import { streamChat, fitToTokenBudget } from "@/lib/ai/router";
+import { streamChat, fitToTokenBudget, aiFailureResponse } from "@/lib/ai/router";
 import { resolveModel } from "@/lib/models/byok";
 import { WORKSPACE_SYSTEM_PROMPT, withScriptHint } from "@/lib/ai/prompts/workspace";
 import { currentTimeNote } from "@/lib/ai/prompts/safety";
@@ -134,13 +134,18 @@ export async function POST(request: Request): Promise<Response> {
     .map((row) => ({ role: row.role as ChatRole, content: row.content }));
 
   // 6. Persist the user message before calling the model
-  const { error: insertError } = await supabase.from("messages").insert({
-    conversation_id: conversationId,
-    user_id: user.id,
-    role: "user",
-    content: message,
-  });
-  if (insertError) {
+  const isNewConversation = !parsed.data.conversationId;
+  const { data: savedMessage, error: insertError } = await supabase
+    .from("messages")
+    .insert({
+      conversation_id: conversationId,
+      user_id: user.id,
+      role: "user",
+      content: message,
+    })
+    .select("id")
+    .single();
+  if (insertError || !savedMessage) {
     return Response.json({ error: "message_save_failed" }, { status: 500 });
   }
 
@@ -175,8 +180,16 @@ export async function POST(request: Request): Promise<Response> {
   let routed;
   try {
     routed = await streamChat(aiMessages, request.signal, resolved);
-  } catch {
-    return Response.json({ error: "ai_unavailable" }, { status: 502 });
+  } catch (err) {
+    // No reply is coming: take the message back out (the UI returns it to the
+    // input box) so a resend doesn't store it twice. A brand-new chat is kept
+    // and its id sent back — it already used one of the guest's lifetime chat
+    // slots, so the resend must land in it instead of opening (and paying for)
+    // another one.
+    await supabase.from("messages").delete().eq("id", savedMessage.id);
+    const failed = aiFailureResponse(err);
+    if (isNewConversation) failed.headers.set("X-Conversation-Id", conversationId);
+    return failed;
   }
 
   const encoder = new TextEncoder();

@@ -65,10 +65,8 @@ export function TalkPanel({
     if (!message || streaming) return;
     setInput("");
     setStreaming(true);
-    setMessages((prev) => [
-      ...prev,
-      { id: `u-${Date.now()}`, role: "user", content: message },
-    ]);
+    const userId = `u-${Date.now()}`;
+    setMessages((prev) => [...prev, { id: userId, role: "user", content: message }]);
     const assistantId = `a-${Date.now()}`;
 
     try {
@@ -85,6 +83,12 @@ export function TalkPanel({
 
       if (!res.ok) {
         setStreaming(false);
+        // Not delivered: drop the bubble and give the words back to the box.
+        setMessages((prev) => prev.filter((m) => m.id !== userId));
+        setInput(message);
+        // A new session the server kept despite the failure: resend into it.
+        const keptId = res.headers.get("X-Conversation-Id");
+        if (keptId && !conversationId) setConversationId(keptId);
         if (await showBetaLimitToast(res)) return;
         if (res.status === 401) {
           router.push("/login");

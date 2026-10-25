@@ -6,7 +6,7 @@ import {
 } from "@/lib/auth";
 import { codeChatRequestSchema } from "@/lib/validators/code";
 import { checkRateLimit, AI_REQUESTS_PER_MINUTE } from "@/lib/rate-limit";
-import { streamChat } from "@/lib/ai/router";
+import { streamChat, aiFailureResponse } from "@/lib/ai/router";
 import { resolveModel } from "@/lib/models/byok";
 import {
   CODE_AGENT_SYSTEM_PROMPT,
@@ -78,8 +78,8 @@ export async function POST(request: Request): Promise<Response> {
   let routed;
   try {
     routed = await streamChat(aiMessages, request.signal, resolved);
-  } catch {
-    return Response.json({ error: "ai_unavailable" }, { status: 502 });
+  } catch (err) {
+    return aiFailureResponse(err);
   }
 
   // Plain streamed text — the agent never writes files; edits go via /edit.

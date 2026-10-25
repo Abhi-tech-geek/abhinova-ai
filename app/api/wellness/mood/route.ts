@@ -6,7 +6,7 @@ import {
 } from "@/lib/auth";
 import { moodCheckInSchema } from "@/lib/validators/wellness";
 import { checkRateLimit, AI_REQUESTS_PER_MINUTE } from "@/lib/rate-limit";
-import { completeChat } from "@/lib/ai/router";
+import { completeChat, aiFailureResponse } from "@/lib/ai/router";
 import { MOOD_INSIGHTS_PROMPT } from "@/lib/ai/prompts/wellness";
 import { createClient } from "@/lib/supabase/server";
 import { isOpenBeta } from "@/lib/beta/config";
@@ -125,7 +125,7 @@ export async function GET(request: Request): Promise<Response> {
       { onConflict: "user_id,kind,period_start" }
     );
     return Response.json({ insight: text, cached: false });
-  } catch {
-    return Response.json({ error: "ai_unavailable" }, { status: 502 });
+  } catch (err) {
+    return aiFailureResponse(err);
   }
 }
