@@ -52,5 +52,7 @@ export async function GET(): Promise<Response> {
     }
   }
 
-  return Response.json({ models });
+  // What "Auto" (no explicit model) routes to on this server.
+  const autoLabel = isLocalMode() ? `Auto (Local · ${localChatModel()})` : "Auto (Groq → Gemini)";
+  return Response.json({ models, autoLabel });
 }

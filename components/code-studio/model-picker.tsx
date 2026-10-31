@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import type { ModelOption } from "@/lib/models/registry";
 
 // Model dropdown backed by /api/models/list (built-ins + user's BYOK models).
-// Empty value = app default (Groq → Gemini fallback chain).
+// Empty value = app default: the Groq → Gemini chain, or the local model in
+// Local Mode (the server sends the matching "Auto" label).
 export function ModelPicker({
   value,
   onChange,
@@ -18,11 +19,15 @@ export function ModelPicker({
   className?: string;
 }) {
   const [models, setModels] = useState<ModelOption[]>([]);
+  const [autoLabel, setAutoLabel] = useState("Auto");
 
   useEffect(() => {
     fetch("/api/models/list")
       .then((res) => (res.ok ? res.json() : { models: [] }))
-      .then((data) => setModels(data.models ?? []))
+      .then((data) => {
+        setModels(data.models ?? []);
+        setAutoLabel(typeof data.autoLabel === "string" ? data.autoLabel : "Auto");
+      })
       .catch(() => setModels([]));
   }, []);
 
@@ -34,7 +39,7 @@ export function ModelPicker({
       title="Model"
       data-testid={testID}
     >
-      <option value="">Auto (Groq → Gemini)</option>
+      <option value="">{autoLabel}</option>
       {models.map((m) => (
         <option key={m.id} value={m.id}>
           {m.byok ? "🔑 " : ""}
