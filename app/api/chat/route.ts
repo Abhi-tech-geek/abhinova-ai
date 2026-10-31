@@ -47,7 +47,8 @@ export async function POST(request: Request): Promise<Response> {
       { status: 400 }
     );
   }
-  const { message } = parsed.data;
+  let { message } = parsed.data;
+  const regenerate = parsed.data.regenerate === true;
 
   // 3. Rate limit (guests get half)
   const guest = isGuest(user);
@@ -78,7 +79,8 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: "conversation_not_found" }, { status: 404 });
     }
     projectId = (conversation.project_id as string | null) ?? null;
-    if (guest) {
+    // Regenerate stores no new user message, so it doesn't use up the per-chat limit.
+    if (guest && !regenerate) {
       const { count } = await supabase
         .from("messages")
         .select("id", { count: "exact", head: true })
@@ -124,32 +126,74 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: "conversation_create_failed" }, { status: 500 });
   }
 
+  // Regenerate: answer the last user message again. The old reply is removed
+  // only after the new one is saved, so a failed retry loses nothing.
+  let replacedReplyIds: string[] = [];
+  let regeneratedFromId: string | null = null;
+  if (regenerate) {
+    const { data: lastUser } = await supabase
+      .from("messages")
+      .select("id, content, created_at")
+      .eq("conversation_id", conversationId)
+      .eq("role", "user")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!lastUser) return Response.json({ error: "nothing_to_regenerate" }, { status: 400 });
+    message = lastUser.content as string;
+    regeneratedFromId = lastUser.id as string;
+    const { data: oldReplies } = await supabase
+      .from("messages")
+      .select("id")
+      .eq("conversation_id", conversationId)
+      .eq("role", "assistant")
+      .gt("created_at", lastUser.created_at as string);
+    replacedReplyIds = (oldReplies ?? []).map((r) => r.id as string);
+  }
+
   // 5. Conversation memory: last N messages, oldest dropped by token budget
   const { data: historyRows } = await supabase
     .from("messages")
-    .select("role, content")
+    .select("id, role, content")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: false })
-    .limit(HISTORY_LIMIT);
+    .limit(HISTORY_LIMIT + replacedReplyIds.length + 1);
   const history: AiMessage[] = (historyRows ?? [])
+    .filter((row) => row.id !== regeneratedFromId && !replacedReplyIds.includes(row.id as string))
+    .slice(0, HISTORY_LIMIT)
     .reverse()
     .map((row) => ({ role: row.role as ChatRole, content: row.content }));
 
-  // 6. Persist the user message before calling the model
+  // 6. Persist the user message before calling the model (not on regenerate:
+  // it's already stored).
   const isNewConversation = !parsed.data.conversationId;
-  const { data: savedMessage, error: insertError } = await supabase
-    .from("messages")
-    .insert({
-      conversation_id: conversationId,
-      user_id: user.id,
-      role: "user",
-      content: message,
-    })
-    .select("id")
-    .single();
-  if (insertError || !savedMessage) {
-    return Response.json({ error: "message_save_failed" }, { status: 500 });
+  let savedMessageId: string | null = null;
+  if (!regenerate) {
+    const { data: savedMessage, error: insertError } = await supabase
+      .from("messages")
+      .insert({
+        conversation_id: conversationId,
+        user_id: user.id,
+        role: "user",
+        content: message,
+      })
+      .select("id")
+      .single();
+    if (insertError || !savedMessage) {
+      return Response.json({ error: "message_save_failed" }, { status: 500 });
+    }
+    savedMessageId = savedMessage.id as string;
   }
+  // Known up front so the UI can rate the reply right after it streams.
+  const assistantMessageId = crypto.randomUUID();
+  /** Takes a failed send's user message back out (never a regenerated one). */
+  const undoUserMessage = async () => {
+    if (savedMessageId) await supabase.from("messages").delete().eq("id", savedMessageId);
+  };
+  /** After the new reply is saved, the reply it replaces goes. */
+  const dropReplacedReplies = async () => {
+    if (replacedReplyIds.length > 0) await supabase.from("messages").delete().in("id", replacedReplyIds);
+  };
 
   // Project chats: instructions → notes → project-scoped chunks.
   let systemPrompt = WORKSPACE_SYSTEM_PROMPT;
@@ -224,12 +268,14 @@ export async function POST(request: Request): Promise<Response> {
         for (let i = 0; i < text.length; i += 24) send(text.slice(i, i + 24));
         if (text) {
           await supabase.from("messages").insert({
+            id: assistantMessageId,
             conversation_id: agentConversationId,
             user_id: user.id,
             role: "assistant",
             content: text,
             metadata: { steps, ...(finalSources.length > 0 ? { sources: finalSources } : {}) },
           });
+          await dropReplacedReplies();
           await supabase
             .from("conversations")
             .update({ updated_at: new Date().toISOString() })
@@ -245,7 +291,7 @@ export async function POST(request: Request): Promise<Response> {
     try {
       first = await reader.read();
     } catch (err) {
-      await supabase.from("messages").delete().eq("id", savedMessage.id);
+      await undoUserMessage();
       const failed = aiFailureResponse(err);
       if (isNewConversation) failed.headers.set("X-Conversation-Id", agentConversationId);
       return failed;
@@ -273,6 +319,7 @@ export async function POST(request: Request): Promise<Response> {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-store",
         "X-Conversation-Id": agentConversationId,
+        "X-Assistant-Message-Id": assistantMessageId,
         "X-AI-Provider": "agent",
       },
     });
@@ -287,7 +334,7 @@ export async function POST(request: Request): Promise<Response> {
     // and its id sent back — it already used one of the guest's lifetime chat
     // slots, so the resend must land in it instead of opening (and paying for)
     // another one.
-    await supabase.from("messages").delete().eq("id", savedMessage.id);
+    await undoUserMessage();
     const failed = aiFailureResponse(err);
     if (isNewConversation) failed.headers.set("X-Conversation-Id", conversationId);
     return failed;
@@ -316,6 +363,7 @@ export async function POST(request: Request): Promise<Response> {
       // so serverless doesn't kill the write.
       if (full) {
         await supabase.from("messages").insert({
+          id: assistantMessageId,
           conversation_id: finalConversationId,
           user_id: user.id,
           role: "assistant",
@@ -323,6 +371,7 @@ export async function POST(request: Request): Promise<Response> {
           // Citations survive a reload of the conversation.
           ...(sources.length > 0 ? { metadata: { sources } } : {}),
         });
+        await dropReplacedReplies();
         // Bump updated_at (trigger sets the timestamp) so sidebar reorders.
         await supabase
           .from("conversations")
@@ -342,6 +391,7 @@ export async function POST(request: Request): Promise<Response> {
       "Content-Type": "text/plain; charset=utf-8",
       "Cache-Control": "no-store",
       "X-Conversation-Id": finalConversationId,
+      "X-Assistant-Message-Id": assistantMessageId,
       "X-AI-Provider": routed.provider,
     },
   });

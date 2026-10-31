@@ -14,14 +14,17 @@ import {
   AI_REQUESTS_PER_MINUTE,
   GUEST_AI_REQUESTS_PER_MINUTE,
 } from "@/lib/rate-limit";
-import { completeChat, extractJsonObject, aiFailureResponse } from "@/lib/ai/router";
+import { completeChat, completeVision, extractJsonObject, aiFailureResponse } from "@/lib/ai/router";
+import { isLocalMode } from "@/lib/ai/ollama";
+import type { VisionImage } from "@/lib/ai/gemini";
 import { resolveModel } from "@/lib/models/byok";
-import { QA_BASE_PROMPT, QA_TOOL_PROMPTS, QA_PROJECT_CONTEXT_NOTE } from "@/lib/ai/prompts/qa-tools";
+import { QA_BASE_PROMPT, QA_TOOL_PROMPTS, QA_PROJECT_CONTEXT_NOTE, QA_SCREENSHOT_NOTE } from "@/lib/ai/prompts/qa-tools";
 import { formatProjectInstructions } from "@/lib/ai/prompts/project-agent";
 import { getOwnedProject } from "@/lib/projects/scope";
 import { retrieveChunks, buildDocumentContext } from "@/lib/rag/retrieve";
 import { createClient } from "@/lib/supabase/server";
 import { enforceBetaQuota } from "@/lib/beta/quota";
+import { splitRequirements, type Requirement } from "@/lib/qa-tools";
 import type { AiMessage } from "@/types/chat";
 
 export async function POST(
@@ -53,10 +56,35 @@ export async function POST(
       { status: 400 }
     );
   }
-  const { input, options, projectId, modelId } = parsed.data;
+  const { input, projectId, modelId } = parsed.data;
+  let options = parsed.data.options;
   const resolved = modelId ? await resolveModel(modelId) : null;
   if (modelId && !resolved) {
     return Response.json({ error: "unknown_model" }, { status: 400 });
+  }
+
+  // Bug Report from a screenshot: checked here, read by a vision model, never stored.
+  let visionImage: VisionImage | null = null;
+  if (parsed.data.image) {
+    if (tool !== "bug-report") return Response.json({ error: "image_not_supported" }, { status: 400 });
+    if (isLocalMode()) return Response.json({ error: "vision_not_local" }, { status: 400 });
+    visionImage = parseScreenshot(parsed.data.image);
+    if (!visionImage) return Response.json({ error: "invalid_image" }, { status: 400 });
+  }
+
+  // Requirements → Tests: the server numbers the requirements (R1, R2…) so
+  // coverage can be computed in code, not trusted to the model.
+  let requirements: Requirement[] = [];
+  let modelInput = input;
+  if (tool === "requirement-coverage") {
+    requirements = splitRequirements(input);
+    if (requirements.length === 0) return Response.json({ error: "no_requirements" }, { status: 400 });
+    modelInput = requirements.map((r) => `${r.id}: ${r.text}`).join("\n");
+    // "Write tests for the gaps": keep only well-formed, known ids.
+    const known = new Set(requirements.map((r) => r.id));
+    const onlyFor = (options?.onlyFor ?? "").split(",").map((s) => s.trim()).filter((id) => known.has(id));
+    const startAt = /^\d{1,3}$/.test(options?.startAt ?? "") ? options!.startAt : undefined;
+    options = onlyFor.length ? { onlyFor: onlyFor.join(", "), ...(startAt ? { startAt } : {}) } : undefined;
   }
 
   // 3. Rate limit (shared per-user AI window with chat-style limits)
@@ -104,11 +132,11 @@ export async function POST(
   const messages: AiMessage[] = [
     {
       role: "system",
-      content: `${QA_BASE_PROMPT}\n\n${QA_TOOL_PROMPTS[tool]}${scopedProjectId ? `\n\n${QA_PROJECT_CONTEXT_NOTE}` : ""}`,
+      content: `${QA_BASE_PROMPT}\n\n${QA_TOOL_PROMPTS[tool]}${scopedProjectId ? `\n\n${QA_PROJECT_CONTEXT_NOTE}` : ""}${visionImage ? `\n\n${QA_SCREENSHOT_NOTE}` : ""}`,
     },
     {
       role: "user",
-      content: `${projectContext ? `${projectContext}\n\n` : ""}${optionsText ? `Options:\n${optionsText}\n\n` : ""}<user_input>\n${input}\n</user_input>`,
+      content: `${projectContext ? `${projectContext}\n\n` : ""}${optionsText ? `Options:\n${optionsText}\n\n` : ""}<user_input>\n${modelInput}\n</user_input>`,
     },
   ];
 
@@ -117,8 +145,14 @@ export async function POST(
   let provider: string;
   let output: unknown = null;
 
+  // With a screenshot the vision model reads it; otherwise the normal chain.
+  const call = (msgs: AiMessage[]) =>
+    visionImage
+      ? completeVision(msgs[0].content, msgs.slice(1).map((m) => m.content).join("\n\n"), visionImage, request.signal)
+      : completeChat(msgs, request.signal, resolved, { json: true });
+
   try {
-    const first = await completeChat(messages, request.signal, resolved, { json: true });
+    const first = await call(messages);
     provider = first.provider;
     output = tryParse(first.text, schema);
 
@@ -132,20 +166,15 @@ export async function POST(
     }
 
     if (output === null) {
-      const retry = await completeChat(
-        [
-          ...messages,
-          { role: "assistant", content: first.text },
-          {
-            role: "user",
-            content:
-              "Your previous response was not valid JSON matching the required schema. Respond again with ONLY the corrected JSON object — no fences, no commentary.",
-          },
-        ],
-        request.signal,
-        resolved,
-        { json: true }
-      );
+      const retry = await call([
+        ...messages,
+        { role: "assistant", content: first.text },
+        {
+          role: "user",
+          content:
+            "Your previous response was not valid JSON matching the required schema. Respond again with ONLY the corrected JSON object — no fences, no commentary.",
+        },
+      ]);
       provider = retry.provider;
       output = tryParse(retry.text, schema);
     }
@@ -157,13 +186,27 @@ export async function POST(
     return Response.json({ error: "generation_parse_failed" }, { status: 422 });
   }
 
+  if (tool === "requirement-coverage") {
+    // Keep only requirement ids that exist — a made-up "R99" never counts as coverage.
+    const known = new Set(requirements.map((r) => r.id));
+    const ai = output as { testCases: { covers: string[] }[] };
+    output = {
+      requirements,
+      testCases: ai.testCases.map((tc) => ({
+        ...tc,
+        covers: [...new Set(tc.covers.map((c) => c.trim().toUpperCase()))].filter((c) => known.has(c)),
+      })),
+    };
+  }
+
   // 7. Persist to history (qa_artifacts — guests allowed by design)
   const { data: artifact } = await supabase
     .from("qa_artifacts")
     .insert({
       user_id: user.id,
       type: tool,
-      input,
+      // The screenshot itself is never stored — history just notes it was there.
+      input: visionImage ? `${input}\n\n[screenshot attached]` : input,
       output: JSON.stringify(output),
       ...(scopedProjectId ? { project_id: scopedProjectId } : {}),
     })
@@ -174,6 +217,22 @@ export async function POST(
     { output, artifactId: artifact?.id ?? null },
     { headers: { "X-AI-Provider": provider } }
   );
+}
+
+const MAX_SCREENSHOT_BYTES = 3 * 1024 * 1024;
+
+/** Data URL → image, only if the bytes really are a PNG / JPEG / WebP of that type. */
+function parseScreenshot(dataUrl: string): VisionImage | null {
+  const match = dataUrl.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
+  if (!match) return null;
+  const bytes = Buffer.from(match[2], "base64");
+  if (bytes.length < 16 || bytes.length > MAX_SCREENSHOT_BYTES) return null;
+  const isPng = bytes[0] === 0x89 && bytes.subarray(1, 4).toString("latin1") === "PNG";
+  const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  const isWebp = bytes.subarray(0, 4).toString("latin1") === "RIFF" && bytes.subarray(8, 12).toString("latin1") === "WEBP";
+  const mime = match[1] as VisionImage["mimeType"];
+  const ok = (mime === "image/png" && isPng) || (mime === "image/jpeg" && isJpeg) || (mime === "image/webp" && isWebp);
+  return ok ? { mimeType: mime, base64: match[2] } : null;
 }
 
 function tryParse(

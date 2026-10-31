@@ -38,6 +38,7 @@ const DISTRESS_PATTERN =
 const WELLNESS_SUGGEST_DISMISSED_KEY = "wellness-suggest-dismissed";
 // Kept for the browser tab: a new chat remounts this panel on its new URL.
 const AGENT_MODE_KEY = "agent-mode";
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Suggestion chips from the design source
 const SUGGESTED_PROMPTS = [
@@ -50,6 +51,7 @@ const SUGGESTED_PROMPTS = [
 type UiMessage = Pick<ChatMessageRecord, "id" | "role" | "content"> & {
   sources?: RetrievedSource[];
   steps?: AgentStep[];
+  rating?: 1 | -1 | null;
 };
 
 export function ChatPanel({
@@ -117,34 +119,45 @@ export function ChatPanel({
   // Abort in-flight stream if the user navigates away mid-generation.
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  async function send(text: string) {
+  /** `regenerate`: answer the last user message again, replacing the reply after it. */
+  async function send(text: string, regenerate = false) {
     const message = text.trim();
     if (!message || streaming) return;
     stopSpeaking(); // new input cuts off any in-progress voice reply
     if (
+      !regenerate &&
       DISTRESS_PATTERN.test(message) &&
       sessionStorage.getItem(WELLNESS_SUGGEST_DISMISSED_KEY) !== "1"
     ) {
       setSuggestWellness(true);
     }
-    setInput("");
     setStreaming(true);
     setWaitingFirstToken(true);
     const userMessageId = `local-user-${Date.now()}`;
-    setMessages((prev) => [
-      ...prev,
-      { id: userMessageId, role: "user", content: message },
-    ]);
-    // A rejected send (limit hit) shouldn't look delivered: drop the bubble
-    // and give the text back so it can be sent somewhere else.
-    const undoSend = () => {
-      setMessages((prev) => prev.filter((m) => m.id !== userMessageId));
-      setInput(message);
-    };
+    let undoSend: () => void;
+    if (regenerate) {
+      // Hide the old reply while the new one is written; put it back on failure.
+      const lastUser = messages.map((m) => m.role).lastIndexOf("user");
+      const replaced = messages.slice(lastUser + 1);
+      setMessages(messages.slice(0, lastUser + 1));
+      undoSend = () => setMessages((prev) => [...prev, ...replaced]);
+    } else {
+      setInput("");
+      setMessages((prev) => [
+        ...prev,
+        { id: userMessageId, role: "user", content: message },
+      ]);
+      // A rejected send (limit hit) shouldn't look delivered: drop the bubble
+      // and give the text back so it can be sent somewhere else.
+      undoSend = () => {
+        setMessages((prev) => prev.filter((m) => m.id !== userMessageId));
+        setInput(message);
+      };
+    }
 
     const controller = new AbortController();
     abortRef.current = controller;
-    const assistantId = `local-assistant-${Date.now()}`;
+    let assistantId = `local-assistant-${Date.now()}`;
 
     try {
       const res = await fetch("/api/chat", {
@@ -156,6 +169,7 @@ export function ChatPanel({
           ...(!activeConversationId && projectId ? { projectId } : {}),
           ...(modelId ? { modelId } : {}),
           ...(agentMode ? { agent: true } : {}),
+          ...(regenerate ? { regenerate: true } : {}),
         }),
         signal: controller.signal,
       });
@@ -197,11 +211,14 @@ export function ChatPanel({
           });
           return;
         }
+        if (regenerate) undoSend();
         toast.error("Something went wrong. Please try again.");
         return;
       }
 
       const newConversationId = res.headers.get("X-Conversation-Id");
+      // The reply's real id (so it can be rated right away).
+      assistantId = res.headers.get("X-Assistant-Message-Id") ?? assistantId;
       setMessages((prev) => [
         ...prev,
         { id: assistantId, role: "assistant", content: "" },
@@ -281,6 +298,30 @@ export function ChatPanel({
     abortRef.current?.abort();
   }
 
+  function regenerateLast() {
+    const lastUser = [...messages].reverse().find((m) => m.role === "user");
+    if (lastUser) void send(lastUser.content, true);
+  }
+
+  async function rate(messageId: string, rating: 1 | -1) {
+    const current = messages.find((m) => m.id === messageId)?.rating ?? null;
+    const next = current === rating ? 0 : rating; // tapping the same thumb again clears it
+    const setRating = (r: 1 | -1 | null) =>
+      setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, rating: r } : m)));
+    setRating(next === 0 ? null : next);
+    const res = await fetch(`/api/messages/${messageId}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rating: next }),
+    }).catch(() => null);
+    if (!res?.ok) {
+      setRating(current);
+      toast.error(res?.status === 503 ? "Ratings aren't switched on yet." : "Couldn't save your rating.");
+    } else if (next !== 0) {
+      toast.success(next === 1 ? "Thanks — glad it helped!" : "Thanks — this helps AbhiNova improve.");
+    }
+  }
+
   const isEmpty = messages.length === 0 && !streaming;
 
   return (
@@ -353,22 +394,30 @@ export function ChatPanel({
             </div>
           ) : (
             <>
-              {messages.map((m) => (
-                <ChatMessage
-                  key={m.id}
-                  role={m.role}
-                  content={m.content}
-                  sources={m.sources}
-                  steps={m.steps}
-                  onCitationClick={setActiveSource}
-                  streaming={
-                    streaming &&
-                    !waitingFirstToken &&
-                    m.id === messages[messages.length - 1]?.id &&
-                    m.role === "assistant"
-                  }
-                />
-              ))}
+              {messages.map((m, i) => {
+                const isLast = i === messages.length - 1;
+                return (
+                  <ChatMessage
+                    key={m.id}
+                    role={m.role}
+                    content={m.content}
+                    sources={m.sources}
+                    steps={m.steps}
+                    onCitationClick={setActiveSource}
+                    streaming={streaming && !waitingFirstToken && isLast && m.role === "assistant"}
+                    // Actions only once a reply is complete; ratings need its real (uuid) id.
+                    actions={
+                      streaming || m.role !== "assistant" || !m.content
+                        ? undefined
+                        : {
+                            rating: m.rating ?? null,
+                            onRate: UUID.test(m.id) ? (r) => rate(m.id, r) : undefined,
+                            onRegenerate: isLast && activeConversationId ? regenerateLast : undefined,
+                          }
+                    }
+                  />
+                );
+              })}
               {waitingFirstToken && <ThinkingOrb />}
             </>
           )}

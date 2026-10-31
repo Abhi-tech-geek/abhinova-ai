@@ -79,6 +79,8 @@ export function sanitizeFileName(fileName: string): string {
   return base.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
 }
 
+export const documentIdSchema = z.string().uuid();
+
 export const processRequestSchema = z.object({
   documentId: z.string().uuid(),
 });

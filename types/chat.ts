@@ -26,6 +26,17 @@ export interface ChatMessageRecord {
   created_at: string;
   /** Project chats store the cited sources; Agent Mode also stores its steps. */
   metadata?: { sources?: RetrievedSource[]; steps?: AgentStep[] } | null;
+  /** The viewer's 👍 (1) / 👎 (-1) on an assistant reply (migration 007). */
+  rating?: 1 | -1 | null;
+}
+
+/** One hit from GET /api/conversations/search. */
+export interface ChatSearchResult {
+  id: string;
+  title: string;
+  projectId: string | null;
+  /** Text around the match when it was found inside a message. */
+  snippet: string | null;
 }
 
 /** conversations table row as used by the UI. */

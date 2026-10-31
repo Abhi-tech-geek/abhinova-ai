@@ -5,6 +5,7 @@ import { projectIdSchema } from "@/lib/validators/projects";
 import { conversationIdSchema } from "@/lib/validators/chat";
 import { getOwnedProject, countProjectDocuments } from "@/lib/projects/scope";
 import { ChatPanel } from "@/components/workspace/chat-panel";
+import { withRatings } from "@/lib/chat/ratings";
 import { ProjectSwitcher } from "@/components/projects/project-switcher";
 import type { ChatMessageRecord } from "@/types/chat";
 
@@ -43,7 +44,7 @@ export default async function ProjectChatPage({
       .select("id, role, content, created_at, metadata")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
-    messages = (data ?? []) as ChatMessageRecord[];
+    messages = await withRatings(supabase, (data ?? []) as ChatMessageRecord[]);
   }
 
   const documentCount = await countProjectDocuments(supabase, project.id);

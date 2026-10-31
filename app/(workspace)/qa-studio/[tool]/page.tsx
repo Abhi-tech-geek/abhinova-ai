@@ -23,6 +23,17 @@ export default async function QaToolPage({
     .order("created_at", { ascending: false })
     .limit(20);
 
+  // Requirements → Tests can start from an uploaded PRD / spec.
+  const { data: documents } =
+    tool.id === "requirement-coverage"
+      ? await supabase
+          .from("documents")
+          .select("id, file_name")
+          .eq("status", "ready")
+          .order("created_at", { ascending: false })
+          .limit(30)
+      : { data: null };
+
   return (
     <main className="mx-auto max-w-4xl px-4 sm:px-6 py-8">
       <div className="mb-6">
@@ -42,6 +53,7 @@ export default async function QaToolPage({
       <ToolWorkspace
         tool={tool}
         history={(artifacts ?? []) as QaArtifactRecord[]}
+        documents={(documents ?? []) as { id: string; file_name: string }[]}
       />
     </main>
   );

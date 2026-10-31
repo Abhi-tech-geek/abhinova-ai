@@ -13,6 +13,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import type { ProjectWithStats } from "@/types/projects";
+import type { ChatSearchResult } from "@/types/chat";
 
 // The palette's body (cmdk + dialog). Loaded on first open by CommandPalette,
 // so pages don't ship it up front.
@@ -26,6 +27,26 @@ export default function CommandPaletteDialog({
   const router = useRouter();
   const { setTheme } = useTheme();
   const [projects, setProjects] = useState<ProjectWithStats[]>([]);
+  const [query, setQuery] = useState("");
+  const [chats, setChats] = useState<ChatSearchResult[]>([]);
+
+  // Chat search (titles + message text), debounced, from 2 characters.
+  useEffect(() => {
+    const term = query.trim();
+    if (term.length < 2) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`/api/conversations/search?q=${encodeURIComponent(term)}`, { signal: controller.signal })
+        .then((res) => (res.ok ? res.json() : { results: [] }))
+        .then((data: { results?: ChatSearchResult[] }) => setChats(data.results ?? []))
+        .catch(() => {});
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query]);
+  const visibleChats = query.trim().length >= 2 ? chats : [];
 
   // Projects load lazily the first time the palette opens.
   useEffect(() => {
@@ -44,11 +65,36 @@ export default function CommandPaletteDialog({
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput
-        placeholder="Type a command or search…"
+        placeholder="Search your chats, or type a command…"
+        value={query}
+        onValueChange={setQuery}
         data-testid="shared-commandpalette-input"
       />
       <CommandList data-testid="shared-commandpalette-list">
         <CommandEmpty>No results found.</CommandEmpty>
+        {visibleChats.length > 0 && (
+          <>
+            <CommandGroup heading="Chats">
+              {visibleChats.map((c) => (
+                <CommandItem
+                  key={c.id}
+                  // Includes the query so cmdk's own filter keeps server matches visible.
+                  value={`chat ${c.id} ${query} ${c.title}`}
+                  onSelect={() =>
+                    run(() => router.push(c.projectId ? `/projects/${c.projectId}/chat/${c.id}` : `/chat/${c.id}`))
+                  }
+                  data-testid="shared-commandpalette-chat"
+                >
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate">💬 {c.title}</span>
+                    {c.snippet && <span className="truncate text-xs opacity-70">{c.snippet}</span>}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
         <CommandGroup heading="Go to">
           <CommandItem onSelect={() => run(() => router.push("/chat"))}>
             💬 Chat

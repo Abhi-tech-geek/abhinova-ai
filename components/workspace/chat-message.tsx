@@ -1,10 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { BrandStar } from "@/components/shared/logo";
 import ChatMarkdown from "@/components/workspace/chat-markdown";
+import { AnswerInsights } from "@/components/documents/answer-insights";
 import type { AgentStep, ChatRole } from "@/types/chat";
 import type { RetrievedSource } from "@/types/documents";
+
+interface ReplyActionsProps {
+  rating: 1 | -1 | null;
+  /** Absent until the reply has its saved id. */
+  onRate?: (rating: 1 | -1) => void;
+  /** Only on the latest reply. */
+  onRegenerate?: () => void;
+}
 
 export function ChatMessage({
   role,
@@ -13,6 +23,7 @@ export function ChatMessage({
   sources = [],
   steps = [],
   onCitationClick,
+  actions,
 }: {
   role: ChatRole;
   content: string;
@@ -21,6 +32,8 @@ export function ChatMessage({
   /** Agent Mode: the tools used before this reply. */
   steps?: AgentStep[];
   onCitationClick?: (source: RetrievedSource) => void;
+  /** Copy / regenerate / 👍👎 row — set once a reply is complete. */
+  actions?: ReplyActionsProps;
 }) {
   const isUser = role === "user";
 
@@ -79,7 +92,71 @@ export function ChatMessage({
               <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse rounded-sm bg-primary align-text-bottom" />
             )}
         </div>
+        {actions && (
+          <>
+            {/* Project / Agent answers built on your documents can be source-checked too. */}
+            {sources.length > 0 && <AnswerInsights answer={content} sources={sources} />}
+            <ReplyActions content={content} {...actions} />
+          </>
+        )}
       </div>
     </motion.div>
+  );
+}
+
+const ACTION_BUTTON =
+  "grid h-7 min-w-7 place-items-center rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+function ReplyActions({
+  content,
+  rating,
+  onRate,
+  onRegenerate,
+}: { content: string } & ReplyActionsProps) {
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast.success("Copied");
+    } catch {
+      toast.error("Couldn't copy — select the text instead.");
+    }
+  }
+  return (
+    <div className="mt-2 flex items-center gap-0.5" data-testid="chat-message-actions">
+      <button type="button" onClick={copy} className={ACTION_BUTTON} title="Copy" aria-label="Copy reply" data-testid="chat-message-copy">
+        📋
+      </button>
+      {onRegenerate && (
+        <button type="button" onClick={onRegenerate} className={ACTION_BUTTON} title="Regenerate" aria-label="Regenerate reply" data-testid="chat-message-regenerate">
+          🔄
+        </button>
+      )}
+      {onRate && (
+        <>
+          <button
+            type="button"
+            onClick={() => onRate(1)}
+            className={`${ACTION_BUTTON} ${rating === 1 ? "bg-success/15 text-success" : ""}`}
+            title="Good reply"
+            aria-label="Good reply"
+            aria-pressed={rating === 1}
+            data-testid="chat-message-thumbs-up"
+          >
+            👍
+          </button>
+          <button
+            type="button"
+            onClick={() => onRate(-1)}
+            className={`${ACTION_BUTTON} ${rating === -1 ? "bg-destructive/15 text-destructive" : ""}`}
+            title="Bad reply"
+            aria-label="Bad reply"
+            aria-pressed={rating === -1}
+            data-testid="chat-message-thumbs-down"
+          >
+            👎
+          </button>
+        </>
+      )}
+    </div>
   );
 }

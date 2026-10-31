@@ -69,3 +69,42 @@ export async function geminiStream(
   }
   return res;
 }
+
+/** An image for a vision request. The bytes are sent to Google, never stored by us. */
+export interface VisionImage {
+  mimeType: "image/png" | "image/jpeg" | "image/webp";
+  base64: string;
+}
+
+/**
+ * One non-streaming vision call (screenshot → JSON). Returns the reply text;
+ * throws with the HTTP status so the router can try the next model.
+ */
+export async function geminiVision(
+  model: string,
+  system: string,
+  text: string,
+  image: VisionImage,
+  signal?: AbortSignal
+): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+    method: "POST",
+    headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: "user", parts: [{ inlineData: { mimeType: image.mimeType, data: image.base64 } }, { text }] }],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 4096,
+        responseMimeType: "application/json",
+        thinkingConfig: model.includes("lite") ? { thinkingLevel: "minimal" } : { thinkingBudget: 0 },
+      },
+    }),
+    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(45_000)]) : AbortSignal.timeout(45_000),
+  });
+  if (!res.ok) throw new Error(`Gemini vision failed with status ${res.status}`);
+  const data = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+  return (data.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? "").join("");
+}

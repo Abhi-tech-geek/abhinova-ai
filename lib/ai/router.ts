@@ -1,5 +1,5 @@
 import { groqStream, GROQ_MODEL } from "@/lib/ai/groq";
-import { geminiStream, GEMINI_MODEL, GEMINI_LITE_MODEL } from "@/lib/ai/gemini";
+import { geminiStream, geminiVision, GEMINI_MODEL, GEMINI_LITE_MODEL, type VisionImage } from "@/lib/ai/gemini";
 import { isLocalAiError, isLocalMode, localChatModel, ollamaStream } from "@/lib/ai/ollama";
 import { PROVIDERS, type AiProvider, type ResolvedModel } from "@/lib/models/registry";
 import type { AiMessage } from "@/types/chat";
@@ -302,6 +302,31 @@ export async function completeChat(
  * markdown fences or prose. Returns the raw candidate string (still needs
  * JSON.parse + zod validation by the caller).
  */
+/**
+ * Screenshot → text: Gemini Flash, then Flash-Lite (the main Groq model can't
+ * see images). Not available in Local Mode (the local model has no vision).
+ */
+export async function completeVision(
+  system: string,
+  text: string,
+  image: VisionImage,
+  signal?: AbortSignal
+): Promise<{ provider: AiProvider; text: string }> {
+  let lastError: unknown;
+  for (const model of [GEMINI_MODEL, GEMINI_LITE_MODEL]) {
+    try {
+      const reply = await geminiVision(model, system, text, image, signal);
+      console.info(`[ai-router] provider=gemini model=${model} (vision)`);
+      return { provider: "gemini", text: reply };
+    } catch (err) {
+      if (signal?.aborted) throw err;
+      lastError = err;
+      console.warn(`[ai-router] gemini vision ${model} failed: ${err instanceof Error ? err.message : "error"}`);
+    }
+  }
+  throw new AiBusyError(lastError);
+}
+
 export function extractJsonObject(text: string): string {
   const cleaned = text.replace(/```(?:json)?/gi, "").trim();
   const start = cleaned.indexOf("{");

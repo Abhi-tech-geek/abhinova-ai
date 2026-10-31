@@ -13,6 +13,7 @@ export const QA_TOOL_IDS = [
   "sql-tests",
   "test-data",
   "automation-snippet",
+  "requirement-coverage",
 ] as const;
 
 export const qaToolIdSchema = z.enum(QA_TOOL_IDS);
@@ -25,6 +26,12 @@ export const qaRequestSchema = z.object({
   projectId: z.string().uuid().optional(),
   /** ModelPicker choice; omitted = default Groq → Gemini chain. */
   modelId: z.string().min(3).max(200).optional(),
+  /** Bug Report only: a screenshot as a data URL (downscaled in the browser; ≤ 3 MB decoded). */
+  image: z
+    .string()
+    .max(4_200_000)
+    .regex(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/)
+    .optional(),
 });
 export type QaRequest = z.infer<typeof qaRequestSchema>;
 
@@ -134,7 +141,24 @@ export const automationSnippetOutputSchema = z.object({
 });
 export type AutomationSnippetOutput = z.infer<typeof automationSnippetOutputSchema>;
 
-/** Output schema lookup used by the API route. */
+/** What the AI returns for Requirements → Tests: test cases + the R-ids each one checks. */
+export const requirementTestsAiSchema = z.object({
+  testCases: z
+    .array(
+      testCasesOutputSchema.shape.testCases.element.extend({
+        covers: z.array(z.string()),
+      })
+    )
+    .min(1),
+});
+
+/** Stored/returned output: the numbered requirements (split by the server) + traced tests. */
+export const requirementCoverageOutputSchema = requirementTestsAiSchema.extend({
+  requirements: z.array(z.object({ id: z.string(), text: z.string() })).min(1),
+});
+export type RequirementCoverageOutput = z.infer<typeof requirementCoverageOutputSchema>;
+
+/** Output schema lookup used by the API route (what the model must return). */
 export const QA_OUTPUT_SCHEMAS: Record<QaToolId, z.ZodTypeAny> = {
   "test-cases": testCasesOutputSchema,
   "bug-report": bugReportOutputSchema,
@@ -144,4 +168,5 @@ export const QA_OUTPUT_SCHEMAS: Record<QaToolId, z.ZodTypeAny> = {
   "sql-tests": sqlTestsOutputSchema,
   "test-data": testDataOutputSchema,
   "automation-snippet": automationSnippetOutputSchema,
+  "requirement-coverage": requirementTestsAiSchema,
 };

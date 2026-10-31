@@ -1,5 +1,5 @@
 import type { QaToolId } from "@/lib/validators/qa";
-import type { TestCasesOutput, BugReportOutput, TestDataOutput } from "@/types/qa";
+import type { TestCasesOutput, BugReportOutput, TestDataOutput, RequirementCoverageOutput } from "@/types/qa";
 
 // QA Studio tool registry — client-safe metadata driving the dashboard grid,
 // the dynamic tool page, and its form. Prompts stay server-side in
@@ -39,8 +39,8 @@ export const QA_TOOLS: QaToolDefinition[] = [
     id: "bug-report",
     name: "Bug Report Formatter",
     icon: "🐞",
-    description: "Rough notes become a report a developer can act on immediately.",
-    proTip: "Include what you SAW, not what you think broke — the formatter separates expected vs actual much better from raw observations.",
+    description: "Rough notes — or just a screenshot — become a report a developer can act on immediately.",
+    proTip: "Attach or paste (Ctrl+V) the screenshot and add one line on what you did — the AI reads the error on screen, you supply the steps.",
     inputLabel: "Rough bug notes",
     inputPlaceholder: "login btn does nothing on mobile chrome after wrong otp entered once, works on desktop, saw 500 in network tab…",
     example: "checkout page, android chrome 129 (pixel 7). added 2 items, applied coupon SAVE10, tapped Pay. spinner keeps going ~40s then 'Something went wrong'. card WAS charged (got bank sms) but order not in My Orders. desktop chrome works fine. network tab showed POST /api/orders 504. happened 3 times out of 4.",
@@ -114,7 +114,76 @@ export const QA_TOOLS: QaToolDefinition[] = [
       ],
     },
   },
+  {
+    id: "requirement-coverage",
+    name: "Requirements → Tests + Coverage",
+    icon: "🧭",
+    description: "Paste a PRD or ticket (or load a document). Every test case is traced to the requirement it checks — and untested requirements are flagged.",
+    proTip: "One requirement per line (or bullet) gives the cleanest R1, R2… numbering — and a gap you can point to in review.",
+    inputLabel: "Requirements (PRD, user story or Jira ticket)",
+    inputPlaceholder: "- Users can sign up with email and password\n- Password must be 8–64 characters with one number\n- A verification email is sent after sign-up…",
+    example: "- Users can sign up with an email address and a password.\n- The password must be 8–64 characters and contain at least one number and one special character.\n- A verification email is sent right after sign-up; the link expires in 24 hours.\n- Unverified users can log in but cannot place orders.\n- After 5 failed log-in attempts the account is locked for 15 minutes.\n- Users can delete their account from Settings; all their data is removed within 30 days.",
+  },
 ];
+
+// ---------------------------------------------------------------------------
+// Requirements → Tests: numbering + coverage (shared by the API route and UI)
+// ---------------------------------------------------------------------------
+
+export interface Requirement {
+  id: string;
+  text: string;
+}
+
+const MAX_REQUIREMENTS = 40;
+
+/**
+ * Splits requirement text into numbered units R1, R2…: one per line/bullet,
+ * and long lines further by sentence. Done in code (not by the AI) so the
+ * numbering — and therefore the coverage report — is stable.
+ */
+export function splitRequirements(text: string): Requirement[] {
+  const units: string[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.replace(/^\s*(?:[-*•▪◦]|\d+[.)]|[a-z][.)]|R\d+[:.)])\s*/i, "").trim();
+    if (line.length < 10) continue;
+    if (/[:：]$/.test(line) && line.length < 60) continue; // a heading like "Login:"
+    const sentences = line.length > 160 ? line.split(/(?<=[.!?।])\s+(?=[A-Z0-9])/) : [line];
+    for (const s of sentences) if (s.trim().length >= 10) units.push(s.trim());
+  }
+  return units.slice(0, MAX_REQUIREMENTS).map((t, i) => ({ id: `R${i + 1}`, text: t }));
+}
+
+/** Which test cases check each requirement, and which requirements have none. */
+export function coverageOf(
+  requirements: Requirement[],
+  testCases: { id: string; covers: string[] }[]
+): { byRequirement: Map<string, string[]>; uncovered: Requirement[]; percent: number } {
+  const byRequirement = new Map(requirements.map((r) => [r.id, [] as string[]]));
+  for (const tc of testCases) for (const r of tc.covers) byRequirement.get(r)?.push(tc.id);
+  const uncovered = requirements.filter((r) => (byRequirement.get(r.id) ?? []).length === 0);
+  const percent = requirements.length ? Math.round(((requirements.length - uncovered.length) / requirements.length) * 100) : 0;
+  return { byRequirement, uncovered, percent };
+}
+
+/**
+ * Joins a document's chunks back into text, dropping the overlap the chunker
+ * adds between neighbours (otherwise requirements would appear twice).
+ */
+export function joinChunks(contents: string[]): string {
+  let out = "";
+  for (const next of contents) {
+    let overlap = 0;
+    for (let k = Math.min(600, next.length, out.length); k >= 20; k--) {
+      if (out.endsWith(next.slice(0, k))) {
+        overlap = k;
+        break;
+      }
+    }
+    out += overlap ? next.slice(overlap) : `${out ? "\n" : ""}${next}`;
+  }
+  return out;
+}
 
 export function getQaTool(id: string): QaToolDefinition | undefined {
   return QA_TOOLS.find((t) => t.id === id);
@@ -186,6 +255,32 @@ export function bugReportToMarkdown(data: BugReportOutput): string {
     `### Attachments Checklist`,
     ...data.attachmentsChecklist.map((a) => `- [ ] ${a}`),
   ].join("\n");
+}
+
+export function requirementTestsToCsv(data: RequirementCoverageOutput): string {
+  return toCsv([
+    ["ID", "Covers", "Title", "Preconditions", "Steps", "Expected Result", "Priority", "Type"],
+    ...data.testCases.map((tc) => [
+      tc.id,
+      tc.covers.join(" "),
+      tc.title,
+      tc.preconditions,
+      tc.steps.map((s, i) => `${i + 1}. ${s}`).join("\n"),
+      tc.expectedResult,
+      tc.priority,
+      tc.type,
+    ]),
+  ]);
+}
+
+/** Traceability matrix: requirement → the test cases that check it. */
+export function traceabilityToMarkdown(data: RequirementCoverageOutput): string {
+  const { byRequirement, percent } = coverageOf(data.requirements, data.testCases);
+  const rows = data.requirements.map((r) => {
+    const tcs = byRequirement.get(r.id) ?? [];
+    return `| ${r.id} | ${r.text.replace(/\|/g, "/")} | ${tcs.length ? tcs.join(", ") : "⚠ not covered"} |`;
+  });
+  return [`**Coverage: ${percent}%**`, "", "| Req | Requirement | Test cases |", "|---|---|---|", ...rows].join("\n");
 }
 
 export function testDataToCsv(data: TestDataOutput): string {

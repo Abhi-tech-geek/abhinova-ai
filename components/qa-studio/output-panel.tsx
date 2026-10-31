@@ -9,7 +9,11 @@ import {
   testCasesToMarkdown,
   bugReportToMarkdown,
   testDataToCsv,
+  coverageOf,
+  requirementTestsToCsv,
+  traceabilityToMarkdown,
 } from "@/lib/qa-tools";
+import { Button } from "@/components/ui/button";
 import type {
   QaToolId,
   TestCasesOutput,
@@ -20,6 +24,7 @@ import type {
   SqlTestsOutput,
   TestDataOutput,
   AutomationSnippetOutput,
+  RequirementCoverageOutput,
 } from "@/types/qa";
 
 function CopyableCode({ code, label }: { code: string; label?: string }) {
@@ -363,9 +368,144 @@ function AutomationView({ data }: { data: AutomationSnippetOutput }) {
   );
 }
 
+function RequirementCoverageView({
+  data,
+  onFillGaps,
+  fillingGaps,
+}: {
+  data: RequirementCoverageOutput;
+  onFillGaps?: (ids: string[]) => void;
+  fillingGaps?: boolean;
+}) {
+  const { byRequirement, uncovered, percent } = coverageOf(data.requirements, data.testCases);
+  const reqText = new Map(data.requirements.map((r) => [r.id, r.text]));
+  const covered = data.requirements.length - uncovered.length;
+  return (
+    <div className="space-y-4">
+      <ExportButtons
+        toolId="requirement-coverage"
+        csv={() => requirementTestsToCsv(data)}
+        markdown={() => traceabilityToMarkdown(data)}
+        json={() => JSON.stringify(data, null, 2)}
+      />
+
+      {/* Coverage summary */}
+      <div data-testid="qastudio-coverage-summary">
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="text-sm font-medium">
+            {covered} of {data.requirements.length} requirements covered
+          </p>
+          <p className={`font-display text-lg font-semibold ${percent === 100 ? "text-success" : "text-warning"}`}>{percent}%</p>
+        </div>
+        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-secondary" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label="Requirement coverage">
+          <div className={`h-full rounded-full ${percent === 100 ? "bg-success" : "brand-gradient"}`} style={{ width: `${percent}%` }} />
+        </div>
+      </div>
+
+      {uncovered.length > 0 && (
+        <div className="rounded-md border border-warning/40 bg-warning/10 p-3" data-testid="qastudio-coverage-gaps">
+          <p className="text-xs font-semibold text-warning">⚠ No test checks these yet</p>
+          <ul className="mt-1.5 space-y-1 text-xs">
+            {uncovered.map((r) => (
+              <li key={r.id}>
+                <span className="font-mono font-medium">{r.id}</span> — {r.text}
+              </li>
+            ))}
+          </ul>
+          {onFillGaps && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-2"
+              disabled={fillingGaps}
+              onClick={() => onFillGaps(uncovered.map((r) => r.id))}
+              data-testid="qastudio-coverage-fill-gaps"
+            >
+              {fillingGaps ? "Writing tests…" : `➕ Write tests for the ${uncovered.length} gap${uncovered.length === 1 ? "" : "s"}`}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Traceability: requirement → test cases */}
+      <div>
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Traceability</p>
+        <ul className="space-y-1" data-testid="qastudio-traceability">
+          {data.requirements.map((r) => {
+            const tcs = byRequirement.get(r.id) ?? [];
+            return (
+              <li key={r.id} className="flex min-w-0 items-start gap-2 text-xs">
+                <span className={`mt-px w-3 shrink-0 font-bold ${tcs.length ? "text-success" : "text-warning"}`} aria-hidden>
+                  {tcs.length ? "✓" : "⚠"}
+                </span>
+                <span className="min-w-0">
+                  <span className="font-mono font-medium">{r.id}</span> {r.text}
+                  <span className="block text-muted-foreground">{tcs.length ? tcs.join(", ") : "not covered"}</span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {/* Test cases with what they cover */}
+      <div>
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Test cases ({data.testCases.length})
+        </p>
+        <ul className="space-y-2" data-testid="qastudio-coverage-testcases">
+          {data.testCases.map((tc) => (
+            <li key={tc.id} className="rounded-md border border-border/60 p-3 text-xs">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="font-mono text-[11px] text-muted-foreground">{tc.id}</span>
+                <Pill value={tc.priority} />
+                <Pill value={tc.type} />
+                {tc.covers.map((r) => (
+                  <span
+                    key={r}
+                    title={reqText.get(r)}
+                    className="rounded-full border border-primary/40 px-1.5 py-px font-mono text-[10px] text-primary"
+                  >
+                    {r}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-1.5 text-sm font-medium">{tc.title}</p>
+              {tc.preconditions && (
+                <p className="mt-1.5 text-muted-foreground">
+                  <span className="font-medium text-foreground">Pre: </span>
+                  {tc.preconditions}
+                </p>
+              )}
+              <ol className="mt-1.5 list-decimal space-y-0.5 pl-4">
+                {tc.steps.map((s, i) => <li key={i}>{s}</li>)}
+              </ol>
+              <p className="mt-1.5 rounded bg-success/10 px-2 py-1">
+                <span className="font-medium text-success">Expected: </span>
+                {tc.expectedResult}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 
-export function OutputPanel({ toolId, data }: { toolId: QaToolId; data: unknown }) {
+export function OutputPanel({
+  toolId,
+  data,
+  onFillGaps,
+  fillingGaps,
+}: {
+  toolId: QaToolId;
+  data: unknown;
+  /** Requirements → Tests: write tests for these uncovered requirement ids. */
+  onFillGaps?: (ids: string[]) => void;
+  fillingGaps?: boolean;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -382,6 +522,9 @@ export function OutputPanel({ toolId, data }: { toolId: QaToolId; data: unknown 
       {toolId === "sql-tests" && <SqlTestsView data={data as SqlTestsOutput} />}
       {toolId === "test-data" && <TestDataView data={data as TestDataOutput} />}
       {toolId === "automation-snippet" && <AutomationView data={data as AutomationSnippetOutput} />}
+      {toolId === "requirement-coverage" && (
+        <RequirementCoverageView data={data as RequirementCoverageOutput} onFillGaps={onFillGaps} fillingGaps={fillingGaps} />
+      )}
     </motion.div>
   );
 }

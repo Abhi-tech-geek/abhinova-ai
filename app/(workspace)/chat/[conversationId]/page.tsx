@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { conversationIdSchema } from "@/lib/validators/chat";
 import { ChatPanel } from "@/components/workspace/chat-panel";
+import { withRatings } from "@/lib/chat/ratings";
 import type { ChatMessageRecord } from "@/types/chat";
 
 export default async function ConversationPage({
@@ -38,7 +39,7 @@ export default async function ConversationPage({
       // Remount per conversation so switching chats never shows stale state.
       key={conversationId}
       conversationId={conversationId}
-      initialMessages={(messages ?? []) as ChatMessageRecord[]}
+      initialMessages={await withRatings(supabase, (messages ?? []) as ChatMessageRecord[])}
     />
   );
 }

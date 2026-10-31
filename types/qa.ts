@@ -11,6 +11,7 @@ export type {
   SqlTestsOutput,
   TestDataOutput,
   AutomationSnippetOutput,
+  RequirementCoverageOutput,
 } from "@/lib/validators/qa";
 
 /** qa_artifacts table row as used by the UI. */
