@@ -141,9 +141,20 @@ export function KnowledgePanel({
               <span className="text-sm">📄</span>
               <span className="min-w-0 flex-1 truncate text-xs font-medium">{doc.file_name}</span>
               <span className="text-[10px] uppercase text-muted-foreground">{doc.file_type}</span>
-              <Badge variant="outline" className={`border-0 text-[10px] ${STATUS_STYLE[doc.status] ?? ""}`}>
-                {doc.status}
-              </Badge>
+              {doc.indexedIn ? (
+                <Badge
+                  variant="outline"
+                  className="border-0 bg-warning/15 text-[10px] text-warning"
+                  title={`Indexed in ${doc.indexedIn === "local" ? "Local" : "Online"} Mode: re-index it on the Documents page to use it here.`}
+                  data-testid="projects-knowledge-doc-other-mode"
+                >
+                  other mode
+                </Badge>
+              ) : (
+                <Badge variant="outline" className={`border-0 text-[10px] ${STATUS_STYLE[doc.status] ?? ""}`}>
+                  {doc.status}
+                </Badge>
+              )}
               <button
                 type="button"
                 title="Remove from project"

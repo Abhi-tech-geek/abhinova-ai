@@ -12,6 +12,8 @@ export interface DocumentRecord {
   created_at: string;
   project_id?: string | null;
   source_url?: string | null;
+  /** Set when the document was indexed in the other mode, so search here skips it. */
+  indexedIn?: "online" | "local";
 }
 
 /**
@@ -29,6 +31,8 @@ export interface ChunkMetadata {
   path?: string;
   language?: string;
   issueKey?: string;
+  /** Embedding model that indexed this chunk (absent = the cloud model). */
+  embedModel?: string;
 }
 
 /** One extracted block of text before chunking (a page, a slide, or a whole file). */

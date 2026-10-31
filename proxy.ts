@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isOpenBeta } from "@/lib/beta/config";
 import { qaToolIdSchema } from "@/lib/validators/qa";
 import { hasMalformedId } from "@/lib/utils";
+import { isLocalMode } from "@/lib/ai/ollama";
 
 // Route groups don't appear in URLs, so (workspace) and (wellness) routes are
 // protected by path prefix. Anonymous (guest) sessions count as authenticated —
@@ -34,7 +35,18 @@ function withCookies(target: NextResponse, from: NextResponse) {
   return target;
 }
 
+// Local Mode serves only this computer. A Host check stops DNS rebinding: a web
+// page on evil.example re-pointing its name at 127.0.0.1 to use the local app.
+const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i;
+
 export async function proxy(request: NextRequest) {
+  if (isLocalMode() && !LOCAL_HOST.test(request.headers.get("host") ?? "")) {
+    return new NextResponse("AbhiNova Local Mode only answers on localhost.", {
+      status: 403,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   // Pass through until Supabase env vars are configured (fresh clone / CI).

@@ -20,7 +20,7 @@ export function localChatModel(): string {
   return process.env.OLLAMA_CHAT_MODEL?.trim() || DEFAULT_CHAT_MODEL;
 }
 
-function localEmbedModel(): string {
+export function localEmbedModel(): string {
   return process.env.OLLAMA_EMBED_MODEL?.trim() || DEFAULT_EMBED_MODEL;
 }
 

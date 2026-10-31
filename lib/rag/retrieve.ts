@@ -1,7 +1,8 @@
-import { embedQuery } from "@/lib/ai/embeddings";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { activeEmbeddingModel, chunkEmbeddingModel, embedQuery } from "@/lib/ai/embeddings";
 import { createClient } from "@/lib/supabase/server";
 import { describeChunkLocation } from "@/lib/utils";
-import type { ChunkMetadata, RetrievedSource } from "@/types/documents";
+import type { ChunkMetadata, DocumentRecord, RetrievedSource } from "@/types/documents";
 
 // Retrieval for chat-with-documents and project chats. Uses the
 // match_document_chunks RPC (SECURITY INVOKER → RLS applies, so only the
@@ -34,12 +35,41 @@ export async function retrieveChunks(
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("match_document_chunks", {
     query_embedding: queryEmbedding,
-    match_count: matchCount,
+    // Extra rows: chunks indexed in the other mode are dropped below.
+    match_count: matchCount * 3,
     filter_document_ids: documentIds && documentIds.length > 0 ? documentIds : null,
     p_project_id: projectId,
   });
   if (error) throw new Error(`Retrieval failed: ${error.message}`);
-  return toSources((data ?? []) as MatchRow[]);
+  // Online and Local Mode vectors live in different spaces — comparing them
+  // gives confident-looking nonsense, so only this mode's chunks count.
+  const model = activeEmbeddingModel();
+  const rows = ((data ?? []) as MatchRow[]).filter((row) => chunkEmbeddingModel(row.metadata) === model);
+  return toSources(rows.slice(0, matchCount));
+}
+
+/**
+ * Marks ready documents that were indexed in the other mode (Online vs Local),
+ * judged by their first chunk. Those are skipped by search until re-indexed.
+ */
+export async function withIndexMode(
+  supabase: SupabaseClient,
+  documents: DocumentRecord[]
+): Promise<DocumentRecord[]> {
+  const ids = documents.filter((d) => d.status === "ready").map((d) => d.id);
+  if (ids.length === 0) return documents;
+  const { data } = await supabase
+    .from("document_chunks")
+    .select("document_id, metadata")
+    .in("document_id", ids)
+    .eq("chunk_index", 0);
+  const model = activeEmbeddingModel();
+  const other = new Map<string, "online" | "local">();
+  for (const row of (data ?? []) as { document_id: string; metadata: ChunkMetadata | null }[]) {
+    const docModel = chunkEmbeddingModel(row.metadata);
+    if (docModel !== model) other.set(row.document_id, docModel.startsWith("ollama/") ? "local" : "online");
+  }
+  return documents.map((d) => (other.has(d.id) ? { ...d, indexedIn: other.get(d.id) } : d));
 }
 
 /** First chunks of one document in reading order (used by Summarize). */

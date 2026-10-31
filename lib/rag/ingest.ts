@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { chunkBlocks } from "@/lib/rag/chunk";
-import { embedDocuments } from "@/lib/ai/embeddings";
+import { activeEmbeddingModel, embedDocuments } from "@/lib/ai/embeddings";
 import { redactSecrets } from "@/lib/code/secret-scan";
 import type { ExtractedBlock } from "@/types/documents";
 
@@ -35,6 +35,8 @@ export async function ingestBlocks(
   if (truncated) chunks = chunks.slice(0, MAX_CHUNKS_PER_DOCUMENT);
 
   const embeddings = await embedDocuments(chunks.map((c) => c.content));
+  // Online and Local Mode vectors aren't comparable: tag which model made them.
+  const embedModel = activeEmbeddingModel();
 
   // Re-processing / re-sync safety: replace this document's chunks entirely.
   await supabase.from("document_chunks").delete().eq("document_id", params.documentId);
@@ -46,7 +48,7 @@ export async function ingestBlocks(
       content: chunk.content,
       embedding: embeddings[i + j],
       chunk_index: chunk.chunkIndex,
-      metadata: chunk.metadata,
+      metadata: { ...chunk.metadata, embedModel },
     }));
     const { error } = await supabase.from("document_chunks").insert(batch);
     if (error) throw new Error("Could not save the processed chunks");

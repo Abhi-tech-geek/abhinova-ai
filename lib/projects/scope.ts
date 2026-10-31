@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ProjectNoteRecord, ProjectRecord, ProjectWithStats } from "@/types/projects";
 import type { DocumentRecord } from "@/types/documents";
+import { withIndexMode } from "@/lib/rag/retrieve";
 import type { ProjectSourceRecord } from "@/types/connectors";
 
 // Project-scoped helpers + free-tier limits. Every query runs through the
@@ -119,7 +120,7 @@ export async function loadProjectDetail(
   return {
     project,
     notes: (notes.data ?? []) as ProjectNoteRecord[],
-    documents: (documents.data ?? []) as DocumentRecord[],
+    documents: await withIndexMode(supabase, (documents.data ?? []) as DocumentRecord[]),
     sources: (sources.data ?? []) as ProjectSourceRecord[],
     chats: (chats.data ?? []) as ProjectDetail["chats"],
   };

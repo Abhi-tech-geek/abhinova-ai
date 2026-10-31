@@ -6,6 +6,7 @@ import { LockedFeature } from "@/components/shared/locked-feature";
 import { UploadDropzone } from "@/components/documents/upload-dropzone";
 import { DocumentList } from "@/components/documents/document-list";
 import { DocChat } from "@/components/documents/doc-chat";
+import { withIndexMode } from "@/lib/rag/retrieve";
 import type { DocumentRecord } from "@/types/documents";
 
 export default async function DocumentsPage() {
@@ -30,7 +31,7 @@ export default async function DocumentsPage() {
     .select("id, file_name, file_type, storage_path, status, created_at")
     .order("created_at", { ascending: false });
 
-  const all = (documents ?? []) as DocumentRecord[];
+  const all = await withIndexMode(supabase, (documents ?? []) as DocumentRecord[]);
   const ready = all.filter((d) => d.status === "ready");
 
   return (

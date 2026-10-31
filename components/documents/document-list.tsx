@@ -28,6 +28,7 @@ export function DocumentList({ documents }: { documents: DocumentRecord[] }) {
   const [deleteTarget, setDeleteTarget] = useState<DocumentRecord | null>(null);
   const [summary, setSummary] = useState<{ name: string; text: string } | null>(null);
   const [summarizingId, setSummarizingId] = useState<string | null>(null);
+  const [reindexingId, setReindexingId] = useState<string | null>(null);
 
   async function confirmDelete() {
     if (!deleteTarget) return;
@@ -46,6 +47,28 @@ export function DocumentList({ documents }: { documents: DocumentRecord[] }) {
     }
     toast.success(`Deleted ${target.file_name}`);
     router.refresh();
+  }
+
+  // Indexed in the other mode (Online vs Local): rebuild its search index here.
+  async function reindex(doc: DocumentRecord) {
+    setReindexingId(doc.id);
+    try {
+      const res = await fetch("/api/documents/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentId: doc.id }),
+      });
+      if (!res.ok) {
+        toast.error("Re-index failed. Please try again.");
+        return;
+      }
+      toast.success(`${doc.file_name} is searchable in this mode now`);
+      router.refresh();
+    } catch {
+      toast.error("Connection failed.");
+    } finally {
+      setReindexingId(null);
+    }
   }
 
   async function summarize(doc: DocumentRecord) {
@@ -87,15 +110,33 @@ export function DocumentList({ documents }: { documents: DocumentRecord[] }) {
         {documents.map((doc) => (
           <li
             key={doc.id}
-            className="glass flex items-center gap-3 rounded-lg px-4 py-3"
+            className="glass flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg px-4 py-3"
             data-testid="documents-list-item"
           >
-            <div className="min-w-0 flex-1">
+            {/* Phones: name + notes on their own line, actions below. */}
+            <div className="min-w-0 flex-1 basis-full sm:basis-0">
               <p className="truncate text-sm font-medium">{doc.file_name}</p>
               <p className="text-[11px] text-muted-foreground">
                 {doc.file_type.toUpperCase()} · <LocalTime iso={doc.created_at} />
               </p>
+              {doc.indexedIn && (
+                <p className="mt-0.5 text-[11px] text-warning" data-testid="documents-list-other-mode">
+                  Indexed in {doc.indexedIn === "local" ? "Local" : "Online"} Mode, so search here skips it.
+                  {doc.storage_path ? " Re-index to use it." : " Re-sync its source to use it."}
+                </p>
+              )}
             </div>
+            {doc.indexedIn && doc.storage_path && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={reindexingId !== null}
+                onClick={() => reindex(doc)}
+                data-testid="documents-reindex-action"
+              >
+                {reindexingId === doc.id ? "Re-indexing…" : "Re-index"}
+              </Button>
+            )}
             <Badge variant="outline" className={`border-0 text-[10px] ${statusStyle[doc.status]}`}>
               {doc.status === "processing" && (
                 <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-warning" />

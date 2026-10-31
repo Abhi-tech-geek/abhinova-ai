@@ -5,10 +5,20 @@
 // the two models aren't comparable, so documents processed in one mode are
 // only searchable in that mode (re-process to switch).
 
-import { isLocalMode, ollamaEmbed } from "@/lib/ai/ollama";
+import { isLocalMode, localEmbedModel, ollamaEmbed } from "@/lib/ai/ollama";
 
 export const EMBEDDING_MODEL = "gemini-embedding-001";
 export const EMBEDDING_DIMENSIONS = 768;
+
+/** The model new chunks are embedded with — stored on each chunk as `embedModel`. */
+export function activeEmbeddingModel(): string {
+  return isLocalMode() ? `ollama/${localEmbedModel()}` : EMBEDDING_MODEL;
+}
+
+/** Chunks from before tagging were all made by the cloud model. */
+export function chunkEmbeddingModel(metadata: { embedModel?: string } | null | undefined): string {
+  return metadata?.embedModel ?? EMBEDDING_MODEL;
+}
 
 const BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}`;
 const BATCH_SIZE = 100; // Gemini batchEmbedContents limit
