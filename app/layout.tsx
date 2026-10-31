@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { AmbientBackground } from "@/components/shared/ambient-background";
 import { Toaster } from "@/components/ui/sonner";
+import { ServiceWorker } from "@/components/shared/service-worker";
 import "./globals.css";
 
 // Design source uses Space Grotesk everywhere (sans + display) + JetBrains Mono.
@@ -25,10 +26,16 @@ export const metadata: Metadata = {
     description: "A futuristic, productivity-first AI workspace.",
     url: "https://abhinova.theabhinavsaxena.in",
     siteName: "AbhiNova AI",
-    // TODO: replace with a real 1200x630 image at public/og.png
     images: [{ url: "/og.png", width: 1200, height: 630 }],
     type: "website",
   },
+  // PWA (manifest in app/manifest.ts): iOS home-screen icon + standalone mode.
+  icons: { apple: "/icons/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "AbhiNova", statusBarStyle: "black-translucent" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#06070d",
 };
 
 export default function RootLayout({
@@ -43,6 +50,7 @@ export default function RootLayout({
           <AmbientBackground />
           {children}
           <Toaster toastOptions={{ className: "glass" }} />
+          <ServiceWorker />
         </ThemeProvider>
       </body>
     </html>
