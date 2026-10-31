@@ -97,7 +97,7 @@ abhinova-ai/
 │   │   ├── groq.ts
 │   │   ├── gemini.ts
 │   │   ├── embeddings.ts
-│   │   ├── router.ts               # Groq→Gemini fallback logic
+│   │   ├── router.ts               # Groq→Gemini fallback logic (Local Mode → Ollama only)
 │   │   └── prompts/                # ALL system prompts live here as named exports
 │   │       ├── workspace.ts
 │   │       ├── qa-tools.ts
@@ -248,7 +248,7 @@ abhinova-ai/
 - Raw IPs are never stored — only a salted SHA-256 hash.
 - Still off for guests in beta: connectors + links, BYOK keys, Settings.
 - Safety beats quota: a Wellness message with a crisis signal always gets the helplines (non-AI fallback) even when the quota is used up — or when every AI provider is down.
-- A failed AI call returns `aiFailureResponse(err)` (`lib/ai/router.ts`): `ai_busy` (503) when the whole fallback chain is out of quota/overloaded, which the UI shows as "AbhiNova is taking a short break". The unsent text goes back to the input box, and a just-created chat/session is kept so the resend does not use another lifetime slot.
+- Local Mode (`OLLAMA_URL` set, own machine only — never on Vercel): every AI call and embedding goes to Ollama with NO cloud fallback, beta quotas are skipped, and `ollama/<model>` ids resolve only there (elsewhere they are `unknown_model`). Ollama down → `local_ai_offline`. (`lib/ai/router.ts`): `ai_busy` (503) when the whole fallback chain is out of quota/overloaded, which the UI shows as "AbhiNova is taking a short break". The unsent text goes back to the input box, and a just-created chat/session is kept so the resend does not use another lifetime slot.
 - New limit → add it to `BETA_LIMITS` + `BETA_ERROR_MESSAGES`; UI error handlers call `showBetaLimitToast(res)` first.
 
 ## Projects Rules (non-negotiable)

@@ -1,7 +1,13 @@
 "use client";
 
 import { toast } from "sonner";
-import { AI_BUSY_MESSAGE, AI_BUSY_TITLE, betaErrorMessage } from "@/lib/beta/config";
+import {
+  AI_BUSY_MESSAGE,
+  AI_BUSY_TITLE,
+  LOCAL_AI_OFFLINE_MESSAGE,
+  LOCAL_AI_OFFLINE_TITLE,
+  betaErrorMessage,
+} from "@/lib/beta/config";
 
 /**
  * If a failed API response is a beta-limit error — or "ai_busy", every AI
@@ -15,6 +21,10 @@ export async function showBetaLimitToast(res: Response): Promise<boolean> {
   const code = (data as { error?: unknown } | null)?.error;
   if (code === "ai_busy") {
     toast.warning(AI_BUSY_TITLE, { description: AI_BUSY_MESSAGE, duration: 10000 });
+    return true;
+  }
+  if (code === "local_ai_offline") {
+    toast.error(LOCAL_AI_OFFLINE_TITLE, { description: LOCAL_AI_OFFLINE_MESSAGE, duration: 12000 });
     return true;
   }
   const message = betaErrorMessage(code);

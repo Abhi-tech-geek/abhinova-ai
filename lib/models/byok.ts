@@ -1,6 +1,7 @@
 import { encrypt, decrypt } from "@/lib/crypto/encrypt";
 import { PROVIDERS, type Provider, type ResolvedModel } from "@/lib/models/registry";
 import { createClient } from "@/lib/supabase/server";
+import { isLocalMode } from "@/lib/ai/ollama";
 
 // BYOK key handling. SERVER-ONLY. Keys are decrypted only at the moment of the
 // AI call, NEVER returned to the client (masked form only), NEVER logged.
@@ -125,6 +126,10 @@ export async function resolveModel(modelId: string): Promise<ResolvedModel | nul
   const model = modelParts.join("/");
   if ((provider === "groq" || provider === "gemini") && model) {
     return { provider, model }; // built-in: app env key is used
+  }
+  // Local Ollama model: only resolvable where Local Mode is on (never on Vercel).
+  if (provider === "ollama" && model && isLocalMode()) {
+    return { provider, model };
   }
   return null;
 }

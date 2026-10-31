@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { User } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BETA_LIMITS, isOpenBeta } from "@/lib/beta/config";
+import { isLocalMode } from "@/lib/ai/ollama";
 
 // SERVER-ONLY. Tamper-proof beta quotas, counted in public.beta_usage via the
 // consume_beta_quota() RPC (service role; guests can't read or reset it).
@@ -89,7 +90,9 @@ export async function enforceBetaQuota(
   request: Request,
   kinds: QuotaKind[]
 ): Promise<Response | null> {
-  if (!isOpenBeta() || kinds.length === 0) return null;
+  // Local Mode runs on the developer's own machine and model: there's no shared
+  // free cloud quota to protect.
+  if (!isOpenBeta() || isLocalMode() || kinds.length === 0) return null;
   try {
     const { data, error } = await createAdminClient().rpc("consume_beta_quota", {
       p_items: itemsFor(kinds, user, request),

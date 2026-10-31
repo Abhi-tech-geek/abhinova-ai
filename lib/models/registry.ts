@@ -5,8 +5,12 @@
 // Model id formats:
 //   built-in:  "groq/openai/gpt-oss-120b", "gemini/gemini-flash-latest"
 //   BYOK:      "byok/<user_api_keys.id>/<modelName>"
+//   local:     "ollama/<model>" — Local Mode only (OLLAMA_URL set)
 
+/** Providers a user can store a BYOK key for. */
 export type Provider = "groq" | "gemini" | "openai" | "anthropic" | "openrouter";
+/** Everything the router can send a call to — adds the keyless local Ollama. */
+export type AiProvider = Provider | "ollama";
 
 export interface ProviderDefinition {
   id: Provider;
@@ -70,8 +74,13 @@ export const PROVIDERS: Record<Provider, ProviderDefinition> = {
 export interface ModelOption {
   id: string; // see id formats above
   label: string;
-  provider: Provider;
+  provider: AiProvider;
   byok: boolean;
+}
+
+/** The Local Mode entry shown first in the ModelPicker (server decides if it's listed). */
+export function localModelOption(model: string): ModelOption {
+  return { id: `ollama/${model}`, label: `${model} · Local (private, on this computer)`, provider: "ollama", byok: false };
 }
 
 export const BUILT_IN_MODELS: ModelOption[] = [
@@ -97,7 +106,7 @@ export const BUILT_IN_MODELS: ModelOption[] = [
 
 /** Resolved routing target for one AI call. apiKey present only for BYOK. */
 export interface ResolvedModel {
-  provider: Provider;
+  provider: AiProvider;
   model: string;
   apiKey?: string;
 }

@@ -57,6 +57,11 @@ export const AI_BUSY_TITLE = "AbhiNova is taking a short break ☕";
 export const AI_BUSY_MESSAGE =
   "Our free AI quota is used up for the moment. It usually comes back within a few minutes — your message is still in the box, just send it again.";
 
+/** "local_ai_offline": Local Mode is on but Ollama isn't answering. Developer-facing. */
+export const LOCAL_AI_OFFLINE_TITLE = "Local AI isn't running";
+export const LOCAL_AI_OFFLINE_MESSAGE =
+  "Start Ollama on this computer (open the Ollama app or run \"ollama serve\") and make sure the model is pulled, e.g. \"ollama pull llama3.2\". Your message is still in the box.";
+
 /** UI helper: friendly text for a beta/limit error code, or null. */
 export function betaErrorMessage(code: unknown): string | null {
   return typeof code === "string" ? (BETA_ERROR_MESSAGES[code] ?? null) : null;

@@ -88,6 +88,30 @@ Keys never live in git: use Vercel environment variables, Codespaces secrets, or
    ```
 5. Open [http://localhost:3000](http://localhost:3000).
 
+## Local Mode — run the AI on your own computer (optional)
+
+Point AbhiNova at [Ollama](https://ollama.com) and every AI call — chat, QA Studio, Code Studio, Wellness and document embeddings — runs on your machine with Llama 3.2. No cloud model, no API key, no daily AI limits.
+
+1. Install Ollama, then pull the two models:
+   ```bash
+   ollama pull llama3.2
+   ```
+   ```bash
+   ollama pull nomic-embed-text
+   ```
+2. Add this line to `.env.local` and restart `npm run dev`:
+   ```
+   OLLAMA_URL=http://localhost:11434
+   ```
+3. The model picker now shows **llama3.2 · Local (private, on this computer)** first.
+
+Notes:
+- Nothing falls back to the cloud in Local Mode. If Ollama isn't running you get a clear "Local AI isn't running" message.
+- Local Mode is for your own computer only. It can't run on Vercel (no GPU, and a server can't reach your laptop), so the live site ignores it.
+- `nomic-embed-text` gives 768-dimension vectors like the cloud model, so the database doesn't change. Vectors from the two models aren't comparable, though: documents processed in one mode are searchable only in that mode.
+- Small local models are slower on a CPU and less reliable with QA Studio's strict JSON output than the cloud models.
+- Optional: `OLLAMA_CHAT_MODEL` / `OLLAMA_EMBED_MODEL` pick other models.
+
 ## Open beta mode (default ON)
 
 No login or signup pages: every visitor automatically gets an anonymous guest session and lands in the app. Limits (in `lib/beta/config.ts`) keep the free AI quota safe:

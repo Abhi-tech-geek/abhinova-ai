@@ -4,7 +4,14 @@ import {
   unauthorizedResponse,
   isGuest,
 } from "@/lib/auth";
-import { BUILT_IN_MODELS, PROVIDERS, type Provider, type ModelOption } from "@/lib/models/registry";
+import {
+  BUILT_IN_MODELS,
+  PROVIDERS,
+  localModelOption,
+  type Provider,
+  type ModelOption,
+} from "@/lib/models/registry";
+import { isLocalMode, localChatModel } from "@/lib/ai/ollama";
 import { createClient } from "@/lib/supabase/server";
 
 // Built-in models + the user's configured BYOK models. Masked labels only —
@@ -18,7 +25,12 @@ export async function GET(): Promise<Response> {
     throw e;
   }
 
-  const models: ModelOption[] = [...BUILT_IN_MODELS];
+  // Local Mode lists the on-machine model first; cloud models stay available
+  // as an explicit choice.
+  const models: ModelOption[] = [
+    ...(isLocalMode() ? [localModelOption(localChatModel())] : []),
+    ...BUILT_IN_MODELS,
+  ];
 
   if (!isGuest(user)) {
     const supabase = await createClient();

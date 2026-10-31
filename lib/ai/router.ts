@@ -1,11 +1,14 @@
 import { groqStream, GROQ_MODEL } from "@/lib/ai/groq";
 import { geminiStream, GEMINI_MODEL, GEMINI_LITE_MODEL } from "@/lib/ai/gemini";
-import { PROVIDERS, type Provider, type ResolvedModel } from "@/lib/models/registry";
+import { isLocalAiError, isLocalMode, localChatModel, ollamaStream } from "@/lib/ai/ollama";
+import { PROVIDERS, type AiProvider, type ResolvedModel } from "@/lib/models/registry";
 import type { AiMessage } from "@/types/chat";
 
 // Provider routing: Groq first (fast), then Gemini Flash, Gemini Flash-Lite and
-// one delayed Groq retry on any failure (rate limit, missing key, outage). Logs
-// which provider served each request — provider/model only, NEVER content.
+// one delayed Groq retry on any failure (rate limit, missing key, outage). In
+// Local Mode (OLLAMA_URL set) everything goes to the local Ollama model instead,
+// with no cloud fallback. Logs which provider served each request —
+// provider/model only, NEVER content.
 
 const GROQ_RETRY_DELAY_MS = 2500;
 /** What the UI suggests waiting after every provider failed. */
@@ -74,7 +77,7 @@ function sseTextStream(
 }
 
 export interface RoutedStream {
-  provider: Provider;
+  provider: AiProvider;
   model: string;
   textStream: ReadableStream<string>;
 }
@@ -174,6 +177,10 @@ async function resolvedStream(
       extract = extractGroqText; // same OpenAI SSE shape
       break;
     }
+    case "ollama":
+      res = await ollamaStream(messages, signal, model);
+      extract = extractGroqText; // OpenAI-compatible SSE
+      break;
   }
 
   console.log(`[ai-router] provider=${provider} model=${model} byok=${Boolean(apiKey)}`);
@@ -187,6 +194,12 @@ export async function streamChat(
 ): Promise<RoutedStream> {
   // Explicit model chosen (ModelPicker) — no fallback chain, fail honestly.
   if (resolved) return resolvedStream(resolved, messages, signal);
+
+  // Local Mode: the on-machine model only. Falling back to a cloud provider
+  // would send the conversation off the machine, which is what this mode avoids.
+  if (isLocalMode()) {
+    return resolvedStream({ provider: "ollama", model: localChatModel() }, messages, signal);
+  }
 
   // Free tiers fail in bursts (Groq 429 per-minute caps, Gemini 503 "high
   // demand"), so try each pool once and give Groq one late retry after its
@@ -242,6 +255,10 @@ export function isAiBusyError(err: unknown): boolean {
  * (e.g. a user's own BYOK key failing) stays "ai_unavailable".
  */
 export function aiFailureResponse(err: unknown): Response {
+  // Local Mode: Ollama not running / model not pulled — tell the developer.
+  if (isLocalAiError(err)) {
+    return Response.json({ error: "local_ai_offline" }, { status: 503 });
+  }
   if (isAiBusyError(err)) {
     return Response.json(
       { error: "ai_busy", retryAfterMs: AI_BUSY_RETRY_MS },
@@ -256,7 +273,7 @@ export async function completeChat(
   messages: AiMessage[],
   signal?: AbortSignal,
   resolved?: ResolvedModel | null
-): Promise<{ provider: Provider; text: string }> {
+): Promise<{ provider: AiProvider; text: string }> {
   const { provider, textStream } = await streamChat(messages, signal, resolved);
   const reader = textStream.getReader();
   let text = "";

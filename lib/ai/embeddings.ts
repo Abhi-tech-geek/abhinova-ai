@@ -1,6 +1,11 @@
 // Embedding generation via Gemini gemini-embedding-001, truncated to 768 dims
 // (outputDimensionality) to match the vector(768) column. SERVER-ONLY.
-// Batched with retry + exponential backoff.
+// Batched with retry + exponential backoff. In Local Mode (OLLAMA_URL set) the
+// local nomic-embed-text model is used instead — also 768 dims. Vectors from
+// the two models aren't comparable, so documents processed in one mode are
+// only searchable in that mode (re-process to switch).
+
+import { isLocalMode, ollamaEmbed } from "@/lib/ai/ollama";
 
 export const EMBEDDING_MODEL = "gemini-embedding-001";
 export const EMBEDDING_DIMENSIONS = 768;
@@ -38,6 +43,7 @@ interface EmbedResponse {
 
 /** Embeds document chunks (RETRIEVAL_DOCUMENT task type), preserving order. */
 export async function embedDocuments(texts: string[]): Promise<number[][]> {
+  if (isLocalMode()) return ollamaEmbed(texts, "document");
   const apiKey = getApiKey();
   const all: number[][] = [];
 
@@ -71,6 +77,7 @@ export async function embedDocuments(texts: string[]): Promise<number[][]> {
 
 /** Embeds a search query (RETRIEVAL_QUERY task type). */
 export async function embedQuery(text: string): Promise<number[]> {
+  if (isLocalMode()) return (await ollamaEmbed([text], "query"))[0];
   const apiKey = getApiKey();
   const result = await withRetry(async () => {
     const res = await fetch(`${BASE_URL}:embedContent`, {

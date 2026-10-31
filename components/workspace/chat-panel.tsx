@@ -21,6 +21,8 @@ import {
   BETA_ERROR_MESSAGES,
   BETA_LIMITS,
   BETA_USAGE_EVENT,
+  LOCAL_AI_OFFLINE_MESSAGE,
+  LOCAL_AI_OFFLINE_TITLE,
   betaErrorMessage,
   isOpenBeta,
 } from "@/lib/beta/config";
@@ -147,11 +149,15 @@ export function ChatPanel({
           setGuestLimitHit(true);
           return;
         }
-        if (data.error === "ai_busy") {
+        if (data.error === "ai_busy" || data.error === "local_ai_offline") {
           const keptId = res.headers.get("X-Conversation-Id");
           if (keptId) setPendingConversationId(keptId);
           undoSend();
-          toast.warning(AI_BUSY_TITLE, { description: AI_BUSY_MESSAGE, duration: 10000 });
+          if (data.error === "ai_busy") {
+            toast.warning(AI_BUSY_TITLE, { description: AI_BUSY_MESSAGE, duration: 10000 });
+          } else {
+            toast.error(LOCAL_AI_OFFLINE_TITLE, { description: LOCAL_AI_OFFLINE_MESSAGE, duration: 12000 });
+          }
           return;
         }
         const betaMessage = betaErrorMessage(data.error);
