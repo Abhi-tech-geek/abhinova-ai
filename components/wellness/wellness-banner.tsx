@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
 const NAV = [
@@ -20,16 +19,11 @@ export function WellnessBanner() {
   const { setTheme } = useTheme();
 
   async function exitWellness() {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      await supabase
-        .from("profiles")
-        .update({ wellness_enabled: false })
-        .eq("id", user.id);
-    }
+    await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wellnessEnabled: false }),
+    }).catch(() => null);
     setTheme("dark");
     router.push("/chat");
     router.refresh();

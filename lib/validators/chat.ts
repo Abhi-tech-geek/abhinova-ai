@@ -15,5 +15,10 @@ export type ChatRequest = z.infer<typeof chatRequestSchema>;
 
 export const conversationIdSchema = z.string().uuid();
 
+/** PATCH /api/conversations/[id] — rename from the sidebar. */
+export const renameConversationSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+});
+
 /** Public share link id (/share/<id>, migration 006). */
 export const shareIdSchema = z.string().uuid();

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { BETA_LIMITS, isOpenBeta } from "@/lib/beta/config";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -52,15 +51,9 @@ export function KnowledgePanel({
   async function openAttach() {
     setAttachOpen(true);
     setSelected([]);
-    const supabase = createClient();
-    const { data } = await supabase
-      .from("documents")
-      .select("id, file_name, file_type, storage_path, status, created_at")
-      .is("project_id", null)
-      .is("source_id", null)
-      .eq("status", "ready")
-      .order("created_at", { ascending: false });
-    setLibrary((data ?? []) as DocumentRecord[]);
+    const res = await fetch("/api/documents").catch(() => null);
+    const data: { documents?: DocumentRecord[] } = res?.ok ? await res.json() : {};
+    setLibrary(data.documents ?? []);
   }
 
   async function attach() {

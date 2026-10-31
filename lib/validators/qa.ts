@@ -18,6 +18,9 @@ export const QA_TOOL_IDS = [
 export const qaToolIdSchema = z.enum(QA_TOOL_IDS);
 export type QaToolId = z.infer<typeof qaToolIdSchema>;
 
+/** A saved QA run (DELETE /api/qa/artifacts/[id]). */
+export const qaArtifactIdSchema = z.string().uuid();
+
 export const qaRequestSchema = z.object({
   input: z.string().min(1).max(20000),
   options: z.record(z.string(), z.string().max(100)).optional(),

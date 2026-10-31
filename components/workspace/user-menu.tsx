@@ -69,15 +69,15 @@ export function UserMenu({
       });
       return;
     }
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    const res = await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wellnessEnabled: enabled }),
+    }).catch(() => null);
+    if (res?.status === 401) {
       router.push("/login");
       return;
     }
-    await supabase.from("profiles").update({ wellness_enabled: enabled }).eq("id", user.id);
     setTheme(enabled ? "wellness" : "dark");
     if (enabled) go("/talk");
     router.refresh();

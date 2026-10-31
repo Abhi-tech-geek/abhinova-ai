@@ -36,6 +36,13 @@ export const journalAnalyzeSchema = z.object({
 });
 export type JournalAnalyzeRequest = z.infer<typeof journalAnalyzeSchema>;
 
+/** POST /api/wellness/journal/entries — save an entry (reframe optional). */
+export const journalEntrySchema = z.object({
+  content: z.string().trim().min(1).max(8000),
+  distortions: z.array(z.string().max(200)).max(3).nullable().default(null),
+  reframe: z.string().max(4000).nullable().default(null),
+});
+
 /** AI output shape for journal analysis (parsed with fallback + retry). */
 export const journalAnalysisOutputSchema = z.object({
   distortions: z.array(z.string()).max(3),

@@ -65,7 +65,14 @@ abhinova-ai/
 │   │   │   ├── chat/route.ts        # coding agent (explain/fix/refactor/generate)
 │   │   │   ├── edit/route.ts        # produce diffs for files (never auto-writes)
 │   │   │   └── docs/route.ts        # PRD / TRD / architecture doc generation
+│   │   ├── conversations/[conversationId]/route.ts        # PATCH rename / DELETE a chat
 │   │   ├── conversations/[conversationId]/share/route.ts  # GET/POST/DELETE a chat's public share link
+│   │   ├── documents/route.ts       # GET library files not in a project (attach picker)
+│   │   ├── documents/[documentId]/route.ts  # DELETE file + row
+│   │   ├── profile/route.ts         # PATCH profile (guests: Wellness toggle only)
+│   │   ├── qa/artifacts/[artifactId]/route.ts  # DELETE a saved QA run
+│   │   ├── code/docs/[docId]/route.ts          # DELETE a saved Code Studio doc
+│   │   ├── wellness/journal/entries/route.ts   # POST save a journal entry
 │   │   ├── account/data/route.ts    # DELETE: wipe all of the caller's data (typed confirmation)
 │   │   ├── cron/keepalive/route.ts  # daily Vercel cron (CRON_SECRET) so free Supabase doesn't pause
 │   │   ├── models/
@@ -211,6 +218,7 @@ abhinova-ai/
 - Every interactive component gets a testID prop (format: `screenname-element-action`, e.g. `"chat-input-send"`), rendered as `data-testid`.
 - Server Components by default; `"use client"` only when needed. Keep heavy client-only UI that opens on demand (dialogs, palettes) behind `next/dynamic`, and keep zod out of client components (shared constants live in `types/`).
 - Next 16 request APIs are async: `await params` / `await searchParams` in pages and route handlers, `await cookies()`, and the server Supabase client is `await createClient()`.
+- Client components never talk to the database directly: reads/writes go through an API route (keeps one server data path — the desktop Local Mode swaps the backend there). Only Supabase *auth* (sign-in/out) stays in the browser.
 - All AI calls happen ONLY in server-side code (API routes / server actions). NEVER call Groq/Gemini from the client.
 - All user input validated with zod before processing.
 - Reusable logic goes in `lib/` or `hooks/` — no duplicate logic across components.
