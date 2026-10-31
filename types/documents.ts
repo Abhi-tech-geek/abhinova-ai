@@ -59,3 +59,29 @@ export interface RetrievedSource {
   metadata: ChunkMetadata;
   similarity: number | null;
 }
+
+/**
+ * Source check for one cited statement in an answer (POST /api/documents/verify):
+ * "supported" = the cited passage says it, "partial" = only part of it or a
+ * detail differs, "unsupported" = the passage doesn't say it (or contradicts
+ * it), "missing" = it cites a source that wasn't part of the answer,
+ * "unchecked" = the judge gave no verdict for it.
+ */
+export interface CitationCheck {
+  claim: string;
+  tags: string[];
+  status: "supported" | "partial" | "unsupported" | "missing" | "unchecked";
+  note?: string;
+}
+
+/** "How this answer was made" — real numbers from each RAG stage. */
+export interface AnswerTrace {
+  mode: "ask" | "summarize";
+  documents: { fileName: string; chunks: number }[];
+  embedModel: string;
+  passagesUsed: number;
+  topSimilarity: number | null;
+  contextChars: number;
+  answerProvider: string;
+  timingsMs: { search: number; answer: number };
+}

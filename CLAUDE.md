@@ -50,7 +50,8 @@ abhinova-ai/
 │   │   ├── qa/[tool]/route.ts
 │   │   ├── documents/upload/route.ts
 │   │   ├── documents/process/route.ts
-│   │   ├── documents/query/route.ts
+│   │   ├── documents/query/route.ts      # answer + sources + trace (real numbers per RAG stage)
+│   │   ├── documents/verify/route.ts     # "Check sources": AI judge per cited statement (passages reloaded by id, RLS)
 │   │   ├── projects/
 │   │   │   ├── route.ts             # create / list projects
 │   │   │   └── [projectId]/
@@ -84,7 +85,7 @@ abhinova-ai/
 │   ├── shared/                     # CommandPalette, WelcomeTour (first-visit product tour), FeedbackDialog, DeleteMyData, Logo, LocalTime, EmptyState, ErrorBoundary
 │   ├── workspace/                  # Sidebar (nav + history, Claude-style), UserMenu, SessionList, ConversationList, ChatMessage, ChatMarkdown, ChatActions (export/share), ChatInput, ThinkingOrb, LocalModeBanner
 │   ├── qa-studio/                  # ToolCard, ToolForm, OutputPanel, HistoryTab, ExportButtons
-│   ├── documents/                  # UploadDropzone, DocumentList, DocumentPicker, CitationChip, ChunkViewer
+│   ├── documents/                  # UploadDropzone, DocumentList, DocumentPicker, CitationChip, ChunkViewer, AnswerInsights (source check + 9-step trace)
 │   ├── projects/                   # ProjectCard, ProjectGrid, CreateProjectDialog, KnowledgePanel, ProjectInstructions, ProjectNotes, ProjectChatList, ProjectSwitcher, ProjectHeader, ProjectSelect, SourceCard, AddSourceDialog, SyncStatusBadge
 │   ├── connectors/                 # ConnectorGrid, ConnectorCard, ConnectDialog (rendered from the registry)
 │   ├── admin/                      # UsageDashboard, usage charts (Recharts), AdminLogin — owner-only /admin
@@ -114,7 +115,8 @@ abhinova-ai/
 │   │   ├── extract.ts              # pdf/docx/doc/pptx/xlsx/xls/csv/txt/md/json/code extraction
 │   │   ├── chunk.ts
 │   │   ├── ingest.ts               # THE single redact → chunk → embed → store pipeline
-│   │   └── retrieve.ts
+│   │   ├── retrieve.ts
+│   │   └── verify.ts               # split an answer into cited statements + judge input (prompt: prompts/verify.ts)
 │   ├── code/
 │   │   ├── fs-access.ts            # File System Access API wrapper (pick dir, read/write with permission)
 │   │   ├── project-index.ts        # build file map, respect .gitignore + secret denylist

@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { DocumentPicker } from "@/components/documents/document-picker";
 import { CitationChip } from "@/components/documents/citation-chip";
 import { ChunkViewer } from "@/components/documents/chunk-viewer";
-import type { DocumentRecord, RetrievedSource } from "@/types/documents";
+import { AnswerInsights } from "@/components/documents/answer-insights";
+import type { AnswerTrace, DocumentRecord, RetrievedSource } from "@/types/documents";
 import { showBetaLimitToast } from "@/lib/beta/client";
 
 // "Ask your documents" — pick one or more files, ask, get a cited answer.
@@ -22,6 +23,7 @@ export function DocChat({ documents }: { documents: DocumentRecord[] }) {
   const [result, setResult] = useState<{
     answer: string;
     sources: RetrievedSource[];
+    trace?: AnswerTrace;
   } | null>(null);
   const [activeSource, setActiveSource] = useState<RetrievedSource | null>(null);
 
@@ -135,7 +137,7 @@ export function DocChat({ documents }: { documents: DocumentRecord[] }) {
             onCitationClick={setActiveSource}
           />
           {result.sources.length > 0 && (
-            <div className="mt-4 border-t border-border/50 pt-3">
+            <div className="mt-4 border-t border-border/50 pt-3" data-testid="documents-answer-sources">
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Sources
               </p>
@@ -146,6 +148,7 @@ export function DocChat({ documents }: { documents: DocumentRecord[] }) {
               </div>
             </div>
           )}
+          <AnswerInsights key={result.answer} answer={result.answer} sources={result.sources} trace={result.trace} />
         </motion.div>
       )}
 

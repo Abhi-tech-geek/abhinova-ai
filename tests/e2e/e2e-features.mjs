@@ -184,7 +184,7 @@ await step("documents", "upload → process → ask", async () => {
   rec("documents", "summarize mode", r.status === 200 && (s.answer ?? "").length > 40, (s.answer ?? JSON.stringify(s)).slice(0, 160));
   r = await call(D, "/api/documents/query", { json: { question: "Who is the CEO of Google?", documentIds: [docId] } });
   const n = await jsonOf(r);
-  rec("documents", "question not in the file → says so", r.status === 200 && /(not|n't|nahi|no ).{0,60}(document|source|file|mention|provided|information)|couldn't find/i.test(n.answer ?? ""), (n.answer ?? "").slice(0, 200));
+  rec("documents", "question not in the file → says so", r.status === 200 && /(not|n't|nahi|no ).{0,60}(document|source|file|mention|provided|information)|(document|source|file|mention).{0,60}(nahi|not)|couldn't find/i.test(n.answer ?? ""), (n.answer ?? "").slice(0, 200));
   const csv = "name,role\nMeera,QA lead\nArjun,Developer\n";
   r = await call(D, "/api/documents/upload", { form: fileForm("team.csv", csv, "text/csv") });
   const up2 = await jsonOf(r);

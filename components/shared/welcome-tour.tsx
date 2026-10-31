@@ -10,7 +10,8 @@ import { BETA_LIMITS, isOpenBeta } from "@/lib/beta/config";
 // one feature per step, Back / Next / Skip, remembered per browser. Can be
 // reopened any time from the account menu ("Product tour").
 
-const SEEN_KEY = "anv:welcome-tour-v1";
+// Bumped when the tour gains new features, so returning users see it once more.
+const SEEN_KEY = "anv:welcome-tour-v2";
 export const OPEN_TOUR_EVENT = "anv:open-welcome-tour";
 
 /** Reopen the tour from anywhere (e.g. the account menu). */
@@ -46,7 +47,20 @@ const FEATURE_STEPS: Step[] = [
     points: [
       "Speak instead of typing 🎤 — and let it read replies aloud",
       "Pick the AI model from the box under the message field",
+      "Export a chat as Markdown or PDF, or share it with a link",
       "Press Ctrl + K to jump anywhere in the app",
+    ],
+  },
+  {
+    icon: "⚡",
+    eyebrow: "Agent Mode",
+    title: "Let AbhiNova look things up first",
+    body: "Normally the AI answers from memory. Turn on ⚡ Agent under the message box and it does the legwork first — then shows every step it took above the reply.",
+    points: [
+      "Searches Wikipedia, reads a web page you give it, and searches your own documents",
+      "Does exact maths with a calculator, and knows today's date and time",
+      "Try: “Wikipedia se batao ISRO kab bana, aur tab se kitne saal hue?”",
+      "Read-only and safe: it can look things up, but never send, change or delete anything",
     ],
   },
   {
@@ -77,7 +91,8 @@ const FEATURE_STEPS: Step[] = [
     title: "Read files. Understand code.",
     body: "Ask questions across your documents, or open a local project folder and work with your code.",
     points: [
-      "Documents: upload, ask, and compare files with citations",
+      "Documents: ask or compare files — every fact is tagged [S1], [S2] with its exact source",
+      "Tap “✓ Check sources” to have each line re-checked, and open “How this answer was made” to see all 9 steps",
       "Code Studio: explain, fix and refactor — every change shown as a diff you approve",
       "Generate PRDs, tech docs and API specs from a short description",
     ],

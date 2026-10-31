@@ -88,6 +88,13 @@ Keys never live in git: use Vercel environment variables, Codespaces secrets, or
    ```
 5. Open [http://localhost:3000](http://localhost:3000).
 
+## Trustworthy document answers
+
+Every answer on the Documents page tags each fact with its source ([S1], [S2]…), and under it:
+
+- **✓ Check sources** — an AI re-reads every cited statement next to the passage it cites and marks it *supported*, *partly supported* or *not in the source* (one extra AI reply, only when you click). The passages are reloaded on the server by id, so you can only ever check against your own files.
+- **How this answer was made** — the 9 RAG steps with this answer's real numbers: how the file was read, cleaned of secrets, cut into passages and embedded at upload, then how the question was matched, which passages were picked, and which model wrote the answer.
+
 ## Agent Mode
 
 Turn on **⚡ Agent** under the chat box and AbhiNova can use tools before it answers: search Wikipedia, read a public web page, search your own documents, do exact maths, and check the time. Each step it took shows above the reply (and is saved with it).

@@ -93,3 +93,23 @@ export const documentQuerySchema = z.object({
   mode: z.enum(["ask", "summarize"]).default("ask"),
 });
 export type DocumentQuery = z.infer<typeof documentQuerySchema>;
+
+/** POST /api/documents/verify — the server reloads each passage by id (RLS). */
+export const sourceCheckRequestSchema = z.object({
+  answer: z.string().min(1).max(12000),
+  sources: z
+    .array(z.object({ tag: z.string().regex(/^S\d{1,2}$/), id: z.string().uuid() }))
+    .min(1)
+    .max(20),
+});
+
+/** AI judge output for the source check. */
+export const sourceCheckOutputSchema = z.object({
+  results: z.array(
+    z.object({
+      n: z.number().int().min(1),
+      verdict: z.enum(["supported", "partial", "unsupported"]),
+      note: z.string().max(300).optional(),
+    })
+  ),
+});
