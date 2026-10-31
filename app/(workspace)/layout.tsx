@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { isGuest } from "@/lib/auth";
 import { Sidebar, type SidebarData } from "@/components/workspace/sidebar";
 import { GuestBanner } from "@/components/workspace/guest-banner";
+import { LocalModeBanner } from "@/components/workspace/local-mode-banner";
+import { isLocalMode, localChatModel } from "@/lib/ai/ollama";
 import { CommandPalette } from "@/components/shared/command-palette";
 import { WelcomeTour } from "@/components/shared/welcome-tour";
 import { getQaTool } from "@/lib/qa-tools";
@@ -123,7 +125,12 @@ export default async function WorkspaceLayout({
         wellnessEnabled={profile?.wellness_enabled ?? false}
       />
       <div className="flex min-w-0 flex-1 flex-col pt-12 md:pt-0">
-        {isGuest(user) && <GuestBanner />}
+        {/* Local Mode has no beta limits, so its banner replaces the beta one. */}
+        {isLocalMode() ? (
+          <LocalModeBanner model={localChatModel()} />
+        ) : (
+          isGuest(user) && <GuestBanner />
+        )}
         <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
       </div>
     </div>

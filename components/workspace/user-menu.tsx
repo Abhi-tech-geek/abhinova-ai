@@ -135,6 +135,9 @@ export function UserMenu({
         <DropdownMenuItem onSelect={() => { onNavigate?.(); openWelcomeTour(); }} data-testid="sidebar-product-tour">
           ✨ Product tour
         </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => go("/privacy#delete")} data-testid="sidebar-delete-data">
+          🗑 Delete my data
+        </DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger data-testid="sidebar-theme-menu">🎨 Theme</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>

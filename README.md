@@ -111,6 +111,11 @@ Notes:
 - `nomic-embed-text` gives 768-dimension vectors like the cloud model, so the database doesn't change. Vectors from the two models aren't comparable, though: documents processed in one mode are searchable only in that mode.
 - Small local models are slower on a CPU and less reliable with QA Studio's strict JSON output than the cloud models.
 - Optional: `OLLAMA_CHAT_MODEL` / `OLLAMA_EMBED_MODEL` pick other models.
+- The top bar shows **🔒 Local Mode** while it's on.
+
+## Privacy
+
+The in-app **Privacy & local mode** page (sidebar) explains what is stored, what never is, which AI providers see your text, and how to run AbhiNova locally. It also has **Delete my data**: one confirmed click removes all of your chats, files, projects, history, wellness entries, saved keys, connected apps and feedback.
 
 ## Open beta mode (default ON)
 

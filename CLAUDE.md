@@ -38,7 +38,7 @@ abhinova-ai/
 │   │   ├── code-studio/
 │   │   │   ├── page.tsx            # project picker + workspace
 │   │   │   └── [projectId]/page.tsx
-│   │   └── settings/page.tsx
+│   │   ├── settings/page.tsx
 │   ├── (wellness)/
 │   │   ├── layout.tsx              # calm theme shell, isolated
 │   │   ├── talk/page.tsx
@@ -65,7 +65,7 @@ abhinova-ai/
 │   │   │   ├── chat/route.ts        # coding agent (explain/fix/refactor/generate)
 │   │   │   ├── edit/route.ts        # produce diffs for files (never auto-writes)
 │   │   │   └── docs/route.ts        # PRD / TRD / architecture doc generation
-│   │   ├── models/
+│   │   ├── account/data/route.ts    # DELETE: wipe all of the caller's data (typed confirmation)
 │   │   │   ├── list/route.ts        # available + user-configured models
 │   │   │   └── keys/route.ts        # BYOK: add/remove encrypted user API keys
 │   │   └── wellness/
@@ -78,7 +78,7 @@ abhinova-ai/
 │   └── globals.css
 ├── components/
 │   ├── ui/                         # shadcn components ONLY (auto-generated)
-│   ├── shared/                     # CommandPalette, WelcomeTour (first-visit product tour), FeedbackDialog, Logo, LocalTime, EmptyState, ErrorBoundary
+│   ├── shared/                     # CommandPalette, WelcomeTour (first-visit product tour), FeedbackDialog, DeleteMyData, Logo, LocalTime, EmptyState, ErrorBoundary
 │   ├── workspace/                  # Sidebar (nav + history, Claude-style), UserMenu, SessionList, ConversationList, ChatMessage, ChatInput, ThinkingOrb
 │   ├── qa-studio/                  # ToolCard, ToolForm, OutputPanel, HistoryTab, ExportButtons
 │   ├── documents/                  # UploadDropzone, DocumentList, DocumentPicker, CitationChip, ChunkViewer
@@ -248,6 +248,7 @@ abhinova-ai/
 - Raw IPs are never stored — only a salted SHA-256 hash.
 - Still off for guests in beta: connectors + links, BYOK keys, Settings.
 - Safety beats quota: a Wellness message with a crisis signal always gets the helplines (non-AI fallback) even when the quota is used up — or when every AI provider is down.
+- Privacy: `/privacy` must only state what the code actually does (update it with any data/AI change). "Delete my data" (`DELETE /api/account/data`, body `{confirm:"DELETE"}`) deletes via the user's own client so RLS limits it to their rows; new user-data tables must be added to its list. It keeps the session and the beta counters (no limit reset).
 - Local Mode (`OLLAMA_URL` set, own machine only — never on Vercel): every AI call and embedding goes to Ollama with NO cloud fallback, beta quotas are skipped, and `ollama/<model>` ids resolve only there (elsewhere they are `unknown_model`). Ollama down → `local_ai_offline`. (`lib/ai/router.ts`): `ai_busy` (503) when the whole fallback chain is out of quota/overloaded, which the UI shows as "AbhiNova is taking a short break". The unsent text goes back to the input box, and a just-created chat/session is kept so the resend does not use another lifetime slot.
 - New limit → add it to `BETA_LIMITS` + `BETA_ERROR_MESSAGES`; UI error handlers call `showBetaLimitToast(res)` first.
 

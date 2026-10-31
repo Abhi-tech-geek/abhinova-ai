@@ -11,8 +11,9 @@ const DEFAULT_EMBED_MODEL = "nomic-embed-text";
 const EMBED_DIMENSIONS = 768;
 const EMBED_BATCH_SIZE = 32;
 
+/** On only for a real http(s) URL — so OLLAMA_URL=off (or empty) turns it off. */
 export function isLocalMode(): boolean {
-  return Boolean(process.env.OLLAMA_URL?.trim());
+  return /^https?:\/\//i.test(process.env.OLLAMA_URL?.trim() ?? "");
 }
 
 export function localChatModel(): string {

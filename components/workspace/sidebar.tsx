@@ -248,8 +248,20 @@ function SidebarContent({
         </div>
       )}
 
-      {/* Feedback + account */}
+      {/* Privacy + feedback + account */}
       <div className={`border-t border-border/40 p-2 ${collapsed ? "flex flex-col items-center gap-1" : "space-y-1"}`}>
+        <Link
+          href="/privacy"
+          onClick={onNavigate}
+          title={collapsed ? "Privacy & local mode" : undefined}
+          className={`flex h-9 items-center rounded-lg text-sm transition-colors hover:bg-secondary/60 hover:text-foreground ${
+            pathname === "/privacy" ? "bg-secondary/60 text-foreground" : "text-muted-foreground"
+          } ${collapsed ? "w-9 justify-center" : "w-full gap-2.5 px-2.5"}`}
+          data-testid="sidebar-privacy-link"
+        >
+          <span className="grid w-6 shrink-0 place-items-center" aria-hidden>🔒</span>
+          {!collapsed && <span className="truncate">Privacy &amp; local mode</span>}
+        </Link>
         <FeedbackDialog collapsed={collapsed} />
         <UserMenu
           userEmail={userEmail}

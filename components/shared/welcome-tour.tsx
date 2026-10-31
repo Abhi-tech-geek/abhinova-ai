@@ -93,6 +93,17 @@ const FEATURE_STEPS: Step[] = [
       "An AI companion — not a replacement for a professional therapist",
     ],
   },
+  {
+    icon: "🔒",
+    eyebrow: "Privacy",
+    title: "Your data, your call",
+    body: "Your chats and files are private to you — and you can go further.",
+    points: [
+      "Delete everything you stored with one button, any time",
+      "Want no cloud AI at all? Run AbhiNova on your own computer with local AI (Llama)",
+      "Find both under \"Privacy & local mode\" in the sidebar",
+    ],
+  },
 ];
 
 const BETA_STEP: Step = {

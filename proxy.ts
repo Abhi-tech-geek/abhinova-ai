@@ -17,6 +17,7 @@ const PROTECTED_PREFIXES = [
   "/journal",
   "/progress",
   "/projects",
+  "/privacy",
 ];
 
 // Link-preview bots and crawlers (never auto-create guests for them).
