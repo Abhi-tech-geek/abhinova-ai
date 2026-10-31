@@ -178,7 +178,7 @@ await step("documents", "upload → process → ask", async () => {
   rec("documents", "process → ready with chunks", r.status === 200 && pr.status === "ready" && pr.chunkCount > 0, JSON.stringify(pr));
   r = await call(D, "/api/documents/query", { json: { question: "P0 bugs kitne time me fix karne hain?", documentIds: [docId] } });
   const q = await jsonOf(r);
-  rec("documents", "ask: answer from the file with a citation", r.status === 200 && /24/.test(q.answer ?? "") && /\[\s*S1\s*\]/.test(q.answer ?? "") && q.sources?.length > 0, (q.answer ?? JSON.stringify(q)).slice(0, 200));
+  rec("documents", "ask: answer from the file with a citation", r.status === 200 && /24/.test(q.answer ?? "") && /[[【]\s*S1\s*[\]】]/.test(q.answer ?? "") && q.sources?.length > 0, (q.answer ?? JSON.stringify(q)).slice(0, 200));
   r = await call(D, "/api/documents/query", { json: { question: "Summarize", documentIds: [docId], mode: "summarize" } });
   const s = await jsonOf(r);
   rec("documents", "summarize mode", r.status === 200 && (s.answer ?? "").length > 40, (s.answer ?? JSON.stringify(s)).slice(0, 160));

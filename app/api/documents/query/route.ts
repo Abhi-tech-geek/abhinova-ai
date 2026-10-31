@@ -7,7 +7,7 @@ import {
 import { documentQuerySchema } from "@/lib/validators/documents";
 import { checkRateLimit, AI_REQUESTS_PER_MINUTE } from "@/lib/rate-limit";
 import { completeChat, aiFailureResponse } from "@/lib/ai/router";
-import { DOC_QA_SYSTEM_PROMPT } from "@/lib/ai/prompts/workspace";
+import { DOC_QA_SYSTEM_PROMPT, withScriptHint } from "@/lib/ai/prompts/workspace";
 import { retrieveChunks, firstChunks, buildDocumentContext } from "@/lib/rag/retrieve";
 import type { RetrievedSource } from "@/types/documents";
 import { isOpenBeta } from "@/lib/beta/config";
@@ -68,7 +68,9 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
-  const userPrompt = `${buildDocumentContext(sources)}\n\nQuestion: ${question}`;
+  // Script hint, as in chat: a Roman-letter Hinglish question must not get a
+  // Devanagari answer (the hint is skipped for other scripts).
+  const userPrompt = `${buildDocumentContext(sources)}\n\nQuestion: ${withScriptHint(question)}`;
 
   try {
     const { provider, text } = await completeChat(
