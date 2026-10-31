@@ -65,7 +65,10 @@ abhinova-ai/
 │   │   │   ├── chat/route.ts        # coding agent (explain/fix/refactor/generate)
 │   │   │   ├── edit/route.ts        # produce diffs for files (never auto-writes)
 │   │   │   └── docs/route.ts        # PRD / TRD / architecture doc generation
-│   │   ├── conversations/[conversationId]/share/route.ts  # GET/POST/DELETE a chat's public share link    # DELETE: wipe all of the caller's data (typed confirmation)
+│   │   ├── conversations/[conversationId]/share/route.ts  # GET/POST/DELETE a chat's public share link
+│   │   ├── account/data/route.ts    # DELETE: wipe all of the caller's data (typed confirmation)
+│   │   ├── cron/keepalive/route.ts  # daily Vercel cron (CRON_SECRET) so free Supabase doesn't pause
+│   │   ├── models/
 │   │   │   ├── list/route.ts        # available + user-configured models
 │   │   │   └── keys/route.ts        # BYOK: add/remove encrypted user API keys
 │   │   └── wellness/
@@ -98,7 +101,9 @@ abhinova-ai/
 │   │   ├── gemini.ts
 │   │   ├── embeddings.ts
 │   │   ├── router.ts               # Groq→Gemini fallback logic (Local Mode → Ollama only)
-│   │   └── prompts/                # ALL system prompts live here as named exports
+│   │   ├── agent.ts                # Agent Mode tool loop (Groq / Ollama tool calling)
+│   │   ├── calculator.ts           # safe arithmetic parser for the agent (no eval)
+│   │   └── prompts/                # ALL system prompts live here as named exports (agent.ts = AGENT_SYSTEM_PROMPT)
 │   │       ├── workspace.ts
 │   │       ├── qa-tools.ts
 │   │       ├── project-agent.ts
@@ -141,6 +146,7 @@ abhinova-ai/
 │   │   └── distortions.ts          # fixed cognitive distortion list
 │   ├── validators/                 # all zod schemas, one file per domain
 │   │   ├── chat.ts
+│   │   ├── agent.ts                # tool-call argument schemas
 │   │   ├── qa.ts
 │   │   ├── documents.ts
 │   │   ├── projects.ts
@@ -251,6 +257,13 @@ abhinova-ai/
 - Privacy: `/privacy` must only state what the code actually does (update it with any data/AI change). "Delete my data" (`DELETE /api/account/data`, body `{confirm:"DELETE"}`) deletes via the user's own client so RLS limits it to their rows; new user-data tables must be added to its list. It keeps the session and the beta counters (no limit reset).
 - Local Mode (`OLLAMA_URL` set, own machine only — never on Vercel): every AI call and embedding goes to Ollama with NO cloud fallback, beta quotas are skipped, and `ollama/<model>` ids resolve only there (elsewhere they are `unknown_model`). Ollama down → `local_ai_offline`. (`lib/ai/router.ts`): `ai_busy` (503) when the whole fallback chain is out of quota/overloaded, which the UI shows as "AbhiNova is taking a short break". The unsent text goes back to the input box, and a just-created chat/session is kept so the resend does not use another lifetime slot.
 - New limit → add it to `BETA_LIMITS` + `BETA_ERROR_MESSAGES`; UI error handlers call `showBetaLimitToast(res)` first.
+
+## Agent Mode Rules (non-negotiable)
+- Off by default; the ⚡ Agent toggle in ChatInput sends `agent: true` to `/api/chat` (remembered per browser tab). Same auth, rate limit and beta quota as a normal chat — checked BEFORE the tool loop.
+- Tools are read-only and fixed in `lib/ai/agent.ts`: wikipedia_search, read_webpage, search_my_documents, calculator, current_time. Budget: 4 rounds, 3 calls/round, 2 page reads per answer. A new tool = a schema in `lib/validators/agent.ts` + a case in `execute()`; never a tool that writes, sends, or spends.
+- `read_webpage` goes through `safeFetchText` (`lib/connectors/web.ts`) only — same SSRF rules. Guests may use it (one-off read, nothing stored), unlike saved link sources.
+- Every tool result is wrapped in `<tool_result>` and the prompt says it is DATA (prompt-injection defence); `search_my_documents` uses `retrieveChunks` so RLS/project scoping still applies.
+- Steps stream as `STEP_FRAME_PREFIX` frames before the reply and are saved in `messages.metadata.steps`. Cloud tool model down → answer through the normal fallback chain with a "fallback" step; Local Mode → `local_ai_offline`, never the cloud.
 
 ## Projects Rules (non-negotiable)
 - `project_id` is NULLABLE everywhere (conversations, documents, qa_artifacts, code_docs). Chats/documents without a project must keep working exactly as before.

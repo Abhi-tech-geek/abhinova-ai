@@ -88,6 +88,13 @@ Keys never live in git: use Vercel environment variables, Codespaces secrets, or
    ```
 5. Open [http://localhost:3000](http://localhost:3000).
 
+## Agent Mode
+
+Turn on **⚡ Agent** under the chat box and AbhiNova can use tools before it answers: search Wikipedia, read a public web page, search your own documents, do exact maths, and check the time. Each step it took shows above the reply (and is saved with it).
+
+- Read-only tools, a small budget (max 4 rounds, 2 page reads), private/internal addresses blocked.
+- Uses Groq tool calling; if that's busy it answers without tools and says so. In Local Mode the tools run with the local model.
+
 ## Local Mode — run the AI on your own computer (optional)
 
 Point AbhiNova at [Ollama](https://ollama.com) and every AI call — chat, QA Studio, Code Studio, Wellness and document embeddings — runs on your machine with Llama 3.2. No cloud model, no API key, no daily AI limits.

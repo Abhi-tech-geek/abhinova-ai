@@ -15,7 +15,7 @@ import {
   stripMarkdownForSpeech,
 } from "@/lib/voice/useSpeechSynthesis";
 import type { VoiceLang } from "@/lib/voice/useSpeechRecognition";
-import { SOURCES_FRAME_PREFIX } from "@/lib/utils";
+import { SOURCES_FRAME_PREFIX, STEP_FRAME_PREFIX } from "@/lib/utils";
 import {
   AI_BUSY_MESSAGE,
   AI_BUSY_TITLE,
@@ -27,7 +27,7 @@ import {
   betaErrorMessage,
   isOpenBeta,
 } from "@/lib/beta/config";
-import type { ChatMessageRecord } from "@/types/chat";
+import type { AgentStep, ChatMessageRecord } from "@/types/chat";
 import type { RetrievedSource } from "@/types/documents";
 
 // Soft wellness suggestion: clear distress phrases only. Never auto-enables,
@@ -36,6 +36,8 @@ import type { RetrievedSource } from "@/types/documents";
 const DISTRESS_PATTERN =
   /i'?m (?:so )?(?:stressed|anxious|depressed|overwhelmed|exhausted|burn(?:ed|t) out)|feel(?:ing)? (?:low|down|empty|hopeless|alone|lonely)|need someone to talk|bahut (?:pareshan|tension|stress|akela)|mann nahi lag|thak (?:gaya|gayi) hoon/i;
 const WELLNESS_SUGGEST_DISMISSED_KEY = "wellness-suggest-dismissed";
+// Kept for the browser tab: a new chat remounts this panel on its new URL.
+const AGENT_MODE_KEY = "agent-mode";
 
 // Suggestion chips from the design source
 const SUGGESTED_PROMPTS = [
@@ -47,6 +49,7 @@ const SUGGESTED_PROMPTS = [
 
 type UiMessage = Pick<ChatMessageRecord, "id" | "role" | "content"> & {
   sources?: RetrievedSource[];
+  steps?: AgentStep[];
 };
 
 export function ChatPanel({
@@ -70,9 +73,10 @@ export function ChatPanel({
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState<UiMessage[]>(() =>
-    initialMessages.map((m) => ({ ...m, sources: m.metadata?.sources ?? [] }))
+    initialMessages.map((m) => ({ ...m, sources: m.metadata?.sources ?? [], steps: m.metadata?.steps ?? [] }))
   );
   const [modelId, setModelId] = useState("");
+  const [agentMode, setAgentMode] = useState(false);
   const [activeSource, setActiveSource] = useState<RetrievedSource | null>(null);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -92,6 +96,23 @@ export function ChatPanel({
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, waitingFirstToken]);
+
+  useEffect(() => {
+    try {
+      setAgentMode(sessionStorage.getItem(AGENT_MODE_KEY) === "1");
+    } catch {
+      // storage blocked — Agent Mode starts off
+    }
+  }, []);
+
+  function changeAgentMode(on: boolean) {
+    setAgentMode(on);
+    try {
+      sessionStorage.setItem(AGENT_MODE_KEY, on ? "1" : "0");
+    } catch {
+      // storage blocked — the toggle still works for this page
+    }
+  }
 
   // Abort in-flight stream if the user navigates away mid-generation.
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -134,6 +155,7 @@ export function ChatPanel({
           ...(activeConversationId ? { conversationId: activeConversationId } : {}),
           ...(!activeConversationId && projectId ? { projectId } : {}),
           ...(modelId ? { modelId } : {}),
+          ...(agentMode ? { agent: true } : {}),
         }),
         signal: controller.signal,
       });
@@ -188,7 +210,8 @@ export function ChatPanel({
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
       let fullReply = "";
-      // Project chats prefix one sources frame (see SOURCES_FRAME_PREFIX).
+      // Before the reply text the server may send "\u001e…\n" frames: agent
+      // steps (STEP_FRAME_PREFIX) and cited sources (SOURCES_FRAME_PREFIX).
       let head = "";
       let headDone = false;
       while (true) {
@@ -197,23 +220,30 @@ export function ChatPanel({
         let delta = decoder.decode(value, { stream: true });
         if (!headDone) {
           head += delta;
-          if (head.startsWith(SOURCES_FRAME_PREFIX)) {
+          while (head.startsWith("\u001e")) {
             const newline = head.indexOf("\n");
-            if (newline === -1) continue; // frame not complete yet
+            if (newline === -1) break; // frame not complete yet
+            const frame = head.slice(0, newline);
+            head = head.slice(newline + 1);
             try {
-              const sources = JSON.parse(head.slice(SOURCES_FRAME_PREFIX.length, newline)) as RetrievedSource[];
-              setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, sources } : m)));
+              if (frame.startsWith(STEP_FRAME_PREFIX)) {
+                const step = JSON.parse(frame.slice(STEP_FRAME_PREFIX.length)) as AgentStep;
+                setMessages((prev) =>
+                  prev.map((m) => (m.id === assistantId ? { ...m, steps: [...(m.steps ?? []), step] } : m))
+                );
+              } else if (frame.startsWith(SOURCES_FRAME_PREFIX)) {
+                const sources = JSON.parse(frame.slice(SOURCES_FRAME_PREFIX.length)) as RetrievedSource[];
+                setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, sources } : m)));
+              }
             } catch {
-              // malformed frame — show the reply without chips
+              // malformed frame — skip it
             }
-            delta = head.slice(newline + 1);
-          } else if (head.length < SOURCES_FRAME_PREFIX.length && SOURCES_FRAME_PREFIX.startsWith(head)) {
-            continue; // could still be a frame prefix
-          } else {
-            delta = head;
           }
+          if (head.startsWith("\u001e")) continue; // wait for the rest of the frame
+          if (!head) continue; // only frames so far
+          delta = head;
+          head = "";
           headDone = true;
-          if (!delta) continue;
         }
         fullReply += delta;
         setWaitingFirstToken(false);
@@ -329,6 +359,7 @@ export function ChatPanel({
                   role={m.role}
                   content={m.content}
                   sources={m.sources}
+                  steps={m.steps}
                   onCitationClick={setActiveSource}
                   streaming={
                     streaming &&
@@ -413,6 +444,8 @@ export function ChatPanel({
             onVoiceLangChange={setVoiceLang}
             modelId={modelId}
             onModelChange={setModelId}
+            agentMode={agentMode}
+            onAgentModeChange={changeAgentMode}
             ttsEnabled={ttsEnabled}
             onTtsChange={(enabled) => {
               setTtsEnabled(enabled);

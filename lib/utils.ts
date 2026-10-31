@@ -109,3 +109,5 @@ export function describeChunkLocation(meta: {
  * never appears in model text, so the client can split it off unambiguously.
  */
 export const SOURCES_FRAME_PREFIX = "\u001eSOURCES ";
+/** Agent Mode: one frame per finished tool step, before the reply text. */
+export const STEP_FRAME_PREFIX = "\u001eSTEP ";

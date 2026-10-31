@@ -65,6 +65,12 @@ export default function PrivacyPage() {
               Want no cloud AI at all? Run AbhiNova on your own computer — next section.
             </p>
           )}
+          <p className="mt-2">
+            Agent Mode (off unless you turn on ⚡ Agent) lets the AI look things up before answering: it
+            sends a short search phrase to Wikipedia and may open a public web page. Those sites see a
+            request from our server, not from you{local ? ", even in Local Mode" : ""}. Private and internal
+            addresses are always blocked.
+          </p>
         </Section>
 
         <Section title="Run it fully private on your computer" testId="privacy-local">

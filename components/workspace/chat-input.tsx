@@ -23,9 +23,14 @@ export function ChatInput({
   onTtsChange,
   modelId,
   onModelChange,
+  agentMode,
+  onAgentModeChange,
 }: {
   modelId: string;
   onModelChange: (modelId: string) => void;
+  /** Agent Mode: the AI may search Wikipedia, read pages, search your files… */
+  agentMode: boolean;
+  onAgentModeChange: (on: boolean) => void;
   value: string;
   onChange: (value: string) => void;
   onSend: () => void;
@@ -123,12 +128,26 @@ export function ChatInput({
         </button>
         <button
           type="button"
-          onClick={() => toast.info("Agents are coming soon.")}
-          className="flex h-[30px] shrink-0 items-center gap-1.5 rounded-[9px] px-2 text-xs text-muted-foreground transition-colors hover:bg-secondary/50 sm:px-2.5"
-          aria-label="Agents"
+          onClick={() => {
+            const next = !agentMode;
+            onAgentModeChange(next);
+            if (next) {
+              toast.info("Agent Mode on", {
+                description: "AbhiNova can now search Wikipedia, read web pages, search your documents and calculate before answering.",
+              });
+            }
+          }}
+          aria-pressed={agentMode}
+          title="Agent Mode: let AbhiNova use tools before answering"
+          className={`flex h-[30px] shrink-0 items-center gap-1.5 rounded-[9px] px-2 text-xs transition-colors sm:px-2.5 ${
+            agentMode
+              ? "bg-primary/15 font-medium text-primary"
+              : "text-muted-foreground hover:bg-secondary/50"
+          }`}
+          aria-label="Agent Mode"
           data-testid="chat-input-agents"
         >
-          ⚡<span className="hidden sm:inline">Agents</span>
+          ⚡<span className="hidden sm:inline">{agentMode ? "Agent on" : "Agent"}</span>
         </button>
         <TtsToggle
           ttsEnabled={ttsEnabled}

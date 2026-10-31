@@ -8,6 +8,8 @@ export const chatRequestSchema = z.object({
   projectId: z.string().uuid().optional(),
   message: z.string().min(1).max(8000),
   modelId: modelIdSchema.optional(),
+  /** Agent Mode: let the model use tools (lib/ai/agent.ts) before answering. */
+  agent: z.boolean().optional(),
 });
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 
