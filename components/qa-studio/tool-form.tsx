@@ -52,7 +52,19 @@ export function ToolForm({
         </div>
       )}
       <div className="space-y-1.5">
-        <Label htmlFor={`qa-${tool.id}-input`}>{tool.inputLabel}</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor={`qa-${tool.id}-input`}>{tool.inputLabel}</Label>
+          {/* Lets a first-time visitor see a real result without thinking up an input. */}
+          <button
+            type="button"
+            onClick={() => setInput(tool.example)}
+            disabled={loading}
+            className="shrink-0 rounded-full border border-primary/40 px-2.5 py-0.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+            data-testid={`qastudio-${tool.id}-example`}
+          >
+            ✨ Try an example
+          </button>
+        </div>
         <Textarea
           id={`qa-${tool.id}-input`}
           value={input}

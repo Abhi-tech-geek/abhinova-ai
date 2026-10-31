@@ -31,6 +31,7 @@ node --import ./tests/e2e/xff.mjs tests/e2e/e2e-features.mjs .env.local http://l
 | `modes-test.mjs` | Funny/odd questions in every mode + a deep project test |
 | `local-mode-test.mjs` + `mock-ollama.mjs` | Local Mode against a fake Ollama (start the app with `OLLAMA_URL=http://localhost:11555`) |
 | `real-local-test.mjs` | Local Mode against a real Ollama |
+| `qa-examples-test.mts` | Every QA Studio "Try an example" input produces a valid result (run with `npx tsx --import ./tests/e2e/xff.mjs …`) |
 
 `xff.mjs` (preload) gives each run its own fake client IP on **localhost only**, so the per-IP beta quota of earlier runs doesn't block it, and waits when Supabase rate-limits anonymous sign-ups (about 30/hour per IP). It has no effect on Vercel.
 
