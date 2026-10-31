@@ -60,15 +60,27 @@ async function call(path: string, body: unknown, signal?: AbortSignal): Promise<
   return res;
 }
 
-/** Streaming chat via Ollama's OpenAI-compatible endpoint (same SSE shape as Groq). */
+/**
+ * Streaming chat via Ollama's OpenAI-compatible endpoint (same SSE shape as Groq).
+ * `json` turns on Ollama's JSON mode: small local models otherwise wrap or
+ * break the strict JSON that QA Studio, Journal and code edits parse.
+ */
 export async function ollamaStream(
   messages: AiMessage[],
   signal?: AbortSignal,
-  model = localChatModel()
+  model = localChatModel(),
+  options: { json?: boolean } = {}
 ): Promise<Response> {
   const res = await call(
     "/v1/chat/completions",
-    { model, messages, stream: true, temperature: 0.7, max_tokens: 2048 },
+    {
+      model,
+      messages,
+      stream: true,
+      temperature: options.json ? 0.2 : 0.7,
+      max_tokens: options.json ? 4096 : 2048,
+      ...(options.json ? { response_format: { type: "json_object" } } : {}),
+    },
     signal
   );
   if (!res.body) throw new LocalAiError("Ollama returned an empty stream");

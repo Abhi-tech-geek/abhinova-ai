@@ -71,7 +71,7 @@ export async function POST(request: Request): Promise<Response> {
   ];
 
   try {
-    const first = await completeChat(messages, request.signal, resolved);
+    const first = await completeChat(messages, request.signal, resolved, { json: true });
     let output = tryParse(first.text);
     if (output === null) {
       const retry = await completeChat(
@@ -85,7 +85,8 @@ export async function POST(request: Request): Promise<Response> {
           },
         ],
         request.signal,
-        resolved
+        resolved,
+        { json: true }
       );
       output = tryParse(retry.text);
     }

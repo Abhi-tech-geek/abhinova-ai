@@ -146,10 +146,20 @@ async function anthropicStream(
 }
 
 /** Routes one call to an explicitly resolved model (built-in or BYOK). */
+/** Per-call options for streamChat / completeChat. */
+export interface ChatOptions {
+  /**
+   * The caller parses the reply as one JSON object. Local Ollama gets JSON
+   * mode; cloud models already follow the prompt's JSON instructions.
+   */
+  json?: boolean;
+}
+
 async function resolvedStream(
   resolved: ResolvedModel,
   messages: AiMessage[],
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  options: ChatOptions = {}
 ): Promise<RoutedStream> {
   const { provider, model, apiKey } = resolved;
   let res: Response;
@@ -178,7 +188,7 @@ async function resolvedStream(
       break;
     }
     case "ollama":
-      res = await ollamaStream(messages, signal, model);
+      res = await ollamaStream(messages, signal, model, { json: options.json });
       extract = extractGroqText; // OpenAI-compatible SSE
       break;
   }
@@ -190,15 +200,16 @@ async function resolvedStream(
 export async function streamChat(
   messages: AiMessage[],
   signal?: AbortSignal,
-  resolved?: ResolvedModel | null
+  resolved?: ResolvedModel | null,
+  options: ChatOptions = {}
 ): Promise<RoutedStream> {
   // Explicit model chosen (ModelPicker) — no fallback chain, fail honestly.
-  if (resolved) return resolvedStream(resolved, messages, signal);
+  if (resolved) return resolvedStream(resolved, messages, signal, options);
 
   // Local Mode: the on-machine model only. Falling back to a cloud provider
   // would send the conversation off the machine, which is what this mode avoids.
   if (isLocalMode()) {
-    return resolvedStream({ provider: "ollama", model: localChatModel() }, messages, signal);
+    return resolvedStream({ provider: "ollama", model: localChatModel() }, messages, signal, options);
   }
 
   // Free tiers fail in bursts (Groq 429 per-minute caps, Gemini 503 "high
@@ -272,9 +283,10 @@ export function aiFailureResponse(err: unknown): Response {
 export async function completeChat(
   messages: AiMessage[],
   signal?: AbortSignal,
-  resolved?: ResolvedModel | null
+  resolved?: ResolvedModel | null,
+  options: ChatOptions = {}
 ): Promise<{ provider: AiProvider; text: string }> {
-  const { provider, textStream } = await streamChat(messages, signal, resolved);
+  const { provider, textStream } = await streamChat(messages, signal, resolved, options);
   const reader = textStream.getReader();
   let text = "";
   while (true) {

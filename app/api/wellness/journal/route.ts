@@ -61,18 +61,23 @@ export async function POST(request: Request): Promise<Response> {
   ];
 
   try {
-    const first = await completeChat(messages, request.signal);
+    const first = await completeChat(messages, request.signal, null, { json: true });
     let output = tryParse(first.text);
     if (output === null) {
-      const retry = await completeChat([
-        ...messages,
-        { role: "assistant", content: first.text },
-        {
-          role: "user",
-          content:
-            "Your previous response was not valid JSON matching the schema. Respond with ONLY the corrected JSON object.",
-        },
-      ]);
+      const retry = await completeChat(
+        [
+          ...messages,
+          { role: "assistant", content: first.text },
+          {
+            role: "user",
+            content:
+              "Your previous response was not valid JSON matching the schema. Respond with ONLY the corrected JSON object.",
+          },
+        ],
+        request.signal,
+        null,
+        { json: true }
+      );
       output = tryParse(retry.text);
     }
     if (output === null) {

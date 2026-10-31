@@ -118,7 +118,7 @@ export async function POST(
   let output: unknown = null;
 
   try {
-    const first = await completeChat(messages, request.signal, resolved);
+    const first = await completeChat(messages, request.signal, resolved, { json: true });
     provider = first.provider;
     output = tryParse(first.text, schema);
 
@@ -143,7 +143,8 @@ export async function POST(
           },
         ],
         request.signal,
-        resolved
+        resolved,
+        { json: true }
       );
       provider = retry.provider;
       output = tryParse(retry.text, schema);
