@@ -8,6 +8,8 @@
 
 # testing
 /coverage
+# e2e run reports (may contain AI answers)
+/tests/out/
 
 # next.js
 /.next/

@@ -63,6 +63,22 @@ export function safeNextPath(raw: string | null, origin: string, fallback = "/ch
   }
 }
 
+const UUID_SEGMENT = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+
+/**
+ * True for chat / project URLs whose id isn't even a UUID ("new" is the
+ * fresh-project-chat route). The proxy answers those with a real 404, since
+ * the page's notFound() runs after loading.tsx has already streamed a 200.
+ */
+export function hasMalformedId(path: string): boolean {
+  const shape = path.replace(UUID_SEGMENT, "UUID").replace(/\/$/, "");
+  return (
+    /^\/chat\/(?!UUID$)[^/]+$/.test(shape) ||
+    /^\/projects\/(?!UUID(\/|$))[^/]+/.test(shape) ||
+    /^\/projects\/UUID\/chat\/(?!UUID$|new$)[^/]+$/.test(shape)
+  );
+}
+
 /**
  * Human-readable citation location for a chunk — shared by the prompt builder
  * and the citation chips so both always agree: "p.3", "slide 2",
