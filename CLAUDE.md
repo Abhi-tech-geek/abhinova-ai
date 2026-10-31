@@ -65,7 +65,7 @@ abhinova-ai/
 │   │   │   ├── chat/route.ts        # coding agent (explain/fix/refactor/generate)
 │   │   │   ├── edit/route.ts        # produce diffs for files (never auto-writes)
 │   │   │   └── docs/route.ts        # PRD / TRD / architecture doc generation
-│   │   ├── account/data/route.ts    # DELETE: wipe all of the caller's data (typed confirmation)
+│   │   ├── conversations/[conversationId]/share/route.ts  # GET/POST/DELETE a chat's public share link    # DELETE: wipe all of the caller's data (typed confirmation)
 │   │   │   ├── list/route.ts        # available + user-configured models
 │   │   │   └── keys/route.ts        # BYOK: add/remove encrypted user API keys
 │   │   └── wellness/
@@ -79,7 +79,7 @@ abhinova-ai/
 ├── components/
 │   ├── ui/                         # shadcn components ONLY (auto-generated)
 │   ├── shared/                     # CommandPalette, WelcomeTour (first-visit product tour), FeedbackDialog, DeleteMyData, Logo, LocalTime, EmptyState, ErrorBoundary
-│   ├── workspace/                  # Sidebar (nav + history, Claude-style), UserMenu, SessionList, ConversationList, ChatMessage, ChatInput, ThinkingOrb
+│   ├── workspace/                  # Sidebar (nav + history, Claude-style), UserMenu, SessionList, ConversationList, ChatMessage, ChatMarkdown, ChatActions (export/share), ChatInput, ThinkingOrb, LocalModeBanner
 │   ├── qa-studio/                  # ToolCard, ToolForm, OutputPanel, HistoryTab, ExportButtons
 │   ├── documents/                  # UploadDropzone, DocumentList, DocumentPicker, CitationChip, ChunkViewer
 │   ├── projects/                   # ProjectCard, ProjectGrid, CreateProjectDialog, KnowledgePanel, ProjectInstructions, ProjectNotes, ProjectChatList, ProjectSwitcher, ProjectHeader, ProjectSelect, SourceCard, AddSourceDialog, SyncStatusBadge
@@ -176,7 +176,7 @@ abhinova-ai/
 │       ├── 002_projects_connectors.sql
 │       ├── 003_open_beta.sql      # beta_usage counters + consume_beta_quota() + guest write access
 │       ├── 004_feedback.sql       # in-app feedback (server-only submit_feedback RPC, 10/user/24h)
-│       └── 005_admin_stats.sql    # admin_usage_stats() aggregates for /admin (service role only)
+│       ├── 005_admin_stats.sql    # admin_usage_stats() aggregates for /admin (service role only)
 ├── design-reference/               # Claude Design export (source design) — read as the visual foundation
 ├── private-learning/               # NEVER pushed to git (in .gitignore)
 ├── public/

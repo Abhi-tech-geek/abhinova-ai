@@ -12,3 +12,6 @@ export const chatRequestSchema = z.object({
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 
 export const conversationIdSchema = z.string().uuid();
+
+/** Public share link id (/share/<id>, migration 006). */
+export const shareIdSchema = z.string().uuid();

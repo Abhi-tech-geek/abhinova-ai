@@ -38,6 +38,7 @@ export default function PrivacyPage() {
             <Item>Your chats, uploaded files, projects and notes, QA and code history, and wellness entries — so they&apos;re there when you come back.</Item>
             <Item>They live in a private database (Supabase, Mumbai region). Every table has row-level security: only your own session can read or change your rows.</Item>
             <Item>Uploaded files sit in a private folder of your own. Secrets found in a document (API keys, tokens) are blanked out before it&apos;s indexed.</Item>
+            <Item>Nothing is public unless you share it: a chat you share by link can be read by anyone with that link until you press &quot;Stop sharing&quot; or delete the chat. Wellness chats can&apos;t be shared.</Item>
           </ul>
         </Section>
 
@@ -104,8 +105,9 @@ export default function PrivacyPage() {
 
         <Section title="Delete my data" testId="privacy-delete" id="delete">
           <p>
-            Remove everything AbhiNova has stored for you: chats, files, projects, history, wellness
-            entries, saved keys, connected apps and feedback. It happens immediately and can&apos;t be undone.
+            Remove everything AbhiNova has stored for you: chats (and their share links), files, projects,
+            history, wellness entries, saved keys, connected apps and feedback. It happens immediately and
+            can&apos;t be undone.
           </p>
           <div className="mt-4">
             <DeleteMyData />

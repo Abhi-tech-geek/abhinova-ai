@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChatMessage } from "@/components/workspace/chat-message";
+import { ChatActions } from "@/components/workspace/chat-actions";
 import { ChatInput } from "@/components/workspace/chat-input";
 import { ThinkingOrb } from "@/components/workspace/thinking-orb";
 import { ChunkViewer } from "@/components/documents/chunk-viewer";
@@ -255,6 +256,13 @@ export function ChatPanel({
   return (
     <div className="flex h-full flex-col">
       {header}
+      {!isEmpty && activeConversationId && !streaming && (
+        <div className="px-4 pt-3">
+          <div className="mx-auto max-w-3xl">
+            <ChatActions conversationId={activeConversationId} messages={messages} />
+          </div>
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto px-4 py-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           {isEmpty && emptyState ? (
