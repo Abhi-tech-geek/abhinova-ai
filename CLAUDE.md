@@ -331,6 +331,7 @@ abhinova-ai/
   6. **"Galtiyan / gotchas"** — anything that broke during the session, why, and how it was fixed
   7. **"Interview angle"** — 2-3 questions an interviewer could ask about this session's work, with short answers
 - If a session changes something built earlier, update the old doc's affected section too.
+- ALSO update the master guide `private-learning/abhinova-guide.html` (English + Hinglish, one `.l-en` and one `.l-hi` block per section) every session: new features into the right Part B chapter, new tables/migrations into ch. 22, new test suites into ch. 24, every important fix into the Fix log (ch. 27: problem · why · fix), a timeline line (ch. 26), and a changelog line (ch. 30). Explain from the basics — the owner must be able to answer "how does this work?" from it.
 - These docs are personal learning notes. `private-learning/` stays in `.gitignore` permanently.
 
 ## Wellness Mode Rules
