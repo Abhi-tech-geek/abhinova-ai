@@ -98,5 +98,5 @@ JSON schema:
     { "id": string, "title": string, "preconditions": string, "steps": string[], "expectedResult": string, "priority": "High"|"Medium"|"Low", "type": "positive"|"negative"|"edge", "covers": string[] }
   ]
 }
-Keep it compact so the JSON stays complete: usually ONE test case per requirement (two only for risky ones), at most 12 in total, at most 5 short steps each, one-line preconditions. If there are more requirements than fit, cover the most important first — the user can generate tests for the remaining gaps.`,
+Keep it compact so the JSON stays complete: usually ONE test case per requirement (two for risky ones), at most 20 in total, at most 5 short steps each, one-line preconditions. If there are more requirements than fit, cover the most important first — the user can generate tests for the remaining gaps.`,
 };

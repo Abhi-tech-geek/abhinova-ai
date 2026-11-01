@@ -7,15 +7,19 @@ const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 // qwen/qwen3.8-27b was faster but its free-tier output-tokens-per-minute cap
 // rejects our 2048-token requests intermittently — gpt-oss-120b is reliable.
 export const GROQ_MODEL = "openai/gpt-oss-120b";
+/** Default reply budget (gpt-oss reasoning tokens count against it too). */
+const DEFAULT_MAX_TOKENS = 2048;
 
 /**
  * Starts a streaming chat completion; returns the raw SSE Response.
- * `overrides` support BYOK routing (user's key) and model selection.
+ * `overrides` support BYOK routing (user's key), model selection and a larger
+ * reply budget for long structured output. Measured 2026-11: Groq's per-minute
+ * token limit counts tokens actually used, not max_tokens.
  */
 export async function groqStream(
   messages: AiMessage[],
   signal?: AbortSignal,
-  overrides?: { apiKey?: string; model?: string }
+  overrides?: { apiKey?: string; model?: string; maxTokens?: number }
 ): Promise<Response> {
   const apiKey = overrides?.apiKey ?? process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error("GROQ_API_KEY is not set");
@@ -31,7 +35,7 @@ export async function groqStream(
       messages,
       stream: true,
       temperature: 0.7,
-      max_tokens: 2048,
+      max_tokens: overrides?.maxTokens ?? DEFAULT_MAX_TOKENS,
     }),
     signal,
   });

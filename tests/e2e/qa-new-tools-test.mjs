@@ -44,6 +44,17 @@ try {
   j = await r.json();
   const gapCovers = (j.output?.testCases ?? []).flatMap((tc) => tc.covers);
   check("'tests for the gaps' only targets the asked requirement", r.status === 200 && gapCovers.length > 0 && gapCovers.every((c) => c === "R3"), JSON.stringify(gapCovers));
+  const BIG = [
+    "Users can sign up with email and password", "Passwords need 8-64 characters and one number", "A verification email is sent after sign-up",
+    "The verification link expires after 24 hours", "Unverified users cannot place orders", "Five failed logins lock the account for 15 minutes",
+    "Users can reset their password by email", "Reset links work only once", "Users can update their phone number in Settings",
+    "Phone numbers must be Indian 10-digit mobiles", "Users can add up to 5 delivery addresses", "One address can be marked as default",
+    "Users can delete their account from Settings", "Account data is removed within 30 days of deletion", "An export of user data can be downloaded as JSON",
+  ].map((t) => `- ${t}.`).join("\n");
+  r = await post(A, "/api/qa/requirement-coverage", { input: BIG });
+  j = await r.json();
+  const bigCovered = new Set((j.output?.testCases ?? []).flatMap((tc) => tc.covers));
+  check("a 15-requirement PRD completes in one run (bigger reply budget)", r.status === 200 && j.output?.requirements?.length === 15 && bigCovered.size >= 12, `${r.status} covered ${bigCovered.size}/15 ${j.error ?? ""}`);
   check("no requirements → 400 (before using quota)", (await post(A, "/api/qa/requirement-coverage", { input: "hi" })).status === 400);
 
   const fd = new FormData();

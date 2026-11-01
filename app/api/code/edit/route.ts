@@ -71,7 +71,8 @@ export async function POST(request: Request): Promise<Response> {
   ];
 
   try {
-    const first = await completeChat(messages, request.signal, resolved, { json: true });
+    // Edits return whole new file contents — they need more than the chat budget.
+    const first = await completeChat(messages, request.signal, resolved, { json: true, maxTokens: 4096 });
     let output = tryParse(first.text);
     if (output === null) {
       const retry = await completeChat(
@@ -86,7 +87,7 @@ export async function POST(request: Request): Promise<Response> {
         ],
         request.signal,
         resolved,
-        { json: true }
+        { json: true, maxTokens: 4096 }
       );
       output = tryParse(retry.text);
     }

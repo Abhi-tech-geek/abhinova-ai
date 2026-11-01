@@ -154,6 +154,8 @@ export interface ChatOptions {
    * mode; cloud models already follow the prompt's JSON instructions.
    */
   json?: boolean;
+  /** Bigger Groq reply budget for long structured output (QA Studio). Gemini already allows 4096. */
+  maxTokens?: number;
 }
 
 async function resolvedStream(
@@ -168,7 +170,7 @@ async function resolvedStream(
 
   switch (provider) {
     case "groq":
-      res = await groqStream(messages, signal, { apiKey, model });
+      res = await groqStream(messages, signal, { apiKey, model, maxTokens: options.maxTokens });
       extract = extractGroqText;
       break;
     case "gemini":
@@ -230,7 +232,7 @@ export async function streamChat(
     try {
       const res =
         attempt.provider === "groq"
-          ? await groqStream(messages, signal)
+          ? await groqStream(messages, signal, { maxTokens: options.maxTokens })
           : await geminiStream(messages, signal, { model: attempt.model });
       console.log(`[ai-router] provider=${attempt.provider} model=${attempt.model}`);
       return {

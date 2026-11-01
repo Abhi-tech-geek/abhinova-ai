@@ -149,7 +149,7 @@ export async function POST(
   const call = (msgs: AiMessage[]) =>
     visionImage
       ? completeVision(msgs[0].content, msgs.slice(1).map((m) => m.content).join("\n\n"), visionImage, request.signal)
-      : completeChat(msgs, request.signal, resolved, { json: true });
+      : completeChat(msgs, request.signal, resolved, { json: true, maxTokens: QA_MAX_TOKENS });
 
   try {
     const first = await call(messages);
@@ -220,6 +220,8 @@ export async function POST(
 }
 
 const MAX_SCREENSHOT_BYTES = 3 * 1024 * 1024;
+/** Long structured output (traced test suites, API suites) needs more than the chat default. */
+const QA_MAX_TOKENS = 4096;
 
 /** Data URL → image, only if the bytes really are a PNG / JPEG / WebP of that type. */
 function parseScreenshot(dataUrl: string): VisionImage | null {
