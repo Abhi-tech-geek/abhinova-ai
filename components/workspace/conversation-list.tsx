@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -41,20 +40,22 @@ export function ConversationList({
     const id = renameTarget.id;
     setRenameTarget(null);
     if (!title || title === renameTarget.title) return;
-    const supabase = createClient();
-    const { error } = await supabase.from("conversations").update({ title }).eq("id", id);
-    if (error) toast.error("Rename failed. Please try again.");
+    const res = await fetch(`/api/conversations/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    }).catch(() => null);
+    if (!res?.ok) toast.error("Rename failed. Please try again.");
     router.refresh();
   }
 
   async function confirmDelete() {
     if (!deleteTarget) return;
-    const supabase = createClient();
     // Messages cascade-delete with the conversation (FK on delete cascade).
-    const { error } = await supabase.from("conversations").delete().eq("id", deleteTarget.id);
+    const res = await fetch(`/api/conversations/${deleteTarget.id}`, { method: "DELETE" }).catch(() => null);
     const wasActive = pathname === `/chat/${deleteTarget.id}`;
     setDeleteTarget(null);
-    if (error) {
+    if (!res?.ok) {
       toast.error("Delete failed. Please try again.");
       return;
     }

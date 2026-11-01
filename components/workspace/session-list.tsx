@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
 import { groupByRecency } from "@/lib/utils";
 import { useMounted } from "@/hooks/use-mounted";
 import {
@@ -145,10 +144,10 @@ export function SessionList({
   async function remove(item: SessionItem) {
     if (!deleteTable || deletingId) return;
     setDeletingId(item.id);
-    const supabase = createClient();
-    const { error } = await supabase.from(deleteTable).delete().eq("id", item.id);
+    const endpoint = deleteTable === "qa_artifacts" ? "/api/qa/artifacts" : "/api/code/docs";
+    const res = await fetch(`${endpoint}/${item.id}`, { method: "DELETE" }).catch(() => null);
     setDeletingId(null);
-    if (error) {
+    if (!res?.ok) {
       toast.error("Delete failed. Please try again.");
       return;
     }

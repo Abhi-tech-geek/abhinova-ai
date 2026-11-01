@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,11 +27,9 @@ interface ProfileData {
 }
 
 export function ProfileSettings({
-  userId,
   profile,
   deleteAccount,
 }: {
-  userId: string;
   profile: ProfileData;
   deleteAccount: () => Promise<void>;
 }) {
@@ -50,19 +47,19 @@ export function ProfileSettings({
 
   async function save() {
     setSaving(true);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        display_name: displayName.trim() || null,
-        avatar_url: avatarUrl.trim() || null,
-        theme_pref: themePref,
-        voice_lang_pref: voiceLang,
-        wellness_enabled: wellnessEnabled,
-      })
-      .eq("id", userId);
+    const res = await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        displayName: displayName.trim() || null,
+        avatarUrl: avatarUrl.trim() || null,
+        themePref,
+        voiceLangPref: voiceLang,
+        wellnessEnabled,
+      }),
+    }).catch(() => null);
     setSaving(false);
-    if (error) {
+    if (!res?.ok) {
       toast.error("Couldn't save settings.");
       return;
     }

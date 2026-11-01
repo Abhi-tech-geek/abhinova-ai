@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,22 +48,21 @@ export function JournalEditor() {
   async function saveEntry(withReframe: boolean) {
     if (!content.trim() || saving) return;
     setSaving(true);
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    const res = await fetch("/api/wellness/journal/entries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: content.trim(),
+        distortions: analysis?.distortions ?? null,
+        reframe: withReframe ? (analysis?.reframe ?? null) : null,
+      }),
+    }).catch(() => null);
+    setSaving(false);
+    if (res?.status === 401) {
       router.push("/login");
       return;
     }
-    const { error } = await supabase.from("journal_entries").insert({
-      user_id: user.id,
-      content: content.trim(),
-      distortions: analysis?.distortions ?? null,
-      reframe: withReframe ? (analysis?.reframe ?? null) : null,
-    });
-    setSaving(false);
-    if (error) {
+    if (!res?.ok) {
       toast.error("Couldn't save the entry.");
       return;
     }

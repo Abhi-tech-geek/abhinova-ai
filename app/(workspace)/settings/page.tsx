@@ -76,7 +76,6 @@ export default async function SettingsPage() {
         <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
       </header>
       <ProfileSettings
-        userId={user.id}
         profile={
           profile ?? {
             display_name: null,

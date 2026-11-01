@@ -61,3 +61,6 @@ export const codeDocsRequestSchema = z.object({
   projectId: z.string().uuid().optional(),
 });
 export type CodeDocsRequest = z.infer<typeof codeDocsRequestSchema>;
+
+/** A saved generated doc (DELETE /api/code/docs/[id]). */
+export const codeDocIdSchema = z.string().uuid();

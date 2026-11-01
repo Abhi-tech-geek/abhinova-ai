@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,14 +33,8 @@ export function DocumentList({ documents }: { documents: DocumentRecord[] }) {
     if (!deleteTarget) return;
     const target = deleteTarget;
     setDeleteTarget(null);
-    const supabase = createClient();
-    // Storage first, then the row (chunks cascade with the document).
-    // Synced/link items have no file in storage.
-    if (target.storage_path) {
-      await supabase.storage.from("documents").remove([target.storage_path]);
-    }
-    const { error } = await supabase.from("documents").delete().eq("id", target.id);
-    if (error) {
+    const res = await fetch(`/api/documents/${target.id}`, { method: "DELETE" }).catch(() => null);
+    if (!res?.ok) {
       toast.error("Delete failed. Please try again.");
       return;
     }
