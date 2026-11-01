@@ -5,6 +5,7 @@ import { isAdminConfigured, isAdminSession } from "@/lib/admin/auth";
 import { BETA_LIMITS } from "@/lib/beta/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { dashboardRangeSchema } from "@/lib/validators/admin";
+import { getFeatureStats } from "@/lib/admin/feature-stats";
 import type { UsageStats } from "@/types/admin";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,9 @@ export default async function AdminPage({
   }
 
   const days = dashboardRangeSchema.parse(searchParams.days);
-  const { data, error } = await createAdminClient().rpc("admin_usage_stats", {
+  const admin = createAdminClient();
+  const featureStats = getFeatureStats(admin, days).catch(() => null);
+  const { data, error } = await admin.rpc("admin_usage_stats", {
     p_days: days,
     p_ai_user_cap: BETA_LIMITS.aiCallsPerUserPerDay,
     p_ai_ip_cap: BETA_LIMITS.aiCallsPerIpPerDay,
@@ -50,5 +53,5 @@ export default async function AdminPage({
     );
   }
 
-  return <UsageDashboard stats={data as UsageStats} />;
+  return <UsageDashboard stats={data as UsageStats} featureStats={await featureStats} />;
 }

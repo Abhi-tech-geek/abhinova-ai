@@ -1,6 +1,7 @@
 import { guardRoute } from "@/lib/auth";
 import { chatSearchSchema } from "@/lib/validators/chat";
 import { createClient } from "@/lib/supabase/server";
+import { countEvent } from "@/lib/admin/events";
 import type { ChatSearchResult } from "@/types/chat";
 
 // Search the caller's workspace chats by title and message text (Ctrl+K).
@@ -14,6 +15,7 @@ export async function GET(request: Request): Promise<Response> {
   if ("response" in guard) return guard.response;
   const q = chatSearchSchema.safeParse(new URL(request.url).searchParams.get("q") ?? "");
   if (!q.success) return Response.json({ results: [] });
+  countEvent("chat_search");
 
   const pattern = `%${q.data.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
   const supabase = await createClient();

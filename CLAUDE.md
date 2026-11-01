@@ -167,7 +167,9 @@ abhinova-ai/
 │   │   ├── memory.ts               # Memory facts + saved prompts
 │   │   └── wellness.ts
 │   ├── admin/
-│   │   └── auth.ts                 # ADMIN_DASHBOARD_TOKEN check + HMAC cookie (server-only)
+│   │   ├── auth.ts                 # ADMIN_DASHBOARD_TOKEN check + HMAC cookie (server-only)
+│   │   ├── events.ts               # countEvent(): site-wide per-day counters (live site only)
+│   │   └── feature-stats.ts        # ratings / new-feature / AI-busy counts for /admin (aggregates only)
 │   ├── beta/
 │   │   ├── config.ts               # isOpenBeta() + BETA_LIMITS + friendly error copy (client-safe)
 │   │   ├── quota.ts                # enforceBetaQuota() / getBetaUsage() (server-only, service role)
@@ -276,6 +278,7 @@ abhinova-ai/
 
 ## Memory, Ratings & QA Extras Rules
 - Memory is OFF by default (`profiles.memory_enabled`); facts are user-typed DATA, injected via `formatUserMemory()` (ends with `GUARDRAILS_REMINDER`) into workspace chat + Agent only — never QA, Wellness or document routes. Every fact is visible and deletable in the Memory dialog.
+- `/admin` shows counts only — never message, fact, prompt or file text. New feature usage = a head-count query or a `countEvent()` site counter (no user id, live site only; `TRACK_EVENTS=1` to test locally).
 - Every new user-data table goes in the `USER_TABLES` list of `app/api/account/data/route.ts` and in `tests/e2e/privacy-test.mjs`.
 - Regenerate never stores a second copy of the question and only removes the old reply AFTER the new one is saved. Reply ids are generated server-side and sent as `X-Assistant-Message-Id`.
 - Requirements → Tests: the server numbers requirements (`splitRequirements`) and computes coverage in code (`coverageOf`); model-supplied requirement ids are filtered to known ones.

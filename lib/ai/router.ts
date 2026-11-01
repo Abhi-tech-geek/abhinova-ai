@@ -2,6 +2,7 @@ import { groqStream, GROQ_MODEL } from "@/lib/ai/groq";
 import { geminiStream, geminiVision, GEMINI_MODEL, GEMINI_LITE_MODEL, type VisionImage } from "@/lib/ai/gemini";
 import { isLocalAiError, isLocalMode, localChatModel, ollamaStream } from "@/lib/ai/ollama";
 import { PROVIDERS, type AiProvider, type ResolvedModel } from "@/lib/models/registry";
+import { countEvent } from "@/lib/admin/events";
 import type { AiMessage } from "@/types/chat";
 
 // Provider routing: Groq first (fast), then Gemini Flash, Gemini Flash-Lite and
@@ -271,6 +272,7 @@ export function aiFailureResponse(err: unknown): Response {
     return Response.json({ error: "local_ai_offline" }, { status: 503 });
   }
   if (isAiBusyError(err)) {
+    countEvent("ai_busy");
     return Response.json(
       { error: "ai_busy", retryAfterMs: AI_BUSY_RETRY_MS },
       { status: 503, headers: { "Retry-After": String(AI_BUSY_RETRY_MS / 1000) } }

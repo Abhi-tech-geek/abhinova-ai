@@ -8,7 +8,7 @@ import { LocalTime } from "@/components/shared/local-time";
 import { Logo } from "@/components/shared/logo";
 import { getQaTool } from "@/lib/qa-tools";
 import { BETA_LIMITS } from "@/lib/beta/config";
-import { DASHBOARD_RANGES, type UsageStats } from "@/types/admin";
+import { DASHBOARD_RANGES, type FeatureStats, type UsageStats } from "@/types/admin";
 
 const FEEDBACK_ICON = { bug: "🐞", idea: "💡", praise: "❤️", other: "💭" } as const;
 
@@ -73,7 +73,85 @@ function SiteMeter({ used, cap }: { used: number; cap: number }) {
   );
 }
 
-export function UsageDashboard({ stats }: { stats: UsageStats }) {
+/** Ratings, AI-busy moments and the newer features. Counts only — no content. */
+function FeatureInsights({ f, days }: { f: FeatureStats; days: number }) {
+  const rated = f.ratings.up + f.ratings.down;
+  const happy = rated ? Math.round((f.ratings.up / rated) * 100) : null;
+  const busyDays = f.busyByDay.filter((d) => d.count > 0);
+  const worst = busyDays.reduce<{ day: string; count: number } | null>((w, d) => (!w || d.count > w.count ? d : w), null);
+  const maxBusy = Math.max(1, ...f.busyByDay.map((d) => d.count));
+
+  const newFeatureRows = [
+    { label: "⚡ Agent replies", value: f.usage.agentReplies },
+    { label: "🧭 Requirements → Tests runs", value: f.usage.coverageRuns },
+    { label: "📸 Screenshot bug reports", value: f.usage.screenshotBugReports },
+    { label: "✓ Source checks", value: f.events.source_check },
+    { label: "🔄 Regenerated replies", value: f.events.regenerate },
+    { label: "🔎 Chat searches", value: f.events.chat_search },
+  ].sort((a, b) => b.value - a.value);
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile label={`👍 Good replies · ${days} days`} value={f.ratings.up} hint={`${f.ratings.upAllTime} all time`} testID="admin-tile-thumbs-up" />
+        <StatTile label={`👎 Bad replies · ${days} days`} value={f.ratings.down} hint={`${f.ratings.downAllTime} all time`} testID="admin-tile-thumbs-down" />
+        <StatTile
+          label="Happy with replies"
+          value={happy === null ? "—" : `${happy}%`}
+          hint={rated ? `of ${rated} rated replies` : "no ratings yet"}
+          testID="admin-tile-satisfaction"
+        />
+        <StatTile
+          label={`${f.events.ai_busy > 0 ? "⚠️" : "✅"} “AI taking a break” · ${days} days`}
+          value={f.events.ai_busy}
+          hint={f.events.agent_fallback ? `+ ${f.events.agent_fallback} Agent answers without tools` : "free AI quota held up"}
+          testID="admin-tile-ai-busy"
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card title="New features" subtitle={`Use in the last ${days} days`} testID="admin-card-new-features">
+          <RankedBars rows={newFeatureRows} unit="times" testID="admin-chart-new-features" />
+        </Card>
+        <Card
+          title="When the free AI quota ran out"
+          subtitle={worst ? `Worst day: ${shortDay(worst.day)} (${worst.count}×). If this climbs, it's time for a paid plan or tighter limits.` : `Never in the last ${days} days 🎉`}
+          testID="admin-card-ai-busy"
+        >
+          <div className="flex h-24 items-end gap-1" role="img" aria-label={`AI busy per day: ${f.busyByDay.map((d) => `${shortDay(d.day)} ${d.count}`).join(", ")}`}>
+            {f.busyByDay.map((d) => (
+              <div key={d.day} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={`${shortDay(d.day)}: ${d.count}`}>
+                <div
+                  className={`rounded-t-[4px] ${d.count ? "bg-warning" : "bg-secondary"}`}
+                  style={{ height: d.count ? `${Math.max(8, (d.count / maxBusy) * 100)}%` : "3px" }}
+                />
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">Counted on the live site only, from the day this dashboard section shipped.</p>
+        </Card>
+      </div>
+
+      <Card title="Personalisation" subtitle="All time" testID="admin-card-personalisation">
+        <ul className="grid gap-2 text-sm sm:grid-cols-4">
+          {[
+            { label: "Testers with Memory on", value: f.personalisation.memoryOn },
+            { label: "Memory facts saved", value: f.personalisation.memoryFacts },
+            { label: "Saved prompts", value: f.personalisation.savedPrompts },
+            { label: "Chats shared by link", value: f.personalisation.sharedChats },
+          ].map((row) => (
+            <li key={row.label} className="rounded-xl border border-border/50 px-3 py-2.5">
+              <p className="text-[11px] text-muted-foreground">{row.label}</p>
+              <p className="text-lg font-semibold">{row.value}</p>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </>
+  );
+}
+
+export function UsageDashboard({ stats, featureStats }: { stats: UsageStats; featureStats?: FeatureStats | null }) {
   const router = useRouter();
   const [showTable, setShowTable] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -225,6 +303,9 @@ export function UsageDashboard({ stats }: { stats: UsageStats }) {
           <RankedBars rows={qaRows} unit="runs" testID="admin-chart-qa" />
         </Card>
       </div>
+
+      {/* Ratings, AI busy, newer features */}
+      {featureStats && <FeatureInsights f={featureStats} days={stats.days} />}
 
       {/* Limits + feedback */}
       <div className="grid gap-4 lg:grid-cols-2">

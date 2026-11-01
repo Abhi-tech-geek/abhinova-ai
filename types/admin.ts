@@ -57,5 +57,16 @@ export interface UsageStats {
   }[];
 }
 
+/** Newer features + reply ratings (lib/admin/feature-stats.ts). Counts only. */
+export interface FeatureStats {
+  ratings: { up: number; down: number; upAllTime: number; downAllTime: number };
+  /** Per-day site counters (lib/admin/events.ts), summed over the range. */
+  events: Record<"ai_busy" | "agent_fallback" | "regenerate" | "source_check" | "chat_search", number>;
+  /** AI-busy count per UTC day in the range, oldest first. */
+  busyByDay: { day: string; count: number }[];
+  usage: { agentReplies: number; coverageRuns: number; screenshotBugReports: number };
+  personalisation: { memoryOn: number; memoryFacts: number; savedPrompts: number; sharedChats: number };
+}
+
 export const DASHBOARD_RANGES = [7, 14, 30] as const;
 export type DashboardRange = (typeof DASHBOARD_RANGES)[number];

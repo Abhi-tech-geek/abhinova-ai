@@ -8,6 +8,7 @@ import { isLocalMode } from "@/lib/ai/ollama";
 import { createClient } from "@/lib/supabase/server";
 import { isOpenBeta } from "@/lib/beta/config";
 import { enforceBetaQuota } from "@/lib/beta/quota";
+import { countEvent } from "@/lib/admin/events";
 import type { CitationCheck } from "@/types/documents";
 
 // "Check sources": an AI judge reads every cited statement of a document
@@ -40,6 +41,7 @@ export async function POST(request: Request): Promise<Response> {
   }
   const quotaBlocked = await enforceBetaQuota(user, request, ["ai"]);
   if (quotaBlocked) return quotaBlocked;
+  countEvent("source_check");
 
   const supabase = await createClient();
   const { data: rows } = await supabase

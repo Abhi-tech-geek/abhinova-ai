@@ -17,6 +17,7 @@ import { AGENT_SYSTEM_PROMPT } from "@/lib/ai/prompts/agent";
 import { resolveModel } from "@/lib/models/byok";
 import { WORKSPACE_SYSTEM_PROMPT, withScriptHint, formatUserMemory } from "@/lib/ai/prompts/workspace";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { countEvent } from "@/lib/admin/events";
 import { currentTimeNote } from "@/lib/ai/prompts/safety";
 import { assembleProjectContext } from "@/lib/projects/context";
 import { getOwnedProject } from "@/lib/projects/scope";
@@ -150,6 +151,7 @@ export async function POST(request: Request): Promise<Response> {
       .limit(1)
       .maybeSingle();
     if (!lastUser) return Response.json({ error: "nothing_to_regenerate" }, { status: 400 });
+    countEvent("regenerate");
     message = lastUser.content as string;
     regeneratedFromId = lastUser.id as string;
     const { data: oldReplies } = await supabase
@@ -270,6 +272,7 @@ export async function POST(request: Request): Promise<Response> {
         } catch (err) {
           if (!(err instanceof AgentUnavailableError)) throw err;
           console.warn(`[agent] ${err.message} — answering without tools`);
+          countEvent("agent_fallback");
           // Tool model busy: answer without tools through the normal chain.
           const fallback: AgentStep = { tool: "fallback", label: "Tools were busy — answered directly", ok: false };
           steps.push(fallback);
