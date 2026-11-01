@@ -41,11 +41,13 @@ const AGENT_MODE_KEY = "agent-mode";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Suggestion chips from the design source
-const SUGGESTED_PROMPTS = [
-  { icon: "✨", text: "Draft a launch announcement for our new app" },
-  { icon: "💡", text: "Brainstorm 10 names for a productivity tool" },
-  { icon: "📋", text: "Summarize a long report into 5 key points" },
-  { icon: "💻", text: "Explain this code and suggest improvements" },
+/** Home screen: one card per standout feature (an action or a page). */
+const AGENT_EXAMPLE = "Wikipedia se batao ISRO kab bana, aur tab se kitne saal hue?";
+const STARTER_CARDS: { icon: string; title: string; text: string; href?: string; testID: string }[] = [
+  { icon: "⚡", title: "Look it up with Agent", text: "Wikipedia, web pages, your files and a calculator — every step shown.", testID: "chat-starter-agent" },
+  { icon: "🧭", title: "Requirements → Tests", text: "Paste a PRD, get test cases traced to each line + a coverage report.", href: "/qa-studio/requirement-coverage", testID: "chat-starter-coverage" },
+  { icon: "📸", title: "Bug report from a screenshot", text: "Paste a screenshot, get a report a developer can act on.", href: "/qa-studio/bug-report", testID: "chat-starter-bug" },
+  { icon: "📄", title: "Ask your documents", text: "Answers with sources — and a button to check every line.", href: "/documents", testID: "chat-starter-docs" },
 ];
 
 type UiMessage = Pick<ChatMessageRecord, "id" | "role" | "content"> & {
@@ -377,20 +379,31 @@ export function ChatPanel({
                 </p>
               </div>
               <div className="grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
-                {SUGGESTED_PROMPTS.map((prompt, i) => (
+                {STARTER_CARDS.map((card, i) => (
                   <button
-                    key={prompt.text}
+                    key={card.testID}
                     type="button"
-                    onClick={() => send(prompt.text)}
+                    onClick={() => {
+                      if (card.href) return router.push(card.href);
+                      // Agent card: switch it on and leave an example ready to send.
+                      changeAgentMode(true);
+                      setInput(AGENT_EXAMPLE);
+                    }}
                     style={{ animationDelay: `${150 + i * 70}ms` }}
-                    className="glass flex items-center gap-3 rounded-[15px] px-4 py-[15px] text-left text-[13.5px] font-medium leading-snug transition-all fill-mode-both animate-in fade-in slide-in-from-bottom-2 hover:-translate-y-0.5 hover:border-primary/40 motion-reduce:animate-none"
-                    data-testid={`chat-empty-chip-${i}`}
+                    className="glass flex items-start gap-3 rounded-[15px] px-4 py-[14px] text-left transition-all fill-mode-both animate-in fade-in slide-in-from-bottom-2 hover:-translate-y-0.5 hover:border-primary/40 motion-reduce:animate-none"
+                    data-testid={card.testID}
                   >
-                    <span className="text-xl text-primary">{prompt.icon}</span>
-                    {prompt.text}
+                    <span className="text-xl leading-none text-primary" aria-hidden>{card.icon}</span>
+                    <span className="min-w-0">
+                      <span className="block text-[13.5px] font-semibold leading-snug">{card.title}</span>
+                      <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{card.text}</span>
+                    </span>
                   </button>
                 ))}
               </div>
+              <p className="-mt-4 text-xs text-muted-foreground">
+                Or just ask anything below — type <span className="font-mono text-foreground">/</span> for commands.
+              </p>
             </div>
           ) : (
             <>

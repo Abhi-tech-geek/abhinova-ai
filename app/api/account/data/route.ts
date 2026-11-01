@@ -28,7 +28,12 @@ const USER_TABLES = [
   "wellness_insights",
   "user_api_keys",
   "connector_accounts",
+  // Migration 007 (skipped if that migration hasn't been run).
+  "message_feedback",
+  "user_memories",
+  "saved_prompts",
 ] as const;
+const notSetUp = (code: string | undefined) => code === "42P01" || code === "PGRST205";
 
 export async function DELETE(request: Request): Promise<Response> {
   let user;
@@ -69,8 +74,10 @@ export async function DELETE(request: Request): Promise<Response> {
 
   for (const table of USER_TABLES) {
     const { error } = await supabase.from(table).delete().eq("user_id", user.id);
-    if (error) return Response.json({ error: "delete_failed", step: table }, { status: 500 });
+    if (error && !notSetUp(error.code)) return Response.json({ error: "delete_failed", step: table }, { status: 500 });
   }
+  // Memory switch back off (the column exists only after migration 007).
+  await supabase.from("profiles").update({ memory_enabled: false }).eq("id", user.id);
 
   const { error: feedbackError } = await createAdminClient()
     .from("feedback")

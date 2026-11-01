@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { isOpenBeta } from "@/lib/beta/config";
 import { openWelcomeTour } from "@/components/shared/welcome-tour";
+import { openMemoryDialog, openSavedPrompts } from "@/components/workspace/account-dialogs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -132,6 +133,12 @@ export function UserMenu({
             ⚙️ Settings
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem onSelect={() => { onNavigate?.(); openMemoryDialog(); }} data-testid="sidebar-memory">
+          🧠 Memory
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => { onNavigate?.(); openSavedPrompts(); }} data-testid="sidebar-saved-prompts">
+          📌 Saved prompts
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => { onNavigate?.(); openWelcomeTour(); }} data-testid="sidebar-product-tour">
           ✨ Product tour
         </DropdownMenuItem>

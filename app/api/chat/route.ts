@@ -15,7 +15,8 @@ import { streamChat, completeChat, fitToTokenBudget, aiFailureResponse } from "@
 import { runAgent, AgentUnavailableError } from "@/lib/ai/agent";
 import { AGENT_SYSTEM_PROMPT } from "@/lib/ai/prompts/agent";
 import { resolveModel } from "@/lib/models/byok";
-import { WORKSPACE_SYSTEM_PROMPT, withScriptHint } from "@/lib/ai/prompts/workspace";
+import { WORKSPACE_SYSTEM_PROMPT, withScriptHint, formatUserMemory } from "@/lib/ai/prompts/workspace";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { currentTimeNote } from "@/lib/ai/prompts/safety";
 import { assembleProjectContext } from "@/lib/projects/context";
 import { getOwnedProject } from "@/lib/projects/scope";
@@ -27,6 +28,15 @@ import type { AgentStep, AiMessage, ChatRole } from "@/types/chat";
 import type { RetrievedSource } from "@/types/documents";
 
 const HISTORY_LIMIT = 20;
+
+/** "" unless Memory is on and has facts. Before migration 007 there's nothing to load. */
+async function loadMemoryBlock(supabase: SupabaseClient, userId: string): Promise<string> {
+  const { data: profile } = await supabase.from("profiles").select("memory_enabled").eq("id", userId).maybeSingle();
+  if (profile?.memory_enabled !== true) return "";
+  const { data } = await supabase.from("user_memories").select("content").order("created_at", { ascending: true }).limit(30);
+  const facts = (data ?? []).map((m) => m.content as string);
+  return facts.length ? `\n\n${formatUserMemory(facts)}` : "";
+}
 
 export async function POST(request: Request): Promise<Response> {
   // 1. Auth
@@ -207,9 +217,12 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
+  // Memory (opt-in): facts the user saved, appended as data after the prompt.
+  const memoryBlock = await loadMemoryBlock(supabase, user.id);
+
   const aiMessages = fitToTokenBudget([
     // Real IST clock so the model never invents the time (bug B6).
-    { role: "system", content: `${systemPrompt}\n\n${currentTimeNote()}` },
+    { role: "system", content: `${systemPrompt}\n\n${currentTimeNote()}${memoryBlock}` },
     ...history,
     // Script hint goes to the model only — the stored message stays verbatim.
     { role: "user", content: withScriptHint(message) },
@@ -229,7 +242,7 @@ export async function POST(request: Request): Promise<Response> {
   if (parsed.data.agent) {
     const agentSystem = projectId ? `${systemPrompt}\n\n${AGENT_SYSTEM_PROMPT}` : AGENT_SYSTEM_PROMPT;
     const agentMessages = fitToTokenBudget([
-      { role: "system", content: `${agentSystem}\n\n${currentTimeNote()}` },
+      { role: "system", content: `${agentSystem}\n\n${currentTimeNote()}${memoryBlock}` },
       ...history,
       { role: "user", content: withScriptHint(message) },
     ]);

@@ -7,6 +7,7 @@ import { MicButton } from "@/components/voice/mic-button";
 import { TtsToggle } from "@/components/voice/tts-toggle";
 import { ModelPicker } from "@/components/code-studio/model-picker";
 import type { VoiceLang } from "@/lib/voice/useSpeechRecognition";
+import { useSlashMenu } from "@/components/workspace/slash-menu";
 
 const MAX_CHARS = 8000;
 
@@ -44,8 +45,10 @@ export function ChatInput({
 }) {
   const [interim, setInterim] = useState("");
   const nearLimit = value.length > MAX_CHARS - 500;
+  const slash = useSlashMenu({ value, setValue: onChange, agentMode, onAgentModeChange });
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (slash.onKeyDown(e)) return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (!streaming && value.trim()) onSend();
@@ -57,6 +60,8 @@ export function ChatInput({
   }
 
   return (
+    <div className="relative">
+    {slash.menu}
     <div className="glass overflow-hidden rounded-[22px] border-border shadow-glass">
       {/* Input row — textarea + mic + gradient send (design source) */}
       <div className="flex items-end gap-2.5 py-2 pl-4 pr-2">
@@ -160,9 +165,10 @@ export function ChatInput({
           className={`shrink-0 text-[11px] ${nearLimit ? "text-warning" : "hidden text-muted-foreground/50 sm:inline"}`}
           data-testid="chat-input-charcount"
         >
-          {nearLimit ? `${value.length}/${MAX_CHARS}` : "AbhiNova · reasoning on"}
+          {nearLimit ? `${value.length}/${MAX_CHARS}` : "Type / for commands"}
         </span>
       </div>
+    </div>
     </div>
   );
 }

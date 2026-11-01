@@ -39,8 +39,13 @@ async function seed(g, tag) {
   await g.db.from("qa_artifacts").insert({ user_id: g.id, type: "test-cases", input: `${tag} req`, output: "{}" });
   await call(g, "/api/wellness/mood", { method: "POST", json: { mood: 3 } });
   await call(g, "/api/feedback", { method: "POST", json: { category: "other", message: `[automated test] ${tag} privacy test` } });
+  // Migration 007: a rated reply, a memory fact, a saved prompt.
+  const { data: reply } = await g.db.from("messages").insert({ conversation_id: conv.id, user_id: g.id, role: "assistant", content: `${tag} reply` }).select("id").single();
+  await call(g, `/api/messages/${reply.id}/feedback`, { method: "POST", json: { rating: 1 } });
+  await call(g, "/api/memory", { method: "POST", json: { content: `${tag} fact`, enable: true } });
+  await call(g, "/api/prompts", { method: "POST", json: { title: `${tag} prompt`, content: "x" } });
 }
-const TABLES = ["conversations", "messages", "documents", "projects", "project_notes", "qa_artifacts", "mood_logs", "feedback"];
+const TABLES = ["conversations", "messages", "documents", "projects", "project_notes", "qa_artifacts", "mood_logs", "feedback", "message_feedback", "user_memories", "saved_prompts"];
 async function counts(uid) {
   const out = {};
   for (const t of TABLES) out[t] = (await admin.from(t).select("*", { count: "exact", head: true }).eq("user_id", uid)).count;
@@ -79,6 +84,8 @@ check("confirmed delete → 200", r.status === 200, `${r.status} ${await r.text(
 
 const after = await counts(A.id);
 check("all of A's data and files are gone", Object.values(after).every((n) => n === 0), JSON.stringify(after));
+const { data: prof } = await admin.from("profiles").select("memory_enabled").eq("id", A.id).single();
+check("Memory is switched back off", prof?.memory_enabled === false, JSON.stringify(prof));
 const other = await counts(Bg.id);
 check("guest B's data is untouched", Object.values(other).every((n) => n > 0), JSON.stringify(other));
 const still = await call(A, "/chat");

@@ -30,6 +30,20 @@ export interface ChatMessageRecord {
   rating?: 1 | -1 | null;
 }
 
+/** A fact the user asked AbhiNova to remember (migration 007). */
+export interface MemoryRecord {
+  id: string;
+  content: string;
+  created_at: string;
+}
+
+/** A reusable prompt for the "/" menu (migration 007). */
+export interface SavedPromptRecord {
+  id: string;
+  title: string;
+  content: string;
+}
+
 /** One hit from GET /api/conversations/search. */
 export interface ChatSearchResult {
   id: string;

@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { ConversationList } from "@/components/workspace/conversation-list";
 import { SessionList, type SessionItem } from "@/components/workspace/session-list";
 import { UserMenu } from "@/components/workspace/user-menu";
+import { AccountDialogs } from "@/components/workspace/account-dialogs";
 import { FeedbackDialog } from "@/components/shared/feedback-dialog";
 import { Logo } from "@/components/shared/logo";
 import { openCommandPalette } from "@/components/shared/command-palette";
@@ -345,6 +346,9 @@ export function Sidebar(props: SidebarProps) {
           ✎
         </button>
       </div>
+
+      {/* Memory / Saved prompts dialogs — mounted once, opened by events. */}
+      <AccountDialogs />
 
       {/* Mobile drawer */}
       {drawerOpen && (

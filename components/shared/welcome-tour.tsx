@@ -11,7 +11,7 @@ import { BETA_LIMITS, isOpenBeta } from "@/lib/beta/config";
 // reopened any time from the account menu ("Product tour").
 
 // Bumped when the tour gains new features, so returning users see it once more.
-const SEEN_KEY = "anv:welcome-tour-v2";
+const SEEN_KEY = "anv:welcome-tour-v3";
 export const OPEN_TOUR_EVENT = "anv:open-welcome-tour";
 
 /** Reopen the tour from anywhere (e.g. the account menu). */
@@ -45,10 +45,10 @@ const FEATURE_STEPS: Step[] = [
     title: "Ask anything, your way",
     body: "A smart assistant for writing, ideas, explanations and everyday work.",
     points: [
+      "Under every reply: 📋 copy, 🔄 regenerate, and 👍/👎 to tell us how it did",
       "Speak instead of typing 🎤 — and let it read replies aloud",
-      "Pick the AI model from the box under the message field",
+      "Press Ctrl + K to search your old chats — even words inside them",
       "Export a chat as Markdown or PDF, or share it with a link",
-      "Press Ctrl + K to jump anywhere in the app",
     ],
   },
   {
@@ -70,7 +70,7 @@ const FEATURE_STEPS: Step[] = [
     body: "Give a project its own files, links and instructions — its chats answer only from that knowledge.",
     points: [
       "Add PDF, Word, PowerPoint, Excel, CSV, Markdown or code files",
-      "Every answer cites its source — down to the page, slide or sheet row",
+      "Every answer cites its source — down to the page, slide or sheet row — and “✓ Check sources” re-checks each line",
       "Custom instructions + notes the AI always remembers",
     ],
   },
@@ -78,11 +78,12 @@ const FEATURE_STEPS: Step[] = [
     icon: "🧪",
     eyebrow: "QA Studio",
     title: "A copilot built for testers",
-    body: "Eight focused tools that turn a requirement into ready-to-use QA work in seconds.",
+    body: "Nine focused tools that turn a requirement — or a screenshot — into ready-to-use QA work in seconds.",
     points: [
-      "Test cases, bug reports, edge cases and regression checklists",
-      "API tests, SQL checks, test data and automation snippets",
-      "Export results to CSV or Markdown",
+      "Requirements → Tests: every test case is traced to the requirement line it checks, and untested lines are flagged",
+      "Bug report from a screenshot: paste it (Ctrl+V), the AI reads the error and writes the report",
+      "Plus edge cases, API tests, SQL checks, test data, regression lists and automation snippets",
+      "Export to CSV or Markdown — including a traceability matrix",
     ],
   },
   {
@@ -95,6 +96,18 @@ const FEATURE_STEPS: Step[] = [
       "Tap “✓ Check sources” to have each line re-checked, and open “How this answer was made” to see all 9 steps",
       "Code Studio: explain, fix and refactor — every change shown as a diff you approve",
       "Generate PRDs, tech docs and API specs from a short description",
+    ],
+  },
+  {
+    icon: "🧠",
+    eyebrow: "Memory & shortcuts",
+    title: "Make it yours",
+    body: "Teach AbhiNova a few things about you once, and keep your favourite prompts one keystroke away.",
+    points: [
+      "Type / in the chat box for quick commands — Agent on/off, Memory, your saved prompts and more",
+      "“/remember I'm a QA engineer, reply in Hinglish” — saves it and switches Memory on, so every chat uses it",
+      "See or delete everything it remembers under 🧠 Memory in your account menu",
+      "Save prompts you use often under 📌 Saved prompts",
     ],
   },
   {

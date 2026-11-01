@@ -52,6 +52,11 @@ abhinova-ai/
 │   │   ├── documents/process/route.ts
 │   │   ├── documents/query/route.ts      # answer + sources + trace (real numbers per RAG stage)
 │   │   ├── documents/verify/route.ts     # "Check sources": AI judge per cited statement (passages reloaded by id, RLS)
+│   │   ├── documents/[documentId]/text/route.ts  # GET a document's text (QA "Load from a document")
+│   │   ├── messages/[messageId]/feedback/route.ts  # 👍/👎 on a reply (migration 007)
+│   │   ├── memory/route.ts          # Memory facts + on/off switch (migration 007)
+│   │   ├── prompts/route.ts         # saved prompts for the "/" menu (migration 007)
+│   │   ├── conversations/search/route.ts  # Ctrl+K chat search (titles + message text)
 │   │   ├── projects/
 │   │   │   ├── route.ts             # create / list projects
 │   │   │   └── [projectId]/
@@ -83,7 +88,7 @@ abhinova-ai/
 ├── components/
 │   ├── ui/                         # shadcn components ONLY (auto-generated)
 │   ├── shared/                     # CommandPalette, WelcomeTour (first-visit product tour), FeedbackDialog, DeleteMyData, Logo, LocalTime, EmptyState, ErrorBoundary
-│   ├── workspace/                  # Sidebar (nav + history, Claude-style), UserMenu, SessionList, ConversationList, ChatMessage, ChatMarkdown, ChatActions (export/share), ChatInput, ThinkingOrb, LocalModeBanner
+│   ├── workspace/                  # Sidebar (nav + history, Claude-style), UserMenu, SessionList, ConversationList, ChatMessage (+ reply actions), ChatMarkdown, ChatActions (export/share), ChatInput, SlashMenu ("/" commands), AccountDialogs + MemoryDialog + SavedPromptsDialog, ThinkingOrb, LocalModeBanner
 │   ├── qa-studio/                  # ToolCard, ToolForm, OutputPanel, HistoryTab, ExportButtons
 │   ├── documents/                  # UploadDropzone, DocumentList, DocumentPicker, CitationChip, ChunkViewer, AnswerInsights (source check + 9-step trace)
 │   ├── projects/                   # ProjectCard, ProjectGrid, CreateProjectDialog, KnowledgePanel, ProjectInstructions, ProjectNotes, ProjectChatList, ProjectSwitcher, ProjectHeader, ProjectSelect, SourceCard, AddSourceDialog, SyncStatusBadge
@@ -123,6 +128,8 @@ abhinova-ai/
 │   │   ├── diff.ts                 # generate + apply reviewed diffs
 │   │   ├── sandbox.ts              # WebContainers run wrapper (browser-isolated)
 │   │   └── secret-scan.ts          # block .env/secret files from ever reaching the LLM
+│   ├── chat/
+│   │   └── ratings.ts              # attach the viewer's 👍/👎 to loaded messages
 │   ├── projects/
 │   │   ├── context.ts              # project context assembly (instructions → notes → chunks, token budget)
 │   │   └── scope.ts                # project-scoped loaders + free-tier limits
@@ -157,6 +164,7 @@ abhinova-ai/
 │   │   ├── admin.ts
 │   │   ├── code.ts
 │   │   ├── models.ts
+│   │   ├── memory.ts               # Memory facts + saved prompts
 │   │   └── wellness.ts
 │   ├── admin/
 │   │   └── auth.ts                 # ADMIN_DASHBOARD_TOKEN check + HMAC cookie (server-only)
@@ -185,6 +193,8 @@ abhinova-ai/
 │       ├── 003_open_beta.sql      # beta_usage counters + consume_beta_quota() + guest write access
 │       ├── 004_feedback.sql       # in-app feedback (server-only submit_feedback RPC, 10/user/24h)
 │       ├── 005_admin_stats.sql    # admin_usage_stats() aggregates for /admin (service role only)
+│       ├── 006_shared_chats.sql   # share a chat by link (get_shared_chat SECURITY DEFINER)
+│       ├── 007_feedback_memory_prompts.sql  # message_feedback, user_memories (+ profiles.memory_enabled), saved_prompts
 ├── design-reference/               # Claude Design export (source design) — read as the visual foundation
 ├── private-learning/               # NEVER pushed to git (in .gitignore)
 ├── public/
@@ -263,6 +273,13 @@ abhinova-ai/
 ## Local Mode Safety Rules
 - Servers listen on 127.0.0.1 (`dev`/`start` scripts); `dev:lan` is the only LAN option. In Local Mode `proxy.ts` refuses any Host that isn't localhost/127.0.0.1/[::1] (DNS rebinding).
 - Every chunk stores `metadata.embedModel` (untagged = cloud `gemini-embedding-001`). Retrieval drops chunks from the other mode; `withIndexMode()` flags such documents in the UI with a Re-index action. Never compare vectors across embedding models.
+
+## Memory, Ratings & QA Extras Rules
+- Memory is OFF by default (`profiles.memory_enabled`); facts are user-typed DATA, injected via `formatUserMemory()` (ends with `GUARDRAILS_REMINDER`) into workspace chat + Agent only — never QA, Wellness or document routes. Every fact is visible and deletable in the Memory dialog.
+- Every new user-data table goes in the `USER_TABLES` list of `app/api/account/data/route.ts` and in `tests/e2e/privacy-test.mjs`.
+- Regenerate never stores a second copy of the question and only removes the old reply AFTER the new one is saved. Reply ids are generated server-side and sent as `X-Assistant-Message-Id`.
+- Requirements → Tests: the server numbers requirements (`splitRequirements`) and computes coverage in code (`coverageOf`); model-supplied requirement ids are filtered to known ones.
+- Screenshots (Bug Report only) are downscaled in the browser, verified by magic bytes, read by Gemini vision (`completeVision`) and never stored; not available in Local Mode (`vision_not_local`).
 
 ## Agent Mode Rules (non-negotiable)
 - Off by default; the ⚡ Agent toggle in ChatInput sends `agent: true` to `/api/chat` (remembered per browser tab). Same auth, rate limit and beta quota as a normal chat — checked BEFORE the tool loop.

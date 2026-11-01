@@ -88,6 +88,19 @@ Keys never live in git: use Vercel environment variables, Codespaces secrets, or
    ```
 5. Open [http://localhost:3000](http://localhost:3000).
 
+## Built for testers
+
+- **Requirements → Tests + Coverage** (QA Studio): paste a PRD or ticket, or load an uploaded document. The server numbers each requirement (R1, R2…), every generated test case lists the requirements it checks, and coverage is computed in code — untested requirements are flagged, with a one-click "write tests for the gaps". Exports a traceability matrix.
+- **Bug report from a screenshot**: attach or paste (Ctrl+V) a screenshot in Bug Report; Gemini reads the error on screen and fills the report. The image is downscaled in the browser, checked by its bytes, and never stored. (Online only — the local model can't see images.)
+
+## Everyday chat tools
+
+- Under each reply: copy, regenerate (replaces the last reply), 👍/👎.
+- **Ctrl+K** searches your chats by title and by words inside messages.
+- Type **/** in the chat box for commands: Agent on/off, `/remember …`, Memory, saved prompts, and shortcuts to the QA tools.
+- **Memory** (off by default): facts you add are used in every chat; see or delete them anytime from the account menu.
+- Needs migration `007_feedback_memory_prompts.sql`.
+
 ## Trustworthy document answers
 
 Every answer on the Documents page tags each fact with its source ([S1], [S2]…), and under it:
