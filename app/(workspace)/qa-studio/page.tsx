@@ -1,6 +1,8 @@
 import { QA_TOOLS } from "@/lib/qa-tools";
 import { ToolCard } from "@/components/qa-studio/tool-card";
 
+export const metadata = { title: "QA Studio" };
+
 export default function QaStudioPage() {
   return (
     <main className="mx-auto max-w-5xl px-4 sm:px-6 py-10">

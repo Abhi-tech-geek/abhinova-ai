@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { TalkPanel } from "@/components/wellness/talk-panel";
 import type { WellnessMessage } from "@/types/wellness";
 
+export const metadata = { title: "Talk · Wellness" };
+
 export default async function TalkPage() {
   const supabase = await createClient();
 

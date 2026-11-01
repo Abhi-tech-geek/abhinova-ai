@@ -5,6 +5,8 @@ import { InsightCard } from "@/components/wellness/insight-card";
 import { MusicPlayer } from "@/components/wellness/music-player";
 import type { MoodLogRecord } from "@/types/wellness";
 
+export const metadata = { title: "Mood · Wellness" };
+
 export default async function MoodPage() {
   const supabase = await createClient();
   const { data: logs } = await supabase

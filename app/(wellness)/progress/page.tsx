@@ -3,6 +3,8 @@ import { MoodChart } from "@/components/wellness/mood-chart";
 import { InsightCard } from "@/components/wellness/insight-card";
 import type { MoodLogRecord } from "@/types/wellness";
 
+export const metadata = { title: "Progress · Wellness" };
+
 export default async function ProgressPage() {
   const supabase = await createClient();
 

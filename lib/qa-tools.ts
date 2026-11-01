@@ -185,6 +185,10 @@ export function joinChunks(contents: string[]): string {
   return out;
 }
 
+// The flagship tool leads the QA Studio grid.
+const FEATURED_TOOL = "requirement-coverage";
+QA_TOOLS.sort((a, b) => Number(b.id === FEATURED_TOOL) - Number(a.id === FEATURED_TOOL));
+
 export function getQaTool(id: string): QaToolDefinition | undefined {
   return QA_TOOLS.find((t) => t.id === id);
 }

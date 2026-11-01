@@ -5,6 +5,11 @@ import { getQaTool } from "@/lib/qa-tools";
 import { ToolWorkspace } from "@/components/qa-studio/tool-workspace";
 import type { QaArtifactRecord } from "@/types/qa";
 
+export async function generateMetadata({ params }: { params: Promise<{ tool: string }> }) {
+  const tool = getQaTool((await params).tool);
+  return { title: tool ? `${tool.name} · QA Studio` : "QA Studio" };
+}
+
 export default async function QaToolPage({
   params: paramsPromise,
 }: {

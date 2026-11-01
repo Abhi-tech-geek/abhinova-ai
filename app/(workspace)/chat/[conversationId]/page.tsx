@@ -5,6 +5,8 @@ import { ChatPanel } from "@/components/workspace/chat-panel";
 import { withRatings } from "@/lib/chat/ratings";
 import type { ChatMessageRecord } from "@/types/chat";
 
+export const metadata = { title: "Chat" };
+
 export default async function ConversationPage({
   params: paramsPromise,
 }: {

@@ -10,7 +10,7 @@ import { BrandStar } from "@/components/shared/logo";
 // user/assistant messages, or nothing once sharing is stopped.
 
 export const metadata = {
-  title: "Shared chat · AbhiNova AI",
+  title: "Shared chat",
   robots: { index: false, follow: false },
 };
 

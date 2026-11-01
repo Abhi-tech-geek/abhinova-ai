@@ -1,4 +1,5 @@
 import { GROQ_MODEL } from "@/lib/ai/groq";
+import { GEMINI_MODEL, GEMINI_LITE_MODEL } from "@/lib/ai/gemini";
 import { isLocalMode, localChatModel, LocalAiError } from "@/lib/ai/ollama";
 import { calculate } from "@/lib/ai/calculator";
 import { currentTimeNote } from "@/lib/ai/prompts/safety";
@@ -15,11 +16,13 @@ import type { RetrievedSource } from "@/types/documents";
 
 // Agent Mode: the model may call a few safe tools (Wikipedia, read a public
 // web page, search the user's own documents, calculator, current time) before
-// answering. SERVER-ONLY. Uses OpenAI-style tool calling on Groq, or on the
-// local Ollama model in Local Mode. Every tool result is wrapped in
+// answering. SERVER-ONLY. Uses OpenAI-style tool calling on Groq (Gemini when
+// Groq is busy), or on the local Ollama model in Local Mode. Every tool result is wrapped in
 // <tool_result> and treated as data (prompt-injection defence).
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GEMINI_OPENAI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const TOOL_MODEL_TIMEOUT_MS = 30_000;
 const MAX_TOOL_ROUNDS = 4;
 const MAX_CALLS_PER_ROUND = 3;
 const MAX_PAGE_READS = 2;
@@ -89,51 +92,81 @@ export class AgentUnavailableError extends Error {
   }
 }
 
+interface ToolEndpoint {
+  name: string;
+  url: string;
+  apiKey?: string;
+  model: string;
+  extra?: Record<string, unknown>;
+}
+
+/**
+ * Where tool calls go. Local Mode: only Ollama. Cloud: Groq first, then
+ * Gemini's OpenAI-compatible endpoint — on the free tier Groq's per-minute
+ * token cap is hit under load, and an Agent answer that drops its tools
+ * halfway is worse than one from the second model.
+ */
+function toolEndpoints(): ToolEndpoint[] {
+  if (isLocalMode()) {
+    return [{ name: "ollama", url: `${(process.env.OLLAMA_URL ?? "").trim().replace(/\/+$/, "")}/v1/chat/completions`, model: localChatModel() }];
+  }
+  const endpoints: ToolEndpoint[] = [];
+  if (process.env.GROQ_API_KEY) endpoints.push({ name: "groq", url: GROQ_API_URL, apiKey: process.env.GROQ_API_KEY, model: GROQ_MODEL });
+  if (process.env.GEMINI_API_KEY) {
+    // Flash then Flash-Lite (separate capacity pools — Flash often 503s under
+    // load). Keep thinking short: tool rounds should be quick.
+    for (const model of [GEMINI_MODEL, GEMINI_LITE_MODEL]) {
+      endpoints.push({ name: model, url: GEMINI_OPENAI_URL, apiKey: process.env.GEMINI_API_KEY, model, extra: { reasoning_effort: "low" } });
+    }
+  }
+  return endpoints;
+}
+
 async function toolCompletion(
   messages: AgentMessage[],
   signal: AbortSignal | undefined,
   allowTools: boolean
 ): Promise<{ content: string | null; tool_calls?: ToolCall[] }> {
   const local = isLocalMode();
-  const url = local ? `${(process.env.OLLAMA_URL ?? "").trim().replace(/\/+$/, "")}/v1/chat/completions` : GROQ_API_URL;
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!local && !apiKey) throw new AgentUnavailableError("GROQ_API_KEY is not set");
+  const endpoints = toolEndpoints();
+  if (endpoints.length === 0) throw new AgentUnavailableError("No tool model configured");
 
-  const post = () =>
-    fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...(local ? {} : { Authorization: `Bearer ${apiKey}` }) },
-      body: JSON.stringify({
-        model: local ? localChatModel() : GROQ_MODEL,
-        messages,
-        ...(allowTools ? { tools: TOOLS, tool_choice: "auto" } : {}),
-        temperature: 0.3,
-        max_tokens: 2048,
-      }),
-      signal,
-    });
-  let res: Response;
-  try {
-    res = await post();
-    // Free-tier per-minute limit: wait briefly once instead of dropping the tools.
-    if (!local && res.status === 429) {
-      const wait = Math.min(Number(res.headers.get("retry-after")) || 2, 4);
-      await new Promise((r) => setTimeout(r, wait * 1000));
-      res = await post();
+  let lastStatus = "unreachable";
+  for (const ep of endpoints) {
+    let res: Response;
+    try {
+      const timeout = AbortSignal.timeout(TOOL_MODEL_TIMEOUT_MS);
+      res = await fetch(ep.url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(ep.apiKey ? { Authorization: `Bearer ${ep.apiKey}` } : {}) },
+        body: JSON.stringify({
+          model: ep.model,
+          messages,
+          ...(allowTools ? { tools: TOOLS, tool_choice: "auto" } : {}),
+          temperature: 0.3,
+          max_tokens: 2048,
+          ...ep.extra,
+        }),
+        signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+      });
+    } catch (err) {
+      if (signal?.aborted) throw err;
+      if (local) throw new LocalAiError("Ollama is not reachable", err);
+      console.warn(`[agent] ${ep.name} tool model unreachable`);
+      continue;
     }
-  } catch (err) {
-    if (signal?.aborted) throw err;
-    throw local ? new LocalAiError("Ollama is not reachable", err) : new AgentUnavailableError("Tool model unreachable");
+    if (!res.ok) {
+      // Never log bodies — they can echo request content.
+      if (local) throw new LocalAiError(`Ollama request failed with status ${res.status}`);
+      lastStatus = String(res.status);
+      console.warn(`[agent] ${ep.name} tool model failed with status ${res.status}`);
+      continue;
+    }
+    const data = (await res.json()) as { choices?: { message?: { content?: string | null; tool_calls?: ToolCall[] } }[] };
+    const message = data.choices?.[0]?.message;
+    return { content: message?.content ?? null, tool_calls: message?.tool_calls };
   }
-  if (!res.ok) {
-    // Never log bodies — they can echo request content.
-    throw local
-      ? new LocalAiError(`Ollama request failed with status ${res.status}`)
-      : new AgentUnavailableError(`Tool model failed with status ${res.status}`);
-  }
-  const data = (await res.json()) as { choices?: { message?: { content?: string | null; tool_calls?: ToolCall[] } }[] };
-  const message = data.choices?.[0]?.message;
-  return { content: message?.content ?? null, tool_calls: message?.tool_calls };
+  throw new AgentUnavailableError(`Tool models failed (last status ${lastStatus})`);
 }
 
 function parseArgs(raw: string): unknown {

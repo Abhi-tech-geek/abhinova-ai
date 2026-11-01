@@ -10,7 +10,7 @@ import type { UsageStats } from "@/types/admin";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Usage dashboard · AbhiNova AI",
+  title: "Usage dashboard",
   robots: { index: false, follow: false },
 };
 

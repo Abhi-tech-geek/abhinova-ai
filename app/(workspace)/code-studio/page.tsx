@@ -5,6 +5,8 @@ import { isOpenBeta } from "@/lib/beta/config";
 import { LockedFeature } from "@/components/shared/locked-feature";
 import { CodeStudioWorkspace } from "@/components/code-studio/code-studio-workspace";
 
+export const metadata = { title: "Code Studio" };
+
 export default async function CodeStudioPage() {
   const supabase = await createClient();
   const {

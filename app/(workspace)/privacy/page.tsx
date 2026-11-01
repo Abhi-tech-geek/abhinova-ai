@@ -1,7 +1,7 @@
 import { isLocalMode, localChatModel } from "@/lib/ai/ollama";
 import { DeleteMyData } from "@/components/shared/delete-my-data";
 
-export const metadata = { title: "Privacy & local mode · AbhiNova AI" };
+export const metadata = { title: "Privacy & local mode" };
 
 const REPO_URL = "https://github.com/Abhi-tech-geek/abhinova-ai";
 

@@ -9,6 +9,8 @@ import { DocChat } from "@/components/documents/doc-chat";
 import { withIndexMode } from "@/lib/rag/retrieve";
 import type { DocumentRecord } from "@/types/documents";
 
+export const metadata = { title: "Documents" };
+
 export default async function DocumentsPage() {
   const supabase = await createClient();
   const {

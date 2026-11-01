@@ -160,7 +160,8 @@ function SidebarContent({
           {!collapsed && (
             <>
               <span className="flex-1 text-left">Search</span>
-              <kbd className="rounded border border-border/70 px-1.5 font-mono text-[10px] text-muted-foreground/70">Ctrl K</kbd>
+              {/* Keyboard hint only where there's a keyboard (hidden in the phone drawer). */}
+              <kbd className="hidden rounded border border-border/70 px-1.5 font-mono text-[10px] text-muted-foreground/70 md:inline">Ctrl K</kbd>
             </>
           )}
         </button>

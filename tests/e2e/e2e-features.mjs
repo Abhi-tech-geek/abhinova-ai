@@ -85,8 +85,10 @@ await step("pages", "all workspace pages", async () => {
   }
   const robots = await (await call(null, "/robots.txt")).text();
   rec("pages", "robots.txt disallows crawling", /Disallow: \//.test(robots), robots.slice(0, 80));
-  const img = await call(null, "/_next/image?url=%2Ffavicon.ico&w=64&q=75");
-  rec("pages", "image optimizer disabled (/_next/image)", img.status >= 400, img.status);
+  // The risk is an open image proxy: remote URLs must be refused. (Vercel may
+  // pass our own static files through /_next/image — that's harmless.)
+  const img = await call(null, "/_next/image?url=https%3A%2F%2Fexample.com%2Fa.png&w=64&q=75");
+  rec("pages", "image optimizer won't fetch remote images", img.status >= 400, img.status);
 });
 
 await step("headers", "security headers", async () => {
@@ -184,7 +186,7 @@ await step("documents", "upload → process → ask", async () => {
   rec("documents", "summarize mode", r.status === 200 && (s.answer ?? "").length > 40, (s.answer ?? JSON.stringify(s)).slice(0, 160));
   r = await call(D, "/api/documents/query", { json: { question: "Who is the CEO of Google?", documentIds: [docId] } });
   const n = await jsonOf(r);
-  rec("documents", "question not in the file → says so", r.status === 200 && /(not|n't|nahi|no ).{0,60}(document|source|file|mention|provided|information)|(document|source|file|mention).{0,60}(nahi|not)|couldn't find/i.test(n.answer ?? ""), (n.answer ?? "").slice(0, 200));
+  rec("documents", "question not in the file → says so", r.status === 200 && /(not|n't|nahi|no ).{0,60}(document|source|file|mention|provided|information)|(document|source|file|mention).{0,60}(nahi|not|n[’']t)|couldn[’']t find/i.test(n.answer ?? ""), (n.answer ?? "").slice(0, 200));
   const csv = "name,role\nMeera,QA lead\nArjun,Developer\n";
   r = await call(D, "/api/documents/upload", { form: fileForm("team.csv", csv, "text/csv") });
   const up2 = await jsonOf(r);
@@ -325,13 +327,15 @@ await step("admin", "admin dashboard", async () => {
   rec("admin", "no cookie → key prompt only (no stats)", r.status === 200 && !/admin_usage_stats|Daily active|Total users/i.test(h) && /key|token/i.test(h), r.status);
   r = await call(null, "/admin/login", { form: new URLSearchParams({ key: "definitely-wrong" }) });
   rec("admin", "wrong key → no admin cookie", !(r.headers.get("set-cookie") ?? "").includes("anv_admin="), `${r.status} ${r.headers.get("location")}`);
-  if (env.ADMIN_DASHBOARD_TOKEN) {
+  // The live site has the owner's own token (not the one in .env.local), so
+  // the right-key path is only checked against a local server.
+  if (env.ADMIN_DASHBOARD_TOKEN && /localhost|127\.0\.0\.1/.test(B)) {
     r = await call(null, "/admin/login", { form: new URLSearchParams({ key: env.ADMIN_DASHBOARD_TOKEN }) });
     const ck = (r.headers.get("set-cookie") ?? "").match(/anv_admin=[^;]+/)?.[0];
     rec("admin", "right key → httpOnly admin cookie", !!ck && /httponly/i.test(r.headers.get("set-cookie") ?? ""), r.status);
     const d = await fetch(B + "/admin?days=7", { headers: { cookie: ck ?? "", "User-Agent": UA } });
     const dh = await d.text();
-    rec("admin", "dashboard renders stats with the cookie", d.status === 200 && dh.length > 5000 && !/Application error/.test(dh), `${d.status} ${dh.length}b`);
+    rec("admin", "dashboard renders stats with the cookie", d.status === 200 && dh.includes('data-testid="admin-dashboard"') && !/Application error/.test(dh), `${d.status} ${dh.length}b`);
   }
 });
 

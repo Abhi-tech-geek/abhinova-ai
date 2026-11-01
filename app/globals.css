@@ -153,6 +153,12 @@
     -webkit-backdrop-filter: blur(18px) saturate(1.2);
     border: 1px solid hsl(var(--border) / 0.8);
   }
+  /* Dialogs sit over text; where backdrop blur doesn't apply (seen in some
+     mobile renderers), 75% let the page behind read through the dialog. */
+  [role="dialog"].glass,
+  [role="alertdialog"].glass {
+    background: hsl(var(--card) / 0.97);
+  }
   /* Micro-interaction: card lift on hover (transform-only, GPU friendly) */
   .hover-lift {
     transition: transform 0.2s ease, box-shadow 0.2s ease;

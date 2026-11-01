@@ -126,7 +126,9 @@ r = await call(A, "/api/chat", { json: { message: "" } });
 rec("input", "Empty message rejected", r.status === 400, `${r.status}`, "medium");
 r = await call(A, "/api/chat", { json: { message: "hi", conversationId: "../../etc/passwd" } });
 rec("input", "Non-UUID conversationId rejected", r.status === 400, `${r.status}`, "medium");
-r = await call(A, "/api/qa/../../admin", { json: { input: "x" } });
+// Encoded so the client doesn't collapse "../" itself (fetch normalises plain
+// dot-segments, which made this check hit /admin and "fail" for the wrong reason).
+r = await call(A, "/api/qa/%2e%2e%2f%2e%2e%2fadmin", { json: { input: "x" } });
 rec("input", "Path traversal on tool id not served", r.status >= 400 || r.status === 308, `${r.status}`, "low");
 r = await call(A, "/api/qa/not-a-tool", { json: { input: "x" } });
 rec("input", "Unknown QA tool → 404", r.status === 404, `${r.status}`, "low");
@@ -173,9 +175,11 @@ const page = await (await fetch(B + "/chat", { headers: { "User-Agent": UA, cook
 const scripts = [...new Set([...page.matchAll(/src="(\/_next\/static\/[^"]+\.js)"/g)].map((m) => m[1]))];
 let bundle = "";
 for (const s of scripts) bundle += await (await fetch(B + s)).text();
-const secretHits = ["service_role", "SUPABASE_SERVICE_ROLE_KEY", "GROQ_API_KEY", "GEMINI_API_KEY", "ENCRYPTION_KEY", "ADMIN_DASHBOARD_TOKEN", "sb_secret_"]
+const secretHits = ["service_role", "SUPABASE_SERVICE_ROLE_KEY", "GROQ_API_KEY", "GEMINI_API_KEY", "ENCRYPTION_KEY", "ADMIN_DASHBOARD_TOKEN"]
   .filter((k) => bundle.includes(k));
-const keyLike = (bundle.match(/gsk_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{30,}/g) ?? []);
+// Actual key VALUES. (The bare prefix "sb_secret_" is fine: supabase-js ships a
+// startsWith("sb_secret_") guard and our secret scanner has it as a pattern.)
+const keyLike = (bundle.match(/gsk_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{30,}|sb_secret_[A-Za-z0-9_-]{20,}/g) ?? []);
 rec("bundle", `No server secrets in ${scripts.length} client JS files`, secretHits.length === 0 && keyLike.length === 0, `names=${secretHits.join(",") || "none"} keys=${keyLike.length}`, "critical");
 const realService = env.SUPABASE_SERVICE_ROLE_KEY && bundle.includes(env.SUPABASE_SERVICE_ROLE_KEY.slice(-20));
 rec("bundle", "Real service-role key absent from client JS", !realService, "", "critical");

@@ -3,6 +3,8 @@ import { JournalEditor } from "@/components/wellness/journal-editor";
 import type { JournalEntryRecord } from "@/types/wellness";
 import { LocalTime } from "@/components/shared/local-time";
 
+export const metadata = { title: "Journal · Wellness" };
+
 export default async function JournalPage() {
   const supabase = await createClient();
   const { data: entries } = await supabase

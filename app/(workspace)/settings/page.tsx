@@ -42,6 +42,8 @@ async function deleteAccountAction(): Promise<void> {
   redirect("/login");
 }
 
+export const metadata = { title: "Settings" };
+
 export default async function SettingsPage() {
   const supabase = await createClient();
   const {
